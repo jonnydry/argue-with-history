@@ -1,0 +1,9 @@
+# Force Python build for Railway (monorepo has Node in apps/web)
+[phases.setup]
+nixPkgs = ["python311", "gcc"]
+
+[phases.install]
+cmds = ["pip install -r apps/api/requirements.txt"]
+
+[start]
+cmd = "cd apps/api && gunicorn src.main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
