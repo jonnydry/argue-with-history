@@ -1,6 +1,9 @@
 import httpx
 from typing import Optional
+import logging
 from ..core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class GrokService:
@@ -117,7 +120,8 @@ Response:
             if isinstance(claims, list) and all(isinstance(c, str) for c in claims):
                 return [c.strip() for c in claims[:4] if c.strip()]
             return []
-        except Exception:
+        except Exception as exc:
+            logger.warning("Key-claim extraction failed: %s", exc, exc_info=True)
             return []
 
     async def score_argument(
@@ -216,12 +220,11 @@ Respond ONLY with valid JSON in this exact format:
             raise ValueError("Empty message content from Grok")
 
         import json
-        import logging
 
         try:
             return json.loads(content)
         except json.JSONDecodeError as e:
-            logging.warning("Grok scoring JSON parse failed: %s", e, exc_info=True)
+            logger.warning("Grok scoring JSON parse failed: %s", e, exc_info=True)
             return {
                 "scores": None,
                 "scores_error": "Scoring unavailable — response format invalid",
@@ -275,7 +278,8 @@ Keep suggested_readings to 2-3 items. Add source_id (e.g. chapter number) when p
         import json
         try:
             return json.loads(content)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            logger.warning("Learning summary parse failed: %s", exc, exc_info=True)
             return {"summary": "Reflect on the debate and the passages cited.", "suggested_readings": []}
 
     async def generate_position_primer(
@@ -316,7 +320,8 @@ Respond with valid JSON only:
             content = response.json().get("choices", [{}])[0].get("message", {}).get("content") or "{}"
             import json
             return json.loads(content)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Position primer generation failed: %s", exc, exc_info=True)
             return {
                 "position_summary": f"On this topic, {figure_name} will present their view. Engage with their arguments directly.",
                 "sample_quote": None,
