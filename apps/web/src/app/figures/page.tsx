@@ -56,34 +56,34 @@ export default function FiguresPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
       <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-4">
-            <Swords size={24} strokeWidth={1.5} className="shrink-0" />
-            <h1 className="text-xl font-bold tracking-tight">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 sm:gap-4">
+            <Swords size={20} strokeWidth={1.5} className="shrink-0 sm:w-6 sm:h-6" />
+            <h1 className="text-base sm:text-xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
           </Link>
           <Link href="/">
-            <Button variant="ghost" className="text-sm font-medium">
+            <Button variant="ghost" size="sm" className="text-xs sm:text-sm font-medium">
               HOME
             </Button>
           </Link>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12">
-        <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="mb-8 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3">
             CHOOSE YOUR
             <br />
             OPPONENT
           </h2>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-lg">
             Select wisely. Your arguments will be tested.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-5xl mx-auto mb-10 sm:mb-16">
           {figures.map((figure) => (
             <Card
               key={figure.id}
@@ -94,10 +94,9 @@ export default function FiguresPage() {
                   : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
               }`}
             >
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  {/* Avatar Circle */}
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shrink-0 ${
                     selectedFigure?.id === figure.id
                       ? "bg-background text-foreground"
                       : "bg-foreground text-background"
@@ -105,10 +104,9 @@ export default function FiguresPage() {
                     {figure.name.charAt(0)}
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-base tracking-tight truncate">
+                      <h3 className="font-bold text-sm sm:text-base tracking-tight truncate">
                         {figure.name}
                       </h3>
                     </div>
@@ -148,8 +146,7 @@ export default function FiguresPage() {
                     </div>
                   </div>
 
-                  {/* Selection Indicator */}
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
+                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
                     selectedFigure?.id === figure.id
                       ? "border-background bg-background"
                       : "border-foreground/30"
@@ -283,14 +280,14 @@ export default function FiguresPage() {
               </Card>
             </div>
 
-            <div className="text-center flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="text-center flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Dialog open={previewOpen} onOpenChange={(open) => { setPreviewOpen(open); if (open) fetchPreview(); }}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-6 h-auto btn-press">
+                  <Button variant="outline" size="lg" className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto">
                     PREVIEW SOURCES
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Key passages for this topic</DialogTitle>
                   </DialogHeader>
@@ -312,8 +309,8 @@ export default function FiguresPage() {
                   )}
                 </DialogContent>
               </Dialog>
-              <Link href="/debate">
-                <Button size="lg" className="text-lg px-12 py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press">
+              <Link href="/debate" className="w-full sm:w-auto">
+                <Button size="lg" className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
                   START DEBATE →
                 </Button>
               </Link>

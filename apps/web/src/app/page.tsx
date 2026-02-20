@@ -151,19 +151,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
       <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Swords size={28} strokeWidth={1.5} className="shrink-0" />
-            <h1 className="text-2xl font-bold tracking-tight">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
+            <h1 className="text-lg sm:text-2xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
           </div>
-          <nav className="flex items-center gap-6">
-            <Link href="/figures" className="text-sm font-medium hover:underline underline-offset-4">
+          <nav className="flex items-center gap-3 sm:gap-6">
+            <Link href="/figures" className="text-xs sm:text-sm font-medium hover:underline underline-offset-4 hidden sm:inline">
               FIGURES
             </Link>
             <Link href="/figures">
-              <Button variant="outline" className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press">
+              <Button variant="outline" size="sm" className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press sm:text-sm sm:px-4 sm:py-2">
                 START
               </Button>
             </Link>
@@ -172,28 +172,28 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="container mx-auto px-6 py-24 md:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-24 md:py-32">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="max-w-2xl">
-              <h2 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-8">
+              <h2 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-6 sm:mb-8">
                 DON&apos;T READ
                 <br />
                 <span className="text-stroke">HISTORY.</span>
                 <br />
                 <span className="underline-thick decoration-foreground">DEFEAT IT.</span>
               </h2>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mb-12 leading-relaxed">
+              <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-8 sm:mb-12 leading-relaxed">
                 Not a spectator sport—you argue. The figure hits back. You must respond.
                 Learn their perspective by engaging with it, not watching.
               </p>
               <Link href="/figures">
-                <Button size="lg" className="text-lg px-10 py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press">
+                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
                   CHOOSE YOUR OPPONENT →
                 </Button>
               </Link>
             </div>
 
-            <div className="relative h-[500px] overflow-hidden lg:h-[600px]">
+            <div className="relative h-[300px] sm:h-[500px] overflow-hidden lg:h-[600px] hidden sm:block">
               <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none"></div>
               <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none"></div>
               
@@ -215,18 +215,18 @@ export default function Home() {
         </section>
 
         <section className="border-t border-border bg-secondary/20">
-          <div className="container mx-auto px-6 py-24">
+          <div className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
             <div className="max-w-4xl mx-auto">
-              <h3 className="text-4xl md:text-5xl font-bold tracking-tight mb-16 text-center">HOW IT WORKS</h3>
+              <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-10 sm:mb-16 text-center">HOW IT WORKS</h3>
               
-              <div className="space-y-16">
+              <div className="space-y-10 sm:space-y-16">
                 {steps.map((step, index) => {
                   const { ref, isInView } = stepRefs[index];
                   return (
                     <div 
                       key={step.num}
                       ref={ref}
-                      className={`flex gap-8 items-start transition-all duration-700 ease-out ${
+                      className={`flex gap-4 sm:gap-8 items-start transition-all duration-700 ease-out ${
                         isInView 
                           ? "opacity-100 translate-y-0" 
                           : "opacity-0 translate-y-12"
@@ -234,23 +234,25 @@ export default function Home() {
                       style={{ transitionDelay: `${index * 150}ms` }}
                     >
                       <div className="flex flex-col items-center">
-                        <div className={`w-24 h-24 rounded-full grid place-items-center transition-all duration-500 ${
+                        <div className={`w-14 h-14 sm:w-24 sm:h-24 rounded-full grid place-items-center transition-all duration-500 ${
                           isInView 
                             ? "bg-foreground text-background scale-100 shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
                             : "bg-secondary text-foreground scale-75"
                         }`}>
-                          {step.icon}
+                          <span className="[&>svg]:w-6 [&>svg]:h-6 sm:[&>svg]:w-10 sm:[&>svg]:h-10">
+                            {step.icon}
+                          </span>
                         </div>
                         {index < steps.length - 1 && (
-                          <div className={`w-px h-24 bg-border transition-all duration-700 ${
+                          <div className={`w-px h-12 sm:h-24 bg-border transition-all duration-700 ${
                             isInView ? "opacity-100 scale-y-100" : "opacity-0 scale-y-0"
                           }`} style={{ transitionDelay: `${index * 150 + 300}ms` }} />
                         )}
                       </div>
-                      <div className="flex-1 pt-3">
-                        <span className="text-sm font-medium text-muted-foreground mb-2 block">STEP {step.num}</span>
-                        <h4 className="text-2xl font-bold mb-3">{step.title}</h4>
-                        <p className="text-muted-foreground text-lg leading-relaxed">
+                      <div className="flex-1 pt-1 sm:pt-3">
+                        <span className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 sm:mb-2 block">STEP {step.num}</span>
+                        <h4 className="text-lg sm:text-2xl font-bold mb-2 sm:mb-3">{step.title}</h4>
+                        <p className="text-muted-foreground text-sm sm:text-lg leading-relaxed">
                           {step.description}
                         </p>
                       </div>
@@ -262,11 +264,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-t border-border bg-foreground text-background py-16">
-          <div className="container mx-auto px-6 text-center">
-            <h3 className="text-3xl font-bold tracking-tight mb-6">READY TO DEBATE?</h3>
+        <section className="border-t border-border bg-foreground text-background py-10 sm:py-16">
+          <div className="container mx-auto px-4 sm:px-6 text-center">
+            <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 sm:mb-6">READY TO DEBATE?</h3>
             <Link href="/figures">
-              <Button size="lg" className="text-lg px-12 py-6 h-auto bg-background text-foreground hover:bg-background/90 btn-press">
+              <Button size="lg" className="text-base sm:text-lg px-10 sm:px-12 py-5 sm:py-6 h-auto bg-background text-foreground hover:bg-background/90 btn-press w-full sm:w-auto">
                 BEGIN →
               </Button>
             </Link>
@@ -274,8 +276,8 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="container mx-auto px-6 text-center text-muted-foreground text-sm">
+      <footer className="border-t border-border py-6 sm:py-8">
+        <div className="container mx-auto px-4 sm:px-6 text-center text-muted-foreground text-xs sm:text-sm">
           <p>Built with Next.js • FastAPI • Grok</p>
         </div>
       </footer>

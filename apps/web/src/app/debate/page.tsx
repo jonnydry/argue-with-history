@@ -81,13 +81,13 @@ export default function DebatePage() {
 
   if (!selectedFigure || !selectedTopic) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg">
-        <Card className="max-w-md border-2 contrast-border">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
+        <Card className="max-w-md w-full border-2 contrast-border">
           <CardHeader>
-            <CardTitle className="text-xl">NO DEBATE SELECTED</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">NO DEBATE SELECTED</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
               Choose a figure and topic first.
             </p>
             <Link href="/figures">
@@ -103,12 +103,12 @@ export default function DebatePage() {
 
   if (!debateStarted || !currentDebate) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg">
-        <Card className="max-w-lg border-2 contrast-border">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
+        <Card className="max-w-lg w-full border-2 contrast-border">
           <CardHeader>
-            <CardTitle className="text-2xl">READY TO DEBATE</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">READY TO DEBATE</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">OPPONENT</p>
               <p className="text-xl font-bold">{selectedFigure.name}</p>
@@ -169,21 +169,21 @@ export default function DebatePage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
       <header className="border-b border-border">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <Link href="/" className="text-lg font-bold hover:underline">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <Link href="/" className="text-sm sm:text-lg font-bold hover:underline">
               ARGUE WITH HISTORY
             </Link>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               vs. {selectedFigure.name} — {currentDebate.topic}
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium">
-              TURN {currentDebate.current_turn}/{currentDebate.max_turns}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+              {currentDebate.current_turn}/{currentDebate.max_turns}
             </span>
             {!isCompleted && (
-              <Button variant="outline" size="sm" onClick={handleEndDebate} className="btn-press">
+              <Button variant="outline" size="sm" onClick={handleEndDebate} className="btn-press text-xs sm:text-sm">
                 END
               </Button>
             )}
@@ -191,14 +191,14 @@ export default function DebatePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
           <div className="lg:col-span-1 order-2 lg:order-1">
-            <Card className="border-2 contrast-border sticky top-24">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-lg">SCORE</CardTitle>
+            <Card className="border-2 contrast-border sticky top-4 lg:top-24">
+              <CardHeader className="border-b border-border py-3 sm:py-4 px-4 sm:px-6">
+                <CardTitle className="text-base sm:text-lg">SCORE</CardTitle>
               </CardHeader>
-              <CardContent className="pt-4 space-y-4">
+              <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 px-4 sm:px-6">
                 {latestTurn?.scores_error ? (
                   <p className="text-muted-foreground text-sm">{latestTurn.scores_error}</p>
                 ) : latestTurn?.scores ? (
@@ -317,7 +317,7 @@ export default function DebatePage() {
           <div className="lg:col-span-3 order-1 lg:order-2">
             <Card className="border-2 contrast-border">
               <CardContent className="p-0">
-                <ScrollArea className="h-[500px] p-6">
+                <ScrollArea className="h-[350px] sm:h-[500px] p-3 sm:p-6">
                   {currentDebate.turns.length === 0 && openingStatement && (
                     <div className="mb-8">
                       <div className="flex items-center gap-2 mb-2">
@@ -420,12 +420,12 @@ export default function DebatePage() {
               </CardContent>
             </Card>
 
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               {isCompleted ? (
                 <Card className="border-2 contrast-border">
-                  <CardContent className="p-8 text-center">
-                    <p className="text-3xl font-bold mb-2">DEBATE COMPLETE</p>
-                    <p className="text-xl text-muted-foreground mb-6">
+                  <CardContent className="p-4 sm:p-8 text-center">
+                    <p className="text-2xl sm:text-3xl font-bold mb-2">DEBATE COMPLETE</p>
+                    <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6">
                       FINAL SCORE: <span className="font-bold text-foreground">{totalScore}/{maxScore}</span>
                     </p>
                     {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
@@ -570,14 +570,14 @@ export default function DebatePage() {
                         ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
                         : "Present your argument..."
                     }
-                    className="min-h-32 bg-card border-2 border-border focus:border-foreground resize-none"
+                    className="min-h-24 sm:min-h-32 bg-card border-2 border-border focus:border-foreground resize-none text-sm sm:text-base"
                     disabled={isLoading}
                   />
-                  <div className="flex gap-4">
+                  <div className="flex gap-2 sm:gap-4">
                     <Button
                       onClick={handleSubmitArgument}
                       disabled={isLoading || !argument.trim()}
-                      className="flex-1 text-lg py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
+                      className="flex-1 text-sm sm:text-lg py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
