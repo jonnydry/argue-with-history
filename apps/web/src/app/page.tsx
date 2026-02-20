@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
 import type { FigureInfo } from "@/lib/types";
@@ -100,7 +101,7 @@ const steps = [
     title: "Choose Your Opponent",
     description: "Select from historical philosophers and pick a debate topic.",
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 block"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M9.5 6.5L21 18v3h-3L6.5 9.5"/><path d="M11 5l-6 6"/><path d="M8 8L4 4"/><path d="M5 3L3 5"/></svg>
+      <Swords size={48} strokeWidth={1.5} className="shrink-0 block" />
     ),
   },
   {
@@ -152,7 +153,7 @@ export default function Home() {
       <header className="border-b border-border">
         <div className="container mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M9.5 6.5L21 18v3h-3L6.5 9.5"/><path d="M11 5l-6 6"/><path d="M8 8L4 4"/><path d="M5 3L3 5"/></svg>
+            <Swords size={28} strokeWidth={1.5} className="shrink-0" />
             <h1 className="text-2xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
