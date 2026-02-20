@@ -1,0 +1,14 @@
+# Don't copy these into the Docker image
+.git
+.gitignore
+*.md
+apps/web
+node_modules
+.next
+__pycache__
+*.pyc
+.venv
+venv
+.env
+.env.*
+!.env.example
