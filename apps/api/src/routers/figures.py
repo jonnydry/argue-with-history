@@ -9,6 +9,7 @@ from ..services.grok_service import grok_service
 router = APIRouter(prefix="/figures", tags=["figures"])
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 async def list_figures() -> JSONResponse:
     figures = list(FIGURES_DATA.values())
