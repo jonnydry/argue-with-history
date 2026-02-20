@@ -1,0 +1,401 @@
+{
+  "chapters": {
+    "1": {
+      "title": "HOW MANY KINDS OF PRINCIPALITIES THERE ARE, AND BY WHAT MEANS THEY ARE",
+      "themes": [
+        "fortune",
+        "power"
+      ],
+      "word_count": 119
+    },
+    "2": {
+      "title": "CONCERNING HEREDITARY PRINCIPALITIES",
+      "themes": [
+        "fear",
+        "love",
+        "war",
+        "power"
+      ],
+      "word_count": 251
+    },
+    "3": {
+      "title": "CONCERNING MIXED PRINCIPALITIES",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "promises",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "honesty",
+        "war"
+      ],
+      "word_count": 3099
+    },
+    "4": {
+      "title": "WHY THE KINGDOM OF DARIUS, CONQUERED BY ALEXANDER, DID NOT REBEL",
+      "themes": [
+        "fear",
+        "love",
+        "war",
+        "power"
+      ],
+      "word_count": 950
+    },
+    "5": {
+      "title": "CONCERNING THE WAY TO GOVERN CITIES OR PRINCIPALITIES WHICH LIVED UNDER",
+      "themes": [
+        "generosity",
+        "stinginess",
+        "power"
+      ],
+      "word_count": 444
+    },
+    "6": {
+      "title": "CONCERNING NEW PRINCIPALITIES WHICH ARE ACQUIRED BY ONE’S OWN ARMS AND",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "war"
+      ],
+      "word_count": 1199
+    },
+    "7": {
+      "title": "CONCERNING NEW PRINCIPALITIES WHICH ARE ACQUIRED EITHER BY THE ARMS OF",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "promises",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "honesty",
+        "war"
+      ],
+      "word_count": 2738
+    },
+    "8": {
+      "title": "CONCERNING THOSE WHO HAVE OBTAINED A PRINCIPALITY BY WICKEDNESS",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "promises",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1541
+    },
+    "9": {
+      "title": "CONCERNING A CIVIL PRINCIPALITY",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "promises",
+        "fortune",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1302
+    },
+    "10": {
+      "title": "CONCERNING THE WAY IN WHICH THE STRENGTH OF ALL PRINCIPALITIES OUGHT TO",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "generosity",
+        "stinginess",
+        "war"
+      ],
+      "word_count": 704
+    },
+    "11": {
+      "title": "CONCERNING ECCLESIASTICAL PRINCIPALITIES",
+      "themes": [
+        "fortune",
+        "virtue",
+        "war",
+        "power"
+      ],
+      "word_count": 882
+    },
+    "12": {
+      "title": "HOW MANY KINDS OF SOLDIERY THERE ARE, AND CONCERNING MERCENARIES",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "promises",
+        "generosity",
+        "stinginess",
+        "virtue",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1977
+    },
+    "13": {
+      "title": "CONCERNING AUXILIARIES, MIXED SOLDIERY, AND ONE’S OWN",
+      "themes": [
+        "power",
+        "promises",
+        "fortune",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1384
+    },
+    "14": {
+      "title": "THAT WHICH CONCERNS A PRINCE ON THE SUBJECT OF THE ART OF WAR",
+      "themes": [
+        "power",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "war"
+      ],
+      "word_count": 876
+    },
+    "15": {
+      "title": "CONCERNING THINGS FOR WHICH MEN, AND ESPECIALLY PRINCES, ARE PRAISED OR",
+      "themes": [
+        "power",
+        "promises",
+        "cruelty",
+        "generosity",
+        "stinginess",
+        "virtue",
+        "honesty",
+        "war"
+      ],
+      "word_count": 507
+    },
+    "16": {
+      "title": "CONCERNING LIBERALITY AND MEANNESS",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "generosity",
+        "stinginess",
+        "virtue",
+        "war"
+      ],
+      "word_count": 804
+    },
+    "17": {
+      "title": "CONCERNING CRUELTY AND CLEMENCY, AND WHETHER IT IS BETTER TO BE LOVED",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "promises",
+        "fortune",
+        "virtue",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1076
+    },
+    "18": {
+      "title": "CONCERNING THE WAY IN WHICH PRINCES SHOULD KEEP FAITH",
+      "themes": [
+        "promises",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "honesty",
+        "power"
+      ],
+      "word_count": 1265
+    },
+    "19": {
+      "title": "THAT ONE SHOULD AVOID BEING DESPISED AND HATED",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "promises",
+        "generosity",
+        "stinginess",
+        "virtue",
+        "honesty",
+        "war"
+      ],
+      "word_count": 3576
+    },
+    "20": {
+      "title": "ARE FORTRESSES, AND MANY OTHER THINGS TO WHICH PRINCES OFTEN RESORT,",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "promises",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1588
+    },
+    "21": {
+      "title": "HOW A PRINCE SHOULD CONDUCT HIMSELF SO AS TO GAIN RENOWN",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "cruelty",
+        "generosity",
+        "fortune",
+        "stinginess",
+        "war"
+      ],
+      "word_count": 1473
+    },
+    "22": {
+      "title": "CONCERNING THE SECRETARIES OF PRINCES",
+      "themes": [
+        "honesty",
+        "war",
+        "promises",
+        "power"
+      ],
+      "word_count": 451
+    },
+    "23": {
+      "title": "HOW FLATTERERS SHOULD BE AVOIDED",
+      "themes": [
+        "war",
+        "power"
+      ],
+      "word_count": 729
+    },
+    "24": {
+      "title": "WHY THE PRINCES OF ITALY HAVE LOST THEIR STATES",
+      "themes": [
+        "fortune",
+        "war",
+        "power"
+      ],
+      "word_count": 524
+    },
+    "25": {
+      "title": "WHAT FORTUNE CAN EFFECT IN HUMAN AFFAIRS AND HOW TO WITHSTAND HER",
+      "themes": [
+        "fear",
+        "love",
+        "fortune",
+        "power"
+      ],
+      "word_count": 1175
+    },
+    "26": {
+      "title": "AN EXHORTATION TO LIBERATE ITALY FROM THE BARBARIANS",
+      "themes": [
+        "fear",
+        "love",
+        "power",
+        "promises",
+        "fortune",
+        "virtue",
+        "honesty",
+        "war"
+      ],
+      "word_count": 1411
+    }
+  },
+  "topic_mapping": {
+    "fear vs love": [
+      "17"
+    ],
+    "fear": [
+      "17"
+    ],
+    "love": [
+      "17"
+    ],
+    "power": [
+      "7",
+      "8",
+      "17",
+      "19",
+      "25"
+    ],
+    "fortune": [
+      "25"
+    ],
+    "virtue": [
+      "6",
+      "7",
+      "8",
+      "14",
+      "15",
+      "16"
+    ],
+    "war": [
+      "12",
+      "13",
+      "14"
+    ],
+    "promises": [
+      "18"
+    ],
+    "honesty": [
+      "18"
+    ],
+    "cruelty": [
+      "17"
+    ],
+    "generosity": [
+      "16"
+    ],
+    "stingy": [
+      "16"
+    ],
+    "advisors": [
+      "22",
+      "23"
+    ],
+    "flattery": [
+      "23"
+    ],
+    "conquest": [
+      "3",
+      "4",
+      "5"
+    ],
+    "means": [
+      "18"
+    ],
+    "end": [
+      "18"
+    ],
+    "better": [
+      "17",
+      "18"
+    ],
+    "despised": [
+      "19"
+    ],
+    "hated": [
+      "19"
+    ]
+  }
+}

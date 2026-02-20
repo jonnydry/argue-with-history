@@ -1,0 +1,108 @@
+{
+  "dialogues": {
+    "apology": {
+      "title": "Apology",
+      "context": "Socrates' defense at his trial, 399 BCE",
+      "themes": [
+        "justice",
+        "truth",
+        "examined life",
+        "death",
+        "duty"
+      ],
+      "word_count": 16086
+    },
+    "crito": {
+      "title": "Crito",
+      "context": "Dialogue in prison; Crito urges escape",
+      "themes": [
+        "obedience to law",
+        "justice",
+        "promises",
+        "civil disobedience"
+      ],
+      "word_count": 6575
+    },
+    "euthyphro": {
+      "title": "Euthyphro",
+      "context": "Dialogue on piety before the trial",
+      "themes": [
+        "piety",
+        "definition",
+        "morality",
+        "gods"
+      ],
+      "word_count": 9201
+    },
+    "phaedo": {
+      "title": "Phaedo",
+      "context": "Socrates' final dialogue on the soul and death",
+      "themes": [
+        "death",
+        "soul",
+        "immortality",
+        "philosophy"
+      ],
+      "word_count": 42773
+    }
+  },
+  "topic_mapping": {
+    "justice": [
+      "apology",
+      "crito"
+    ],
+    "truth": [
+      "apology"
+    ],
+    "examined life": [
+      "apology"
+    ],
+    "death": [
+      "apology",
+      "phaedo"
+    ],
+    "duty": [
+      "apology",
+      "crito"
+    ],
+    "obedience": [
+      "crito"
+    ],
+    "law": [
+      "crito",
+      "apology"
+    ],
+    "civil disobedience": [
+      "crito"
+    ],
+    "piety": [
+      "euthyphro"
+    ],
+    "morality": [
+      "euthyphro",
+      "apology"
+    ],
+    "gods": [
+      "euthyphro",
+      "apology"
+    ],
+    "soul": [
+      "phaedo",
+      "apology"
+    ],
+    "immortality": [
+      "phaedo"
+    ],
+    "breaking": [
+      "crito"
+    ],
+    "right": [
+      "crito",
+      "apology"
+    ],
+    "wrong": [
+      "crito",
+      "apology"
+    ]
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "books": {
+    "1": {
+      "book": "I",
+      "text": "FOREWORD\n\n_In which it is inquired why man passes from the state\nof nature to the state of society and what are the essential\nconditions of the compact._\n\n       I   The Subject of the first",
+      "themes": [
+        "nature",
+        "society"
+      ]
+    },
+    "2": {
+      "book": "II",
+      "text": "_Which treats of legislation._\n\n       I   That Sovereignty is inalienable\n      II   That Sovereignty is indivisible\n     III   Whether the general Will is fallible\n      IV   The Limits of the Sovereign Power\n       V   The Right of Life and Death\n      VI   Law\n     VII   The Legislator\n    VIII   The People\n      IX   The People (_continued_)\n       X   The People (_continued_)\n      XI   The various Systems of Legislation\n     XII   The Division of the Laws",
+      "themes": [
+        "death",
+        "power",
+        "law"
+      ]
+    },
+    "3": {
+      "book": "III",
+      "text": "_Which treats of political laws, that is to say, of the form of\ngovernment._\n\n       I   Government in General\n      II   The constituent Principle in the various Forms of Government\n     III   The Division of Governments\n      IV   Democracy\n       V   Aristocracy\n      VI   Monarchy\n     VII   Mixed Governments\n    VIII   That all Forms of Government do not suit all Countries\n      IX   The Marks of a good Government\n       X   The Abuse of Government and its Tendency to Degenerate\n      XI   The Death of the Body Politic\n     XII   How the Sovereign Authority maintains itself\n    XIII   How the Sovereign Authority maintains itself _(continued_)\n     XIV   How the Sovereign Authority maintains itself _(continued_)\n      XV   Deputies or Representatives\n     XVI   That the Institution of Government is not a Contract\n    XVII   The Institution of Government\n   XVIII   How to check the Usurpations of Government",
+      "themes": [
+        "death",
+        "law"
+      ]
+    },
+    "4": {
+      "book": "IV",
+      "text": "_Which treats further of political laws and sets forth the\nmeans of strengthening the Constitution of the State_.\n\n       I   That the general Will is indestructible\n      II   Voting\n     III   Elections\n      IV   The Roman Comitia\n       V   The Tribunate\n      VI   The Dictatorship\n     VII   The Censorship\n    VIII   Civil Religion\n      IX   Conclusion\n\nA DISCOURSE ON THE ARTS AND SCIENCES\nA DISCOURSE ON THE ORIGIN OF INEQUALITY -- Appendix\nA DISCOURSE ON POLITICAL ECONOMY\n\nTHE SOCIAL CONTRACT\n\nOR\n\nPRINCIPLES OF POLITICAL\n\nRIGHT\n\nF\u0153deris \u00e6quas\n\nDicamus leges. (Vergil, _\u00c6neid_ XI.)\n\nFOREWORD\n\nThis little treatise is part of a longer work which I began years ago\nwithout realising my limitations, and long since abandoned. Of the\nvarious fragments that might have been extracted from what I wrote,\nthis is the most considerable, and, I think, the least unworthy of\nbeing offered to the public. The rest no longer exists.",
+      "themes": [
+        "power",
+        "truth",
+        "law"
+      ]
+    }
+  },
+  "topic_mapping": {
+    "freedom": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "chains": [
+      "1"
+    ],
+    "general_will": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "society": [
+      "1",
+      "2"
+    ],
+    "nature": [
+      "1",
+      "2"
+    ],
+    "democracy": [
+      "2",
+      "3",
+      "4"
+    ],
+    "sovereignty": [
+      "1",
+      "2",
+      "3"
+    ],
+    "law": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "citizen": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "government": [
+      "2",
+      "3"
+    ],
+    "inequality": [
+      "1"
+    ],
+    "contract": [
+      "1",
+      "2"
+    ],
+    "will": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ]
+  }
+}

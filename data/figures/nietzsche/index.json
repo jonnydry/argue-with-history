@@ -1,0 +1,138 @@
+{
+  "parts": {
+    "1": {
+      "part": "I",
+      "text": ":    PREJUDICES OF PHILOSOPHERS",
+      "themes": []
+    },
+    "2": {
+      "part": "II",
+      "text": ":   THE FREE SPIRIT",
+      "themes": [
+        "freedom"
+      ]
+    },
+    "3": {
+      "part": "III",
+      "text": ":  THE RELIGIOUS MOOD",
+      "themes": []
+    },
+    "4": {
+      "part": "IV",
+      "text": ":   APOPHTHEGMS AND INTERLUDES",
+      "themes": []
+    },
+    "5": {
+      "part": "V",
+      "text": ":    THE NATURAL HISTORY OF MORALS",
+      "themes": [
+        "virtue",
+        "nature"
+      ]
+    },
+    "6": {
+      "part": "VI",
+      "text": ":   WE SCHOLARS",
+      "themes": []
+    },
+    "7": {
+      "part": "VII",
+      "text": ":  OUR VIRTUES",
+      "themes": [
+        "virtue"
+      ]
+    },
+    "8": {
+      "part": "VIII",
+      "text": ": PEOPLES AND COUNTRIES",
+      "themes": []
+    },
+    "9": {
+      "part": "IX",
+      "text": ":   WHAT IS NOBLE?\n\n    FROM THE HEIGHTS (POEM TRANSLATED BY L.A. MAGNUS)\n\nPREFACE\n\nSUPPOSING that Truth is a woman--what then? Is there not ground\nfor suspecting that all philosophers, in so far as they have been\ndogmatists, have failed to understand women--that the terrible\nseriousness and clumsy importunity with which they have usually paid\ntheir addresses to Truth, have been unskilled and unseemly methods for\nwinning a woman? Certainly she has never allowed herself to be won; and\nat present every kind of dogma stands with sad and discouraged mien--IF,\nindeed, it stands at all! For there are scoffers who maintain that it\nhas fallen, that all dogma lies on the ground--nay more, that it is at\nits last gasp. But to speak seriously, there are good grounds for hoping\nthat all dogmatizing in philosophy, whatever solemn, whatever conclusive\nand decided airs it has assumed, may have been only a noble puerilism\nand tyronism; and probably the time is at hand when it will be once\nand again understood WHAT has actually sufficed for the basis of such\nimposing and absolute philosophical edifices as the dogmatists have\nhitherto reared: perhaps some popular superstition of immemorial time\n(such as the soul-superstition, which, in the form of subject- and\nego-superstition, has not yet ceased doing mischief): perhaps some\nplay upon words, a deception on the part of grammar, or an\naudacious generalization of very restricted, very personal, very\nhuman--all-too-human facts. The philosophy of the dogmatists, it is to\nbe hoped, was only a promise for thousands of years afterwards, as was\nastrology in still earlier times, in the service of which probably more\nlabour, gold, acuteness, and patience have been spent than on any\nactual science hitherto: we owe to it, and to its \"super-terrestrial\"\npretensions in Asia and Egypt, the grand style of architecture. It seems\nthat in order to inscribe themselves upon the heart of humanity with\neverlasting claims, all great things have first to wander about the\nearth as enormous and awe-inspiring caricatures: dogmatic philosophy has\nbeen a caricature of this kind--for instance, the Vedanta doctrine in\nAsia, and Platonism in Europe. Let us not be ungrateful to it, although\nit must certainly be confessed that the worst, the most tiresome,\nand the most dangerous of errors hitherto has been a dogmatist\nerror--namely, Plato's invention of Pure Spirit and the Good in Itself.\nBut now when it has been surmounted, when Europe, rid of this nightmare",
+      "themes": [
+        "freedom",
+        "power",
+        "truth"
+      ]
+    }
+  },
+  "topic_mapping": {
+    "morality": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "truth": [
+      "1",
+      "2"
+    ],
+    "power": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "9"
+    ],
+    "master": [
+      "1",
+      "2",
+      "9"
+    ],
+    "slave": [
+      "1",
+      "2",
+      "9"
+    ],
+    "will": [
+      "1",
+      "2",
+      "7"
+    ],
+    "meaning": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "values": [
+      "1",
+      "2",
+      "5",
+      "6",
+      "9"
+    ],
+    "religion": [
+      "1",
+      "2",
+      "3"
+    ],
+    "knowledge": [
+      "1",
+      "2"
+    ],
+    "life": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "affirmation": [
+      "2",
+      "11"
+    ]
+  }
+}
