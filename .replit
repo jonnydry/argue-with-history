@@ -1,0 +1,6 @@
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[agent]
+expertMode = true
