@@ -57,7 +57,7 @@ export default function FiguresPage() {
       <header className="border-b border-border">
         <div className="container mx-auto px-6 py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-4">
-            <span className="text-2xl select-none">⚔</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M9.5 6.5L21 18v3h-3L6.5 9.5"/><path d="M11 5l-6 6"/><path d="M8 8L4 4"/><path d="M5 3L3 5"/></svg>
             <h1 className="text-xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
