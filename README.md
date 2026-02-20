@@ -28,8 +28,8 @@ pip install -r requirements.txt
 
 ```bash
 # Backend
-cp .env.example .env
-# Edit .env and add your GROK_API_KEY
+cd apps/api && cp .env.example .env
+# Edit .env and add your GROK_API_KEY and OPENAI_API_KEY
 ```
 
 3. **Start the servers:**
@@ -45,6 +45,10 @@ npm run dev
 ```
 
 4. **Open http://localhost:3000**
+
+## Deployment
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for step-by-step instructions to deploy the API (Railway) and frontend (Vercel).
 
 ## Architecture
 

@@ -1,6 +1,11 @@
+from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+# Always load .env from apps/api/ so keys are found regardless of CWD
+_API_DIR = Path(__file__).resolve().parent.parent.parent
+_ENV_FILE = _API_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -14,7 +19,8 @@ class Settings(BaseSettings):
     allowed_origins: str = ""         # comma-separated extra allowed origins
 
     class Config:
-        env_file = ".env"
+        env_file = str(_ENV_FILE)
+        env_file_encoding = "utf-8"
 
     def get_allowed_origins(self) -> list[str]:
         """Return the full list of CORS-allowed origins."""
