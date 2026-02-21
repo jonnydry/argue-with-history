@@ -16,6 +16,11 @@ import { useDebateStore } from "@/stores/debate-store";
 import { api } from "@/lib/api";
 import { getFigureDebateCount } from "@/lib/progression";
 import type { DebateTopic, FigureInfo } from "@/lib/types";
+import {
+  ERA_CATEGORIES,
+  filterFiguresByEra,
+  type EraCategory,
+} from "@/lib/figures";
 
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
@@ -36,8 +41,15 @@ export default function FiguresPage() {
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(4);
+  const [selectedEra, setSelectedEra] = useState<EraCategory>("All");
   const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
   const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
+
+  const filteredFigures = filterFiguresByEra(figures, selectedEra);
+
+  useEffect(() => {
+    setVisibleCount(4);
+  }, [selectedEra]);
 
   const topicSectionRef = useRef<HTMLDivElement>(null);
   const settingsSectionRef = useRef<HTMLDivElement>(null);
@@ -132,8 +144,24 @@ export default function FiguresPage() {
           </p>
         </div>
 
+        <div className="flex flex-wrap gap-2 mb-6 justify-center sm:justify-start max-w-5xl mx-auto">
+          {ERA_CATEGORIES.map((era) => (
+            <button
+              key={era}
+              onClick={() => setSelectedEra(era)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedEra === era
+                  ? "bg-foreground text-background"
+                  : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/50"
+              }`}
+            >
+              {era}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
-          {figures.slice(0, visibleCount).map((figure) => {
+          {filteredFigures.slice(0, visibleCount).map((figure) => {
             const isSelected = selectedFigure?.id === figure.id;
             const isHighlighted = highlightedFigureId === figure.id;
             return (
@@ -225,7 +253,7 @@ export default function FiguresPage() {
           })}
         </div>
 
-        {figures.length > visibleCount && (
+        {filteredFigures.length > visibleCount && (
           <div className="flex justify-center mb-10 sm:mb-16">
             <Button
               variant="outline"
