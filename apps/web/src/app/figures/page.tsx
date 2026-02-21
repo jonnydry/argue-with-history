@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Swords } from "lucide-react";
@@ -34,6 +34,9 @@ export default function FiguresPage() {
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  const topicSectionRef = useRef<HTMLDivElement>(null);
+  const settingsSectionRef = useRef<HTMLDivElement>(null);
+
   const fetchPreview = async () => {
     if (!selectedFigure || !selectedTopic) return;
     setPreviewLoading(true);
@@ -52,6 +55,18 @@ export default function FiguresPage() {
       fetchFigures();
     }
   }, [figures.length, fetchFigures]);
+
+  useEffect(() => {
+    if (selectedFigure) {
+      topicSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedFigure]);
+
+  useEffect(() => {
+    if (selectedFigure && selectedTopic) {
+      settingsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [selectedFigure, selectedTopic]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
@@ -162,7 +177,7 @@ export default function FiguresPage() {
         </div>
 
         {selectedFigure && (
-          <div className="max-w-3xl mx-auto animate-fade-up">
+          <div ref={topicSectionRef} className="max-w-3xl mx-auto animate-fade-up">
             <div className="mb-8">
               <h3 className="text-2xl font-bold tracking-tight mb-2">
                 SELECT A TOPIC
@@ -217,7 +232,7 @@ export default function FiguresPage() {
         )}
 
         {selectedFigure && selectedTopic && (
-          <div className="max-w-2xl mx-auto animate-fade-up delay-200">
+          <div ref={settingsSectionRef} className="max-w-2xl mx-auto animate-fade-up delay-200">
             <div className="mb-8">
               <h3 className="text-2xl font-bold tracking-tight mb-6">
                 SETTINGS
