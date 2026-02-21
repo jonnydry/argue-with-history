@@ -32,6 +32,7 @@ export default function DebatePageContent() {
 
   const [argument, setArgument] = useState("");
   const [debateStarted, setDebateStarted] = useState(false);
+  const [mobileScoreExpanded, setMobileScoreExpanded] = useState(false);
   const [primer, setPrimer] = useState<{
     position_summary?: string;
     sample_quote?: string | null;
@@ -177,6 +178,264 @@ export default function DebatePageContent() {
       (latestTurn.scores.rebuttal_score ?? 0)
     : 0;
 
+  // Hoist computed values for use in both mobile and desktop renders
+  const claimChecks = latestTurn?.scores && "claim_checks" in latestTurn.scores
+    ? (latestTurn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
+    : undefined;
+  const hasClaimChecks = Array.isArray(claimChecks) && claimChecks.length > 0;
+
+  const scholarPassages = scholarMode
+    ? (currentDebate.turns.length > 0
+        ? currentDebate.turns[currentDebate.turns.length - 1].passages ?? []
+        : openingPassages)
+    : [];
+
+  const tips: string[] = [];
+  if (latestTurn?.scores && !isCompleted) {
+    const s = latestTurn.scores;
+    if ((s.historical_accuracy_score ?? 10) < 6) {
+      tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
+    }
+    if (typeof s.rebuttal_score === "number" && s.rebuttal_score < 6) {
+      tips.push("Tip: Respond directly to a claim they made.");
+    }
+    if ((s.logic_score ?? 10) < 6) {
+      tips.push("Tip: Make your claim clear, then support it with evidence and reasoning.");
+    }
+  }
+
+  const keyClaims = currentDebate.turns.length > 0
+    ? currentDebate.turns[currentDebate.turns.length - 1].key_claims
+    : openingKeyClaims;
+  const hasKeyClaims = keyClaims && keyClaims.length > 0 && selectedFigure;
+
+  const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
+
+  // Reusable score bars renderer
+  const renderScoreBars = (barHeight: string) => (
+    <>
+      <div title={latestTurn?.scores?.logic_reason || undefined}>
+        <div className="flex justify-between text-sm mb-1">
+          <span>LOGIC</span>
+          <span className="font-bold">{latestTurn!.scores!.logic_score}/10</span>
+        </div>
+        <div className={`${barHeight} bg-secondary`}>
+          <div
+            className="h-full bg-foreground transition-all duration-500"
+            style={{ width: `${latestTurn!.scores!.logic_score * 10}%` }}
+          />
+        </div>
+      </div>
+      <div title={latestTurn?.scores?.historical_reason || undefined}>
+        <div className="flex justify-between text-sm mb-1">
+          <span>HISTORICAL</span>
+          <span className="font-bold">{latestTurn!.scores!.historical_accuracy_score}/10</span>
+        </div>
+        <div className={`${barHeight} bg-secondary`}>
+          <div
+            className="h-full bg-foreground transition-all duration-500"
+            style={{ width: `${latestTurn!.scores!.historical_accuracy_score * 10}%` }}
+          />
+        </div>
+      </div>
+      <div title={latestTurn?.scores?.rhetoric_reason || undefined}>
+        <div className="flex justify-between text-sm mb-1">
+          <span>RHETORIC</span>
+          <span className="font-bold">{latestTurn!.scores!.rhetoric_score}/10</span>
+        </div>
+        <div className={`${barHeight} bg-secondary`}>
+          <div
+            className="h-full bg-foreground transition-all duration-500"
+            style={{ width: `${latestTurn!.scores!.rhetoric_score * 10}%` }}
+          />
+        </div>
+      </div>
+      {typeof latestTurn!.scores!.rebuttal_score === "number" && (
+        <div title={latestTurn?.scores?.rebuttal_reason || undefined}>
+          <div className="flex justify-between text-sm mb-1">
+            <span>REBUTTAL</span>
+            <span className="font-bold">{latestTurn!.scores!.rebuttal_score}/10</span>
+          </div>
+          <div className={`${barHeight} bg-secondary`}>
+            <div
+              className="h-full bg-foreground transition-all duration-500"
+              style={{ width: `${latestTurn!.scores!.rebuttal_score * 10}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // Reusable feedback sections renderer
+  const renderFeedbackSections = (collapsible: boolean) => (
+    <>
+      {latestTurn!.scores!.strengths.length > 0 && (
+        collapsible ? (
+          <details className="group/strengths">
+            <summary className="cursor-pointer text-xs text-green-400 list-none flex items-center gap-1">
+              <span className="group-open/strengths:rotate-90 transition-transform">▶</span>
+              STRENGTHS ({latestTurn!.scores!.strengths.length})
+            </summary>
+            <div className="mt-1 p-2 bg-green-900/20 border border-green-800">
+              {latestTurn!.scores!.strengths.map((s, i) => (
+                <p key={i} className="text-sm">+ {s}</p>
+              ))}
+            </div>
+          </details>
+        ) : (
+          <div className="mt-4 p-3 bg-green-900/20 border border-green-800">
+            <p className="text-xs text-green-400 mb-1">STRENGTHS</p>
+            {latestTurn!.scores!.strengths.map((s, i) => (
+              <p key={i} className="text-sm">+ {s}</p>
+            ))}
+          </div>
+        )
+      )}
+      {latestTurn!.scores!.improvements.length > 0 && (
+        collapsible ? (
+          <details className="group/improvements">
+            <summary className="cursor-pointer text-xs text-amber-400 list-none flex items-center gap-1">
+              <span className="group-open/improvements:rotate-90 transition-transform">▶</span>
+              IMPROVEMENTS ({latestTurn!.scores!.improvements.length})
+            </summary>
+            <div className="mt-1 p-2 bg-amber-900/20 border border-amber-800">
+              {latestTurn!.scores!.improvements.map((s, i) => (
+                <p key={i} className="text-sm">~ {s}</p>
+              ))}
+            </div>
+          </details>
+        ) : (
+          <div className="mt-2 p-3 bg-amber-900/20 border border-amber-800">
+            <p className="text-xs text-amber-400 mb-1">IMPROVEMENTS</p>
+            {latestTurn!.scores!.improvements.map((s, i) => (
+              <p key={i} className="text-sm">~ {s}</p>
+            ))}
+          </div>
+        )
+      )}
+      {hasClaimChecks && (
+        collapsible ? (
+          <details className="group/claims">
+            <summary className="cursor-pointer text-xs text-blue-400 list-none flex items-center gap-1">
+              <span className="group-open/claims:rotate-90 transition-transform">▶</span>
+              CLAIM CHECK ({claimChecks!.length})
+            </summary>
+            <div className="mt-1 p-2 bg-blue-900/20 border border-blue-800">
+              {claimChecks!.map((c, i) => (
+                <p
+                  key={i}
+                  className={`text-sm ${
+                    c.type === "accurate" ? "text-green-400"
+                    : c.type === "mischaracterized" ? "text-amber-400"
+                    : "text-muted-foreground"
+                  }`}
+                >
+                  {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
+                  {c.note}
+                </p>
+              ))}
+            </div>
+          </details>
+        ) : (
+          <div className="mt-2 p-3 bg-blue-900/20 border border-blue-800">
+            <p className="text-xs text-blue-400 mb-1">CLAIM CHECK</p>
+            {claimChecks!.map((c, i) => (
+              <p
+                key={i}
+                className={`text-sm ${
+                  c.type === "accurate" ? "text-green-400"
+                  : c.type === "mischaracterized" ? "text-amber-400"
+                  : "text-muted-foreground"
+                }`}
+              >
+                {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
+                {c.note}
+              </p>
+            ))}
+          </div>
+        )
+      )}
+    </>
+  );
+
+  // Reusable helper sections (scholar sources, tips, key claims)
+  const renderHelperSections = () => (
+    <>
+      {scholarPassages.length > 0 && (
+        <div className="mb-4 p-4 bg-secondary/50 border-2 border-border rounded-md">
+          <p className="text-sm font-medium mb-2">SOURCES TO ENGAGE WITH</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Review these passages before responding.
+          </p>
+          <div className="space-y-3 max-h-48 overflow-y-auto">
+            {scholarPassages.map((p, i) => (
+              <div key={i} className="pl-3 border-l-2 border-border">
+                <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">
+                  {p.text_excerpt}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {tips.length > 0 && (
+        <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800 rounded-md">
+          {tips.map((t, i) => (
+            <p key={i} className="text-sm text-amber-200">• {t}</p>
+          ))}
+        </div>
+      )}
+      {hasKeyClaims && (
+        <div className="p-3 bg-secondary/50 border border-border rounded-md">
+          <p className="text-sm font-medium mb-2">
+            {selectedFigure!.name} argues:
+          </p>
+          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 mb-2">
+            {keyClaims!.map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ol>
+          <p className="text-xs text-muted-foreground">
+            How do you respond to these points?
+          </p>
+        </div>
+      )}
+    </>
+  );
+
+  // Reusable learning summary content
+  const renderLearningSummaryContent = () => (
+    <>
+      {learningSummary!.summary && (
+        <p className="text-muted-foreground text-sm">{learningSummary!.summary}</p>
+      )}
+      {(learningSummary as { key_takeaway?: string }).key_takeaway && (
+        <div className="mt-3 p-3 bg-secondary/50 border border-border rounded-md">
+          <p className="text-xs font-medium mb-1">KEY TAKEAWAY</p>
+          <p className="text-sm">{(learningSummary as { key_takeaway: string }).key_takeaway}</p>
+        </div>
+      )}
+      {learningSummary!.suggested_readings && learningSummary!.suggested_readings.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm font-medium mb-2">CONTINUE LEARNING</p>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            {learningSummary!.suggested_readings.map((r, i) => {
+              const rec = r as { title: string; reason: string; source_id?: string };
+              return (
+                <li key={i}>
+                  • {rec.source_id ? `[${rec.source_id}] ` : ""}
+                  {rec.title}: {rec.reason}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
       <header className="border-b border-border">
@@ -202,9 +461,48 @@ export default function DebatePageContent() {
         </div>
       </header>
 
+      {/* Mobile-only compact score bar */}
+      {latestTurn?.scores && (
+        <div className="lg:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+          <div className="container mx-auto px-3 py-2">
+            <button
+              onClick={() => setMobileScoreExpanded(!mobileScoreExpanded)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3 text-sm">
+                <span className="font-bold">SCORE: {totalScore}/{maxScore}</span>
+                <div className="flex gap-2 text-xs text-muted-foreground">
+                  <span>L:{latestTurn.scores.logic_score}</span>
+                  <span>H:{latestTurn.scores.historical_accuracy_score}</span>
+                  <span>R:{latestTurn.scores.rhetoric_score}</span>
+                  {typeof latestTurn.scores.rebuttal_score === "number" && (
+                    <span>Rb:{latestTurn.scores.rebuttal_score}</span>
+                  )}
+                </div>
+              </div>
+              <span className={`transition-transform text-xs ${mobileScoreExpanded ? "rotate-180" : ""}`}>
+                ▼
+              </span>
+            </button>
+            {mobileScoreExpanded && (
+              <div className="pt-2 pb-1 space-y-2 border-t border-border mt-2">
+                {renderScoreBars("h-2")}
+                <div className="border-t border-border pt-2">
+                  <div className="flex justify-between font-bold">
+                    <span>TOTAL</span>
+                    <span>{totalScore}/{maxScore}</span>
+                  </div>
+                </div>
+                {renderFeedbackSections(true)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
-          <div className="lg:col-span-1 order-2 lg:order-1">
+          <div className="hidden lg:block lg:col-span-1 order-2 lg:order-1">
             <Card className="border-2 contrast-border sticky top-4 lg:top-24">
               <CardHeader className="border-b border-border py-3 sm:py-4 px-4 sm:px-6">
                 <CardTitle className="text-base sm:text-lg">SCORE</CardTitle>
@@ -214,109 +512,14 @@ export default function DebatePageContent() {
                   <p className="text-muted-foreground text-sm">{latestTurn.scores_error}</p>
                 ) : latestTurn?.scores ? (
                   <>
-                    <div title={latestTurn.scores.logic_reason || undefined}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>LOGIC</span>
-                        <span className="font-bold">{latestTurn.scores.logic_score}/10</span>
-                      </div>
-                      <div className="h-3 bg-secondary">
-                        <div
-                          className="h-full bg-foreground transition-all duration-500"
-                          style={{ width: `${latestTurn.scores.logic_score * 10}%` }}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div title={latestTurn.scores.historical_reason || undefined}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>HISTORICAL</span>
-                        <span className="font-bold">{latestTurn.scores.historical_accuracy_score}/10</span>
-                      </div>
-                      <div className="h-3 bg-secondary">
-                        <div
-                          className="h-full bg-foreground transition-all duration-500"
-                          style={{ width: `${latestTurn.scores.historical_accuracy_score * 10}%` }}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div title={latestTurn.scores.rhetoric_reason || undefined}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>RHETORIC</span>
-                        <span className="font-bold">{latestTurn.scores.rhetoric_score}/10</span>
-                      </div>
-                      <div className="h-3 bg-secondary">
-                        <div
-                          className="h-full bg-foreground transition-all duration-500"
-                          style={{ width: `${latestTurn.scores.rhetoric_score * 10}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {typeof latestTurn.scores.rebuttal_score === "number" && (
-                      <div title={latestTurn.scores.rebuttal_reason || undefined}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>REBUTTAL</span>
-                          <span className="font-bold">{latestTurn.scores.rebuttal_score}/10</span>
-                        </div>
-                        <div className="h-3 bg-secondary">
-                          <div
-                            className="h-full bg-foreground transition-all duration-500"
-                            style={{ width: `${latestTurn.scores.rebuttal_score * 10}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
+                    {renderScoreBars("h-3")}
                     <div className="border-t border-border pt-4">
                       <div className="flex justify-between font-bold text-lg">
                         <span>TOTAL</span>
                         <span>{totalScore}/{maxScore}</span>
                       </div>
                     </div>
-                    
-                    {latestTurn.scores.strengths.length > 0 && (
-                      <div className="mt-4 p-3 bg-green-900/20 border border-green-800">
-                        <p className="text-xs text-green-400 mb-1">STRENGTHS</p>
-                        {latestTurn.scores.strengths.map((s, i) => (
-                          <p key={i} className="text-sm">+ {s}</p>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {latestTurn.scores.improvements.length > 0 && (
-                      <div className="mt-2 p-3 bg-amber-900/20 border border-amber-800">
-                        <p className="text-xs text-amber-400 mb-1">IMPROVEMENTS</p>
-                        {latestTurn.scores.improvements.map((s, i) => (
-                          <p key={i} className="text-sm">~ {s}</p>
-                        ))}
-                      </div>
-                    )}
-                    {(() => {
-                      const claimChecks = latestTurn.scores && "claim_checks" in latestTurn.scores
-                        ? (latestTurn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
-                        : undefined;
-                      return Array.isArray(claimChecks) && claimChecks.length > 0 ? (
-                      <div className="mt-2 p-3 bg-blue-900/20 border border-blue-800">
-                        <p className="text-xs text-blue-400 mb-1">CLAIM CHECK</p>
-                        {claimChecks.map((c, i) => (
-                          <p
-                            key={i}
-                            className={`text-sm ${
-                              c.type === "accurate"
-                                ? "text-green-400"
-                                : c.type === "mischaracterized"
-                                ? "text-amber-400"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
-                            {c.note}
-                          </p>
-                        ))}
-                      </div>
-                    ) : null;
-                  })()}
+                    {renderFeedbackSections(false)}
                   </>
                 ) : (
                   <p className="text-muted-foreground text-sm">Submit argument for scores</p>
@@ -440,36 +643,25 @@ export default function DebatePageContent() {
                       FINAL SCORE: <span className="font-bold text-foreground">{totalScore}/{maxScore}</span>
                     </p>
                     {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
-                      <div className="mb-6 text-left max-w-xl mx-auto">
-                        <p className="text-sm font-medium mb-2">LEARNING SUMMARY</p>
-                        {learningSummary.summary && (
-                          <p className="text-muted-foreground text-sm">{learningSummary.summary}</p>
-                        )}
-                        {(learningSummary as { key_takeaway?: string }).key_takeaway && (
-                          <div className="mt-3 p-3 bg-secondary/50 border border-border rounded-md">
-                            <p className="text-xs font-medium mb-1">KEY TAKEAWAY</p>
-                            <p className="text-sm">{(learningSummary as { key_takeaway: string }).key_takeaway}</p>
+                      <>
+                        {/* Mobile: collapsible learning summary */}
+                        <details className="lg:hidden mb-4 text-left max-w-xl mx-auto group/learn">
+                          <summary className="cursor-pointer text-sm font-medium list-none flex items-center gap-1">
+                            <span className="group-open/learn:rotate-90 transition-transform">▶</span>
+                            LEARNING SUMMARY
+                          </summary>
+                          <div className="mt-2">
+                            {renderLearningSummaryContent()}
                           </div>
-                        )}
-                        {learningSummary.suggested_readings && learningSummary.suggested_readings.length > 0 && (
-                          <div className="mt-4">
-                            <p className="text-sm font-medium mb-2">CONTINUE LEARNING</p>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {learningSummary.suggested_readings.map((r, i) => {
-                                const rec = r as { title: string; reason: string; source_id?: string };
-                                return (
-                                  <li key={i}>
-                                    • {rec.source_id ? `[${rec.source_id}] ` : ""}
-                                    {rec.title}: {rec.reason}
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
+                        </details>
+                        {/* Desktop: always visible */}
+                        <div className="hidden lg:block mb-6 text-left max-w-xl mx-auto">
+                          <p className="text-sm font-medium mb-2">LEARNING SUMMARY</p>
+                          {renderLearningSummaryContent()}
+                        </div>
+                      </>
                     )}
-                    <div className="flex gap-4 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                       <Link href="/figures">
                         <Button className="bg-foreground text-background btn-press">NEW DEBATE</Button>
                       </Link>
@@ -481,82 +673,27 @@ export default function DebatePageContent() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {scholarMode && (() => {
-                    const passages =
-                      currentDebate.turns.length > 0
-                        ? currentDebate.turns[currentDebate.turns.length - 1].passages ?? []
-                        : openingPassages;
-                    if (passages.length > 0) {
-                      return (
-                        <div className="mb-4 p-4 bg-secondary/50 border-2 border-border rounded-md">
-                          <p className="text-sm font-medium mb-2">SOURCES TO ENGAGE WITH</p>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Review these passages before responding.
-                          </p>
-                          <div className="space-y-3 max-h-48 overflow-y-auto">
-                            {passages.map((p, i) => (
-                              <div key={i} className="pl-3 border-l-2 border-border">
-                                <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">
-                                  {p.text_excerpt}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
+                  {/* Mobile: collapse helpers into one toggle */}
+                  {hasAnyHelper && (
+                    <div className="lg:hidden">
+                      <details className="group/helpers mb-2">
+                        <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
+                          <span className="group-open/helpers:rotate-90 transition-transform">▶</span>
+                          Debate aids
+                          {tips.length > 0 && (
+                            <Badge variant="outline" className="text-xs ml-1 py-0">Tips</Badge>
+                          )}
+                        </summary>
+                        <div className="mt-2 space-y-3">
+                          {renderHelperSections()}
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(() => {
-                    const tips: string[] = [];
-                    if (latestTurn?.scores && !isCompleted) {
-                      const s = latestTurn.scores;
-                      if ((s.historical_accuracy_score ?? 10) < 6) {
-                        tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
-                      }
-                      if (typeof s.rebuttal_score === "number" && s.rebuttal_score < 6) {
-                        tips.push("Tip: Respond directly to a claim they made.");
-                      }
-                      if ((s.logic_score ?? 10) < 6) {
-                        tips.push("Tip: Make your claim clear, then support it with evidence and reasoning.");
-                      }
-                    }
-                    if (tips.length > 0) {
-                      return (
-                        <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800 rounded-md">
-                          {tips.map((t, i) => (
-                            <p key={i} className="text-sm text-amber-200">• {t}</p>
-                          ))}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(() => {
-                    const claims =
-                      currentDebate.turns.length > 0
-                        ? currentDebate.turns[currentDebate.turns.length - 1].key_claims
-                        : openingKeyClaims;
-                    if (claims && claims.length > 0 && selectedFigure) {
-                      return (
-                        <div className="p-3 bg-secondary/50 border border-border rounded-md">
-                          <p className="text-sm font-medium mb-2">
-                            {selectedFigure.name} argues:
-                          </p>
-                          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 mb-2">
-                            {claims.map((c, i) => (
-                              <li key={i}>{c}</li>
-                            ))}
-                          </ol>
-                          <p className="text-xs text-muted-foreground">
-                            How do you respond to these points?
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                      </details>
+                    </div>
+                  )}
+                  {/* Desktop: show helpers expanded */}
+                  <div className="hidden lg:block space-y-4">
+                    {renderHelperSections()}
+                  </div>
                   <details className="group/details mb-2">
                     <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
                       <span className="group-open/details:rotate-90 transition-transform">▶</span>
