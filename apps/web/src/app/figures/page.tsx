@@ -34,7 +34,7 @@ export default function FiguresPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [visibleCount, setVisibleCount] = useState(4);
   const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
   const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
 
@@ -131,7 +131,7 @@ export default function FiguresPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-5xl mx-auto mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
           {figures.slice(0, visibleCount).map((figure) => {
             const isSelected = selectedFigure?.id === figure.id;
             const isHighlighted = highlightedFigureId === figure.id;
@@ -139,17 +139,17 @@ export default function FiguresPage() {
             <Card
               key={figure.id}
               onClick={() => handleFigureClick(figure)}
-              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden ${
+              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden rounded-xl shadow-lg hover:shadow-xl ${
                 isSelected
-                  ? "bg-foreground text-background border-foreground"
+                  ? "bg-foreground text-background border-foreground shadow-lg"
                   : isHighlighted
-                  ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50"
+                  ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50 shadow-lg"
                   : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
               }`}
             >
-              <CardContent className="p-3 sm:p-5">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shrink-0 ${
+              <CardContent className="p-5 sm:p-6">
+                <div className="flex items-start gap-4 sm:gap-5">
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shrink-0 ${
                     isSelected
                       ? "bg-background text-foreground"
                       : isHighlighted
@@ -160,36 +160,36 @@ export default function FiguresPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-sm sm:text-base tracking-tight truncate">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-bold text-base sm:text-lg tracking-tight truncate">
                         {figure.name}
                       </h3>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className={`text-xs ${
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className={`text-xs sm:text-sm ${
                         isSelected ? "text-background/70" : isHighlighted ? "text-foreground/80" : "text-muted-foreground"
                       }`}>
                         {figure.era}
                       </p>
                       {getFigureDebateCount(figure.id) > 0 && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-foreground/20 text-foreground/90">
+                        <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-foreground/20 text-foreground/90">
                           {getFigureDebateCount(figure.id)} debate{getFigureDebateCount(figure.id) !== 1 ? "s" : ""}
                         </span>
                       )}
                     </div>
 
-                    <p className={`text-xs line-clamp-2 mb-3 leading-relaxed ${
+                    <p className={`text-sm line-clamp-3 mb-4 leading-relaxed ${
                       isSelected ? "text-background/80" : isHighlighted ? "text-foreground/90" : "text-muted-foreground"
                     }`}>
                       {figure.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-1.5">
-                      {figure.traits.slice(0, 3).map((trait) => (
+                    <div className="flex flex-wrap gap-2">
+                      {figure.traits.slice(0, 4).map((trait) => (
                         <span
                           key={trait}
-                          className={`px-2 py-0.5 text-[10px] rounded-full ${
+                          className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-full ${
                             isSelected
                               ? "bg-background/20 text-background"
                               : isHighlighted
@@ -203,7 +203,7 @@ export default function FiguresPage() {
                     </div>
                   </div>
 
-                  <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
+                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
                     isSelected
                       ? "border-background bg-background"
                       : isHighlighted
@@ -229,7 +229,7 @@ export default function FiguresPage() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setVisibleCount((c) => c + 8)}
+              onClick={() => setVisibleCount((c) => c + 4)}
               className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto"
             >
               <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
