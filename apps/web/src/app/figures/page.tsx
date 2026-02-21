@@ -35,6 +35,8 @@ export default function FiguresPage() {
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
+  const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
+  const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
 
   const topicSectionRef = useRef<HTMLDivElement>(null);
   const settingsSectionRef = useRef<HTMLDivElement>(null);
@@ -76,6 +78,29 @@ export default function FiguresPage() {
     }
   }, [selectedFigure?.id, selectedTopic?.id, prefetchTopicPrimer]);
 
+  const handleFigureClick = (figure: (typeof figures)[0]) => {
+    if (selectedFigure?.id === figure.id) return;
+    if (highlightedFigureId === figure.id) {
+      setHighlightedFigureId(null);
+      setHighlightedTopicId(null);
+      selectFigure(figure);
+    } else {
+      setHighlightedFigureId(figure.id);
+      setHighlightedTopicId(null);
+    }
+  };
+
+  const handleTopicClick = (topic: (typeof selectedFigure)["topics"][0]) => {
+    if (!selectedFigure) return;
+    if (selectedTopic?.id === topic.id) return;
+    if (highlightedTopicId === topic.id) {
+      setHighlightedTopicId(null);
+      selectTopic(topic);
+    } else {
+      setHighlightedTopicId(topic.id);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
       <header className="border-b border-border">
@@ -107,21 +132,28 @@ export default function FiguresPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-5xl mx-auto mb-6">
-          {figures.slice(0, visibleCount).map((figure) => (
+          {figures.slice(0, visibleCount).map((figure) => {
+            const isSelected = selectedFigure?.id === figure.id;
+            const isHighlighted = highlightedFigureId === figure.id;
+            return (
             <Card
               key={figure.id}
-              onClick={() => selectFigure(figure)}
+              onClick={() => handleFigureClick(figure)}
               className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden ${
-                selectedFigure?.id === figure.id
+                isSelected
                   ? "bg-foreground text-background border-foreground"
+                  : isHighlighted
+                  ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50"
                   : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
               }`}
             >
               <CardContent className="p-3 sm:p-5">
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shrink-0 ${
-                    selectedFigure?.id === figure.id
+                    isSelected
                       ? "bg-background text-foreground"
+                      : isHighlighted
+                      ? "bg-foreground/20 text-foreground"
                       : "bg-foreground text-background"
                   }`}>
                     {figure.name.charAt(0)}
@@ -136,7 +168,7 @@ export default function FiguresPage() {
 
                     <div className="flex items-center gap-2 mb-1">
                       <p className={`text-xs ${
-                        selectedFigure?.id === figure.id ? "text-background/70" : "text-muted-foreground"
+                        isSelected ? "text-background/70" : isHighlighted ? "text-foreground/80" : "text-muted-foreground"
                       }`}>
                         {figure.era}
                       </p>
@@ -148,7 +180,7 @@ export default function FiguresPage() {
                     </div>
 
                     <p className={`text-xs line-clamp-2 mb-3 leading-relaxed ${
-                      selectedFigure?.id === figure.id ? "text-background/80" : "text-muted-foreground"
+                      isSelected ? "text-background/80" : isHighlighted ? "text-foreground/90" : "text-muted-foreground"
                     }`}>
                       {figure.description}
                     </p>
@@ -158,8 +190,10 @@ export default function FiguresPage() {
                         <span
                           key={trait}
                           className={`px-2 py-0.5 text-[10px] rounded-full ${
-                            selectedFigure?.id === figure.id
+                            isSelected
                               ? "bg-background/20 text-background"
+                              : isHighlighted
+                              ? "bg-foreground/20 text-foreground"
                               : "bg-foreground/10 text-foreground/80"
                           }`}
                         >
@@ -170,18 +204,24 @@ export default function FiguresPage() {
                   </div>
 
                   <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
-                    selectedFigure?.id === figure.id
+                    isSelected
                       ? "border-background bg-background"
+                      : isHighlighted
+                      ? "border-foreground/60"
                       : "border-foreground/30"
                   }`}>
-                    {selectedFigure?.id === figure.id && (
+                    {isSelected && (
                       <span className="text-foreground text-xs">✓</span>
+                    )}
+                    {isHighlighted && !isSelected && (
+                      <span className="text-foreground/60 text-xs">·</span>
                     )}
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
+          );
+          })}
         </div>
 
         {figures.length > visibleCount && (
@@ -206,48 +246,61 @@ export default function FiguresPage() {
             </div>
             
             <div className="grid sm:grid-cols-2 gap-3 mb-10">
-              {selectedFigure.topics.map((topic) => (
+              {selectedFigure.topics.map((topic) => {
+                const isTopicSelected = selectedTopic?.id === topic.id;
+                const isTopicHighlighted = highlightedTopicId === topic.id;
+                return (
                 <Card
                   key={topic.id}
-                  onClick={() => selectTopic(topic)}
+                  onClick={() => handleTopicClick(topic)}
                   className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] overflow-hidden ${
-                    selectedTopic?.id === topic.id
+                    isTopicSelected
                       ? "bg-foreground text-background border-foreground"
+                      : isTopicHighlighted
+                      ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50"
                       : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
                   }`}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        selectedTopic?.id === topic.id
+                        isTopicSelected
                           ? "bg-background text-foreground"
+                          : isTopicHighlighted
+                          ? "bg-foreground/20 text-foreground"
                           : "bg-foreground/10 text-foreground"
                       }`}>
                         {selectedFigure.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className={`font-semibold text-sm mb-1 ${selectedTopic?.id === topic.id ? "" : ""}`}>
+                        <h4 className="font-semibold text-sm mb-1">
                           {topic.title}
                         </h4>
                         {topic.description && (
-                          <p className={`text-xs line-clamp-2 ${selectedTopic?.id === topic.id ? "text-background/70" : "text-muted-foreground"}`}>
+                          <p className={`text-xs line-clamp-2 ${isTopicSelected ? "text-background/70" : isTopicHighlighted ? "text-foreground/90" : "text-muted-foreground"}`}>
                             {topic.description}
                           </p>
                         )}
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                        selectedTopic?.id === topic.id
+                        isTopicSelected
                           ? "border-background bg-background"
+                          : isTopicHighlighted
+                          ? "border-foreground/60"
                           : "border-foreground/30"
                       }`}>
-                        {selectedTopic?.id === topic.id && (
+                        {isTopicSelected && (
                           <span className="text-foreground text-xs">✓</span>
+                        )}
+                        {isTopicHighlighted && !isTopicSelected && (
+                          <span className="text-foreground/60 text-xs">·</span>
                         )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              );
+              })}
             </div>
           </div>
         )}
