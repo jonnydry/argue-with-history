@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "https://*.picard.replit.dev",
     "https://*.repl.co",
     "0ebcdb7e-dc5d-4c79-97bc-61716173a5f5-00-2gbudx0ckw11t.picard.replit.dev",
+    ".replit.dev",
+    ".picard.replit.dev",
   ],
   async rewrites() {
     return [
