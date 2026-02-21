@@ -279,7 +279,7 @@ export default function Home() {
 
       <footer className="border-t border-border py-6 sm:py-8">
         <div className="container mx-auto px-4 sm:px-6 text-center text-muted-foreground text-xs sm:text-sm">
-          <p>Built with Next.js • FastAPI • Grok</p>
+          <p>Built with Next.js • FastAPI • Grok • Replit</p>
         </div>
       </footer>
     </div>
