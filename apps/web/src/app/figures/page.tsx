@@ -15,6 +15,7 @@ import {
 import { useDebateStore } from "@/stores/debate-store";
 import { api } from "@/lib/api";
 import { getFigureDebateCount } from "@/lib/progression";
+import type { DebateTopic, FigureInfo } from "@/lib/types";
 
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
@@ -78,7 +79,7 @@ export default function FiguresPage() {
     }
   }, [selectedFigure?.id, selectedTopic?.id, prefetchTopicPrimer]);
 
-  const handleFigureClick = (figure: (typeof figures)[0]) => {
+  const handleFigureClick = (figure: FigureInfo) => {
     if (selectedFigure?.id === figure.id) return;
     if (highlightedFigureId === figure.id) {
       setHighlightedFigureId(null);
@@ -90,7 +91,7 @@ export default function FiguresPage() {
     }
   };
 
-  const handleTopicClick = (topic: (typeof selectedFigure)["topics"][0]) => {
+  const handleTopicClick = (topic: DebateTopic) => {
     if (!selectedFigure) return;
     if (selectedTopic?.id === topic.id) return;
     if (highlightedTopicId === topic.id) {
@@ -149,7 +150,7 @@ export default function FiguresPage() {
             >
               <CardContent className="p-5 sm:p-6">
                 <div className="flex items-start gap-4 sm:gap-5">
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-bold text-lg sm:text-xl shrink-0 ${
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-blackletter font-bold text-lg sm:text-xl shrink-0 ${
                     isSelected
                       ? "bg-background text-foreground"
                       : isHighlighted
@@ -263,7 +264,7 @@ export default function FiguresPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-blackletter text-xs font-bold shrink-0 ${
                         isTopicSelected
                           ? "bg-background text-foreground"
                           : isTopicHighlighted
