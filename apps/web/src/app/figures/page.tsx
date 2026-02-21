@@ -33,6 +33,7 @@ export default function FiguresPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   const topicSectionRef = useRef<HTMLDivElement>(null);
   const settingsSectionRef = useRef<HTMLDivElement>(null);
@@ -98,8 +99,8 @@ export default function FiguresPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-5xl mx-auto mb-10 sm:mb-16">
-          {figures.map((figure) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-5xl mx-auto mb-6">
+          {figures.slice(0, visibleCount).map((figure) => (
             <Card
               key={figure.id}
               onClick={() => selectFigure(figure)}
@@ -175,6 +176,19 @@ export default function FiguresPage() {
             </Card>
           ))}
         </div>
+
+        {figures.length > visibleCount && (
+          <div className="flex justify-center mb-10 sm:mb-16">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount((c) => c + 8)}
+              className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto"
+            >
+              <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
+            </Button>
+          </div>
+        )}
 
         {selectedFigure && (
           <div ref={topicSectionRef} className="max-w-3xl mx-auto animate-fade-up">
