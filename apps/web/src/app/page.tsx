@@ -61,28 +61,28 @@ function FigureCard({ figure, index }: { figure: FigureInfo; index: number }) {
     <Card 
       className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer group overflow-hidden"
     >
-      <CardContent className="p-5">
+      <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-2xl shrink-0">
+          <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-3xl shrink-0">
             {figure.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-base tracking-tight truncate">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="font-bold text-lg tracking-tight truncate">
                 {figure.name}
               </h3>
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider shrink-0">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider shrink-0">
                 {figure.era.split('(')[0].trim()}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-2.5 leading-relaxed">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
               {figure.description}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {figure.traits.slice(0, 2).map((trait) => (
                 <span 
                   key={trait} 
-                  className="px-2.5 py-0.5 bg-foreground/10 text-[11px] rounded-full text-foreground/80"
+                  className="px-3 py-1 bg-foreground/10 text-xs rounded-full text-foreground/80"
                 >
                   {trait}
                 </span>
