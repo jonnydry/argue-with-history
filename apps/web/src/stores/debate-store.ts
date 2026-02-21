@@ -267,8 +267,6 @@ export const useDebateStore = create<DebateStore>()(
       partialize: (state) => ({
         figures: state.figures,
         figuresLastFetched: state.figuresLastFetched,
-        selectedFigure: state.selectedFigure,
-        selectedTopic: state.selectedTopic,
         currentDebate: state.currentDebate,
         debateMode: state.debateMode,
         maxTurns: state.maxTurns,
