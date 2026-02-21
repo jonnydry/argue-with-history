@@ -184,8 +184,8 @@ export default function Home() {
                 <span className="underline-thick decoration-foreground">DEFEAT IT.</span>
               </h2>
               <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-8 sm:mb-12 leading-relaxed">
-                Not a spectator sport—you argue. The figure hits back. You must respond.
-                Learn their perspective by engaging with it, not watching.
+                Not a spectator sport. Combat the world&apos;s most infamous philosophers and thinkers in your own words. Your arguments will be judged. Increase your understanding, challenge your assumptions, enter the arena.
+                <Swords size={20} className="inline-block ml-2 text-foreground/50 align-middle" />
               </p>
               <Link href="/figures">
                 <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
