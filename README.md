@@ -1,6 +1,6 @@
 # Argue With History
 
-Debate simulator: You vs. Historical Figures using their actual writings.
+Debate simulator: You vs. Historical Figures using their actual writings. Select a philosopher, pick a topic, and argue—the AI responds in character, grounded in their works.
 
 ## Quick Start
 
@@ -8,7 +8,8 @@ Debate simulator: You vs. Historical Figures using their actual writings.
 
 - Node.js 18+
 - Python 3.10+
-- Grok API key
+- Grok API key (xAI)
+- OpenAI API key (optional, for semantic search; falls back to keyword matching if not set)
 
 ### Setup
 
@@ -29,7 +30,8 @@ pip install -r requirements.txt
 ```bash
 # Backend
 cd apps/api && cp .env.example .env
-# Edit .env and add your GROK_API_KEY and OPENAI_API_KEY
+# Edit .env and add your GROK_API_KEY (required)
+# Add OPENAI_API_KEY for semantic retrieval (optional)
 ```
 
 3. **Start the servers:**
@@ -53,61 +55,69 @@ See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for step-by-step instructions to deploy
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     FRONTEND (Next.js)                      │
-│  - Landing page with figure selection                       │
-│  - Debate arena with real-time scoring                      │
-│  - localStorage persistence                                  │
-└────────────────────┬────────────────────────────────────────┘
-                     │ REST API
-┌────────────────────▼────────────────────────────────────────┐
-│                    BACKEND (FastAPI)                        │
-│  - Debate orchestration                                      │
-│  - Chapter/dialogue retrieval (file-based, no vector DB)    │
-│  - Scoring engine (LLM-as-judge)                            │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-┌────────────────────▼────────────────────────────────────────┐
-│                    AI LAYER (Grok API)                      │
-│  - Historical figure personas                                │
-│  - Response generation with source grounding                 │
-│  - Argument scoring                                          │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     FRONTEND (Next.js 16)                        │
+│  - Landing page with animated figure carousel                     │
+│  - Figures page: era filtering, two-tap selection, auto-scroll    │
+│  - Debate arena with real-time scoring                           │
+│  - Zustand store with persisted state                            │
+└────────────────────────────┬────────────────────────────────────┘
+                              │ REST API
+┌─────────────────────────────▼────────────────────────────────────┐
+│                    BACKEND (FastAPI)                              │
+│  - Debate orchestration                                           │
+│  - Semantic retrieval (OpenAI embeddings) or keyword fallback    │
+│  - File-based JSON cache, no vector DB                           │
+│  - GZip compression, rate limiting                                │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │
+┌─────────────────────────────▼────────────────────────────────────┐
+│                    AI LAYER (xAI Grok API)                        │
+│  - Model: grok-4-1-fast-non-reasoning                            │
+│  - Historical figure personas                                     │
+│  - Response generation with source grounding                      │
+│  - Argument scoring (logic, rhetoric, historical accuracy)        │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Historical Figures
 
-### Machiavelli
-- **Works:** The Prince (26 chapters)
-- **Topics:** Fear vs Love, Power, Virtue, Promises, Generosity
-- **Style:** Pragmatic, cynical, authoritative
+30+ philosophers and thinkers across five eras:
 
-### Socrates
-- **Works:** Apology, Crito, Euthyphro, Phaedo
-- **Topics:** Justice, Truth, Death, Civil Disobedience, Virtue
-- **Style:** Questioning, ironic, dialectical
+| Era | Figures |
+|-----|---------|
+| Classical | Socrates, Plato, Aristotle, Cicero, Lucretius, Seneca |
+| Roman Empire | Epictetus, Marcus Aurelius |
+| Renaissance / Early Modern | Machiavelli, Hobbes, Locke, Descartes, Spinoza, Leibniz |
+| Enlightenment | Hume, Kant, Rousseau, Voltaire, Paine, Burke, Wollstonecraft |
+| 19th–20th Century | Nietzsche, Marx, Mill, Thoreau, Douglass, Emerson, DuBois, Darwin, James, Tocqueville, Russell |
+
+Each figure has 5 debate topics and source material drawn from public-domain texts (Project Gutenberg and similar).
 
 ## API Endpoints
 
 ```
-GET  /figures                  # List all figures
-GET  /figures/{id}             # Get figure details
-GET  /figures/{id}/topics      # Get debate topics
+GET  /figures                          # List all figures
+GET  /figures/{id}                     # Get figure details
+GET  /figures/{id}/topics              # Get debate topics
+GET  /figures/{id}/topics/{tid}/preview  # Preview passages for a topic
+GET  /figures/{id}/topics/{tid}/primer  # Position primer (AI-generated)
 
-POST /debate/start             # Start new debate
-POST /debate/turn              # Submit argument
-GET  /debate/{id}              # Get debate state
-POST /debate/{id}/end          # End debate
+POST /debate/start                     # Start new debate
+POST /debate/turn                      # Submit argument
+GET  /debate/{id}                      # Get debate state
+POST /debate/{id}/end                  # End debate
 ```
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Next.js 15, Tailwind CSS, shadcn/ui, Zustand |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, Zustand |
 | Backend | FastAPI, Python 3.10+ |
-| AI | Grok-2 (xAI) |
-| Data | Project Gutenberg texts, processed JSON |
+| AI | Grok 4 (grok-4-1-fast-non-reasoning, xAI) |
+| Embeddings | OpenAI text-embedding-3-small (optional) |
+| Data | Processed JSON from public-domain texts |
 
 ## Project Structure
 
@@ -116,22 +126,23 @@ argue-with-history/
 ├── apps/
 │   ├── web/                    # Next.js frontend
 │   │   └── src/
-│   │       ├── app/           # Pages
-│   │       ├── components/    # UI components
-│   │       ├── lib/           # API client, types
-│   │       └── stores/        # Zustand stores
+│   │       ├── app/            # Pages (home, figures, debate)
+│   │       ├── components/     # UI components
+│   │       ├── lib/            # API client, types, era filtering
+│   │       └── stores/         # Zustand (debate store)
 │   │
 │   └── api/                    # FastAPI backend
 │       └── src/
-│           ├── routers/       # API endpoints
-│           ├── services/      # Business logic
-│           ├── models/        # Data models
-│           └── core/          # Config
+│           ├── routers/        # figures, debate
+│           ├── services/       # grok, retrieval, embedding, persistence
+│           ├── models/         # schemas, figures data
+│           └── core/           # config, rate limiter
 │
 ├── data/
-│   └── figures/
-│       ├── machiavelli/       # The Prince
-│       └── socrates/          # Plato's Dialogues
+│   └── figures/                # Per-figure JSON indexes
+│       ├── machiavelli/
+│       ├── socrates/
+│       └── ...
 │
 └── README.md
 ```
@@ -144,6 +155,7 @@ argue-with-history/
 2. Add persona prompt to `apps/api/src/services/prompts.py`
 3. Download and process texts from Project Gutenberg
 4. Create retrieval logic in `apps/api/src/services/retrieval_service.py`
+5. Add JSON index under `data/figures/{figure_id}/`
 
 ### Customizing Personas
 
@@ -159,4 +171,4 @@ MIT
 ## Credits
 
 - Historical texts from [Project Gutenberg](https://gutenberg.org)
-- Built with Next.js, FastAPI, and Grok AI
+- Built with Next.js, FastAPI, and Grok AI (xAI)
