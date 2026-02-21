@@ -146,7 +146,8 @@ export default function Home() {
     fetchFigures();
   }, [fetchFigures]);
 
-  const scrollFigures = figures.length > 0 ? [...figures, ...figures] : [];
+  const scrollFigures =
+    figures.length > 0 ? [...figures.slice(0, 6), ...figures.slice(0, 6)] : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">

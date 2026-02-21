@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from typing import Dict
+import os
 import uuid
 import time
 import asyncio
@@ -62,7 +63,12 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
     if not topic_title:
         raise HTTPException(status_code=400, detail="Invalid topic ID")
 
-    context = retrieval_service.get_context(body.figure.value, topic_title, "")
+    if os.environ.get("REPL_ID"):
+        context = retrieval_service.get_context(body.figure.value, topic_title, "")
+    else:
+        context = await asyncio.to_thread(
+            retrieval_service.get_context, body.figure.value, topic_title, ""
+        )
     persona_prompt = get_persona_prompt(body.figure.value, body.topic_id)
 
     try:
@@ -146,11 +152,17 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
     figure_info = FIGURES_DATA[debate.figure]
     persona_prompt = get_persona_prompt(debate.figure.value, getattr(debate, "topic_id", None))
 
-    context = retrieval_service.get_context(
-        debate.figure.value,
-        debate.topic,
-        request.argument,
-    )
+    if os.environ.get("REPL_ID"):
+        context = retrieval_service.get_context(
+            debate.figure.value, debate.topic, request.argument
+        )
+    else:
+        context = await asyncio.to_thread(
+            retrieval_service.get_context,
+            debate.figure.value,
+            debate.topic,
+            request.argument,
+        )
 
     debate_history = []
     for turn in debate.turns:

@@ -1,8 +1,46 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { DebateState, FigureInfo, DebateTopic, Figure, Passage } from "@/lib/types";
 import { api } from "@/lib/api";
 import { recordDebateComplete } from "@/lib/progression";
+
+function createDebouncedStorage(
+  base: Storage | null,
+  delayMs: number
+): { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void; removeItem: (k: string) => void } {
+  if (!base) {
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    };
+  }
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  let pending: { key: string; value: string } | null = null;
+  const flush = () => {
+    if (pending) {
+      base.setItem(pending.key, pending.value);
+      pending = null;
+    }
+    timeout = null;
+  };
+  return {
+    getItem: (k) => base.getItem(k),
+    setItem: (k, v) => {
+      pending = { key: k, value: v };
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(flush, delayMs);
+    },
+    removeItem: (k) => {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      pending = null;
+      base.removeItem(k);
+    },
+  };
+}
 
 interface DebateStore {
   figures: FigureInfo[];
@@ -14,6 +52,8 @@ interface DebateStore {
   debateSources: string[];
   openingPassages: Passage[];
   learningSummary: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } | null;
+  topicPrimer: { position_summary?: string; sample_quote?: string | null; user_task?: string } | null;
+  topicPrimerKey: string | null;
   debateMode: "structured" | "freeform";
   maxTurns: number;
   structuredInput: boolean;
@@ -23,6 +63,7 @@ interface DebateStore {
   figuresLastFetched: number | null;
 
   fetchFigures: () => Promise<void>;
+  prefetchTopicPrimer: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
   setDebateMode: (mode: "structured" | "freeform") => void;
@@ -50,6 +91,8 @@ export const useDebateStore = create<DebateStore>()(
       debateSources: [],
       openingPassages: [],
       learningSummary: null,
+      topicPrimer: null,
+      topicPrimerKey: null,
       debateMode: "structured",
       maxTurns: 3,
       structuredInput: false,
@@ -89,11 +132,22 @@ export const useDebateStore = create<DebateStore>()(
       },
 
       selectFigure: (figure) => {
-        set({ selectedFigure: figure, selectedTopic: null });
+        set({ selectedFigure: figure, selectedTopic: null, topicPrimer: null, topicPrimerKey: null });
       },
 
       selectTopic: (topic) => {
         set({ selectedTopic: topic });
+      },
+
+      prefetchTopicPrimer: () => {
+        const { selectedFigure, selectedTopic } = get();
+        if (!selectedFigure || !selectedTopic) return;
+        const key = `${selectedFigure.id}:${selectedTopic.id}`;
+        if (get().topicPrimerKey === key) return;
+        api.figures
+          .getTopicPrimer(selectedFigure.id, selectedTopic.id)
+          .then((primer) => set({ topicPrimer: primer, topicPrimerKey: key }))
+          .catch(() => set({ topicPrimer: null, topicPrimerKey: null }));
       },
 
       setDebateMode: (mode) => {
@@ -194,6 +248,8 @@ export const useDebateStore = create<DebateStore>()(
           debateSources: [],
           openingPassages: [],
           learningSummary: null,
+          topicPrimer: null,
+          topicPrimerKey: null,
           error: null,
         });
       },
@@ -202,6 +258,12 @@ export const useDebateStore = create<DebateStore>()(
     }),
     {
       name: "argue-with-history",
+      storage: createJSONStorage(() =>
+        createDebouncedStorage(
+          typeof window !== "undefined" ? window.localStorage : null,
+          400
+        )
+      ),
       partialize: (state) => ({
         figures: state.figures,
         figuresLastFetched: state.figuresLastFetched,

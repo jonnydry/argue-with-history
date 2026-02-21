@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+import os
+import asyncio
 from typing import Dict
 from ..models.figures import FIGURES_DATA, Figure
 from ..models.schemas import FigureInfo
@@ -53,7 +55,12 @@ async def get_topic_preview(figure_id: str, topic_id: str) -> Dict:
     if not topic_title:
         raise HTTPException(status_code=404, detail=f"Topic '{topic_id}' not found")
 
-    context = retrieval_service.get_context(figure_id, topic_title, "")
+    if os.environ.get("REPL_ID"):
+        context = retrieval_service.get_context(figure_id, topic_title, "")
+    else:
+        context = await asyncio.to_thread(
+            retrieval_service.get_context, figure_id, topic_title, ""
+        )
     return {
         "passages": context.get("passages", []),
         "sources": context.get("sources", []),
@@ -77,7 +84,12 @@ async def get_topic_primer(figure_id: str, topic_id: str) -> Dict:
     if not topic_title:
         raise HTTPException(status_code=404, detail=f"Topic '{topic_id}' not found")
 
-    context = retrieval_service.get_context(figure_id, topic_title, "")
+    if os.environ.get("REPL_ID"):
+        context = retrieval_service.get_context(figure_id, topic_title, "")
+    else:
+        context = await asyncio.to_thread(
+            retrieval_service.get_context, figure_id, topic_title, ""
+        )
     passages = context.get("passages", [])
     primer = await grok_service.generate_position_primer(
         info.name, topic_title, passages

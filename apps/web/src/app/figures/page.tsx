@@ -23,6 +23,7 @@ export default function FiguresPage() {
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
   const selectTopic = useDebateStore((s) => s.selectTopic);
   const selectedTopic = useDebateStore((s) => s.selectedTopic);
+  const prefetchTopicPrimer = useDebateStore((s) => s.prefetchTopicPrimer);
   const debateMode = useDebateStore((s) => s.debateMode);
   const setDebateMode = useDebateStore((s) => s.setDebateMode);
   const maxTurns = useDebateStore((s) => s.maxTurns);
@@ -68,6 +69,12 @@ export default function FiguresPage() {
       settingsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [selectedFigure, selectedTopic]);
+
+  useEffect(() => {
+    if (selectedFigure && selectedTopic) {
+      prefetchTopicPrimer();
+    }
+  }, [selectedFigure?.id, selectedTopic?.id, prefetchTopicPrimer]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
