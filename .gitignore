@@ -56,3 +56,7 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+.agent_state_main.bin
+repl_state.bin
+.upm/
+.pythonlibs/
