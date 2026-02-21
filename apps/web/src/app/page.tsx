@@ -63,7 +63,7 @@ function FigureCard({ figure, index }: { figure: FigureInfo; index: number }) {
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background font-bold text-sm shrink-0">
+          <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-lg shrink-0">
             {figure.name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
