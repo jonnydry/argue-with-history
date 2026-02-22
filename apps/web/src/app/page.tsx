@@ -181,10 +181,10 @@ export default function Home() {
       </header>
 
       <main>
-        <div className="relative w-full h-[120px] sm:h-[180px] md:h-[220px] overflow-hidden">
+        <div className="relative w-full h-[220px] sm:h-[320px] md:h-[400px] overflow-hidden bg-black">
           <video
             src="/splash.mp4"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             autoPlay
             loop
             muted
