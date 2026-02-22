@@ -74,6 +74,7 @@ interface DebateStore {
   submitArgument: (argument: string) => Promise<void>;
   endDebate: () => Promise<void>;
   reset: () => void;
+  clearStaleDebateIfMismatch: () => void;
   clearError: () => void;
 }
 
@@ -252,6 +253,25 @@ export const useDebateStore = create<DebateStore>()(
           topicPrimerKey: null,
           error: null,
         });
+      },
+
+      clearStaleDebateIfMismatch: () => {
+        const { currentDebate, selectedFigure, selectedTopic } = get();
+        if (!currentDebate || !selectedFigure || !selectedTopic) return;
+        const figureMatches = currentDebate.figure === selectedFigure.id;
+        const topicMatches =
+          (currentDebate as { topic_id?: string }).topic_id === selectedTopic.id ||
+          currentDebate.topic === selectedTopic.title;
+        if (!figureMatches || !topicMatches) {
+          set({
+            currentDebate: null,
+            openingStatement: null,
+            openingKeyClaims: [],
+            debateSources: [],
+            openingPassages: [],
+            learningSummary: null,
+          });
+        }
       },
 
       clearError: () => set({ error: null }),

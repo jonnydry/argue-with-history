@@ -33,6 +33,7 @@ export default function DebatePageContent() {
   const submitArgument = useDebateStore((s) => s.submitArgument);
   const endDebate = useDebateStore((s) => s.endDebate);
   const reset = useDebateStore((s) => s.reset);
+  const clearStaleDebateIfMismatch = useDebateStore((s) => s.clearStaleDebateIfMismatch);
   const learningSummary = useDebateStore((s) => s.learningSummary);
   const topicPrimer = useDebateStore((s) => s.topicPrimer);
   const topicPrimerKey = useDebateStore((s) => s.topicPrimerKey);
@@ -51,6 +52,11 @@ export default function DebatePageContent() {
     topicPrimer && topicPrimerKey && selectedFigure && selectedTopic && topicPrimerKey === `${selectedFigure.id}:${selectedTopic.id}`
       ? topicPrimer
       : primer;
+
+  // Clear previous debate when selected figure/topic no longer matches (e.g. user picked new opponent on /figures)
+  useEffect(() => {
+    clearStaleDebateIfMismatch();
+  }, [currentDebate, selectedFigure?.id, selectedTopic?.id, clearStaleDebateIfMismatch]);
 
   useEffect(() => {
     if (currentDebate && currentDebate.turns.length > 0) {
