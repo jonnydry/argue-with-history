@@ -245,6 +245,38 @@
   animation-play-state: paused;
 }
 
+/* Debate page: manuscript / arena aesthetic */
+.debate-manuscript {
+  position: relative;
+}
+
+.debate-manuscript::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(251, 191, 36, 0.15), transparent);
+  pointer-events: none;
+}
+
+.debate-turn-you {
+  border-left: 3px solid rgba(250, 250, 250, 0.15);
+}
+
+.debate-turn-opponent {
+  border-left: 3px solid rgba(251, 191, 36, 0.4);
+}
+
+.debate-score-accent {
+  border-left: 3px solid rgba(251, 191, 36, 0.6);
+}
+
+.debate-arena-header {
+  background: linear-gradient(180deg, rgba(24, 24, 27, 0.6) 0%, transparent 100%);
+}
+
 /* Scrolling card enhancements */
 .line-clamp-2 {
   display: -webkit-box;

@@ -227,52 +227,54 @@ export default function DebatePageContent() {
     const historical = toScore(latestTurn!.scores!.historical_accuracy_score);
     const rhetoric = toScore(latestTurn!.scores!.rhetoric_score);
     const rebuttal = toScore(latestTurn!.scores!.rebuttal_score);
+    const barFill = (score: number) =>
+      score >= 8 ? "bg-accent" : "bg-foreground";
     return (
       <>
         <div title={latestTurn?.scores?.logic_reason || undefined}>
           <div className="flex justify-between text-sm mb-1">
-            <span>LOGIC</span>
-            <span className="font-bold">{logic}/10</span>
+            <span className="text-muted-foreground uppercase text-xs tracking-wider">Logic</span>
+            <span className="font-bold tabular-nums">{logic}/10</span>
           </div>
-          <div className={`${barHeight} bg-secondary`}>
+          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
             <div
-              className="h-full bg-foreground transition-all duration-500"
+              className={`h-full ${barFill(logic)} transition-all duration-500`}
               style={{ width: `${logic * 10}%` }}
             />
           </div>
         </div>
         <div title={latestTurn?.scores?.historical_reason || undefined}>
           <div className="flex justify-between text-sm mb-1">
-            <span>HISTORICAL</span>
-            <span className="font-bold">{historical}/10</span>
+            <span className="text-muted-foreground uppercase text-xs tracking-wider">Historical</span>
+            <span className="font-bold tabular-nums">{historical}/10</span>
           </div>
-          <div className={`${barHeight} bg-secondary`}>
+          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
             <div
-              className="h-full bg-foreground transition-all duration-500"
+              className={`h-full ${barFill(historical)} transition-all duration-500`}
               style={{ width: `${historical * 10}%` }}
             />
           </div>
         </div>
         <div title={latestTurn?.scores?.rhetoric_reason || undefined}>
           <div className="flex justify-between text-sm mb-1">
-            <span>RHETORIC</span>
-            <span className="font-bold">{rhetoric}/10</span>
+            <span className="text-muted-foreground uppercase text-xs tracking-wider">Rhetoric</span>
+            <span className="font-bold tabular-nums">{rhetoric}/10</span>
           </div>
-          <div className={`${barHeight} bg-secondary`}>
+          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
             <div
-              className="h-full bg-foreground transition-all duration-500"
+              className={`h-full ${barFill(rhetoric)} transition-all duration-500`}
               style={{ width: `${rhetoric * 10}%` }}
             />
           </div>
         </div>
         <div title={latestTurn?.scores?.rebuttal_reason || undefined}>
           <div className="flex justify-between text-sm mb-1">
-            <span>REBUTTAL</span>
-            <span className="font-bold">{rebuttal}/10</span>
+            <span className="text-muted-foreground uppercase text-xs tracking-wider">Rebuttal</span>
+            <span className="font-bold tabular-nums">{rebuttal}/10</span>
           </div>
-          <div className={`${barHeight} bg-secondary`}>
+          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
             <div
-              className="h-full bg-foreground transition-all duration-500"
+              className={`h-full ${barFill(rebuttal)} transition-all duration-500`}
               style={{ width: `${rebuttal * 10}%` }}
             />
           </div>
@@ -402,16 +404,16 @@ export default function DebatePageContent() {
         </div>
       )}
       {hasKeyClaims && (
-        <div className="p-3 bg-secondary/50 border border-border rounded-md">
-          <p className="text-sm font-medium mb-2">
-            {selectedFigure!.name} argues:
+        <div className="p-4 bg-secondary/40 border-l-2 border-accent/50 rounded-r-md">
+          <p className="text-sm font-blackletter text-foreground/90 mb-2">
+            {selectedFigure!.name} argues
           </p>
-          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 mb-2">
+          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 mb-3 pl-1">
             {keyClaims!.map((c, i) => (
-              <li key={i}>{c}</li>
+              <li key={i} className="leading-relaxed">{c}</li>
             ))}
           </ol>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground italic">
             How do you respond to these points?
           </p>
         </div>
@@ -452,18 +454,20 @@ export default function DebatePageContent() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
-      <header className="border-b border-border">
+      <header className="border-b border-border debate-arena-header">
         <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <Link href="/" className="text-sm sm:text-lg font-bold hover:underline">
               ARGUE WITH HISTORY
             </Link>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">
-              vs. {selectedFigure.name} — {currentDebate.topic}
+            <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
+              <span className="font-blackletter text-foreground/90">{selectedFigure.name}</span>
+              <span className="mx-1.5">·</span>
+              {currentDebate.topic}
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+            <span className="text-xs sm:text-sm font-blackletter text-accent whitespace-nowrap">
               {currentDebate.current_turn}/{currentDebate.max_turns}
             </span>
             {!isCompleted && (
@@ -477,14 +481,14 @@ export default function DebatePageContent() {
 
       {/* Mobile-only compact score bar */}
       {latestTurn?.scores && (
-        <div className="lg:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className="lg:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm debate-arena-header">
           <div className="container mx-auto px-3 py-2">
             <button
               onClick={() => setMobileScoreExpanded(!mobileScoreExpanded)}
               className="w-full flex items-center justify-between"
             >
               <div className="flex items-center gap-3 text-sm">
-                <span className="font-bold">SCORE: {totalScore}/{maxScore}</span>
+                <span className="font-blackletter">Score: <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span></span>
                 <div className="flex gap-2 text-xs text-muted-foreground">
                   <span>L:{toScore(latestTurn.scores.logic_score)}</span>
                   <span>H:{toScore(latestTurn.scores.historical_accuracy_score)}</span>
@@ -500,9 +504,9 @@ export default function DebatePageContent() {
               <div className="pt-2 pb-1 space-y-2 border-t border-border mt-2">
                 {renderScoreBars("h-2")}
                 <div className="border-t border-border pt-2">
-                  <div className="flex justify-between font-bold">
-                    <span>TOTAL</span>
-                    <span>{totalScore}/{maxScore}</span>
+                  <div className="flex justify-between font-blackletter">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span>
                   </div>
                 </div>
                 {renderFeedbackSections(true)}
@@ -515,9 +519,9 @@ export default function DebatePageContent() {
       <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
           <div className="hidden lg:block lg:col-span-1 order-2 lg:order-1">
-            <Card className="border-2 contrast-border sticky top-4 lg:top-24">
+            <Card className="border-2 contrast-border debate-score-accent sticky top-4 lg:top-24 overflow-hidden">
               <CardHeader className="border-b border-border py-3 sm:py-4 px-4 sm:px-6">
-                <CardTitle className="text-base sm:text-lg">SCORE</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-blackletter tracking-wide">SCORE</CardTitle>
               </CardHeader>
               <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 px-4 sm:px-6">
                 {latestTurn?.scores_error ? (
@@ -526,9 +530,9 @@ export default function DebatePageContent() {
                   <>
                     {renderScoreBars("h-3")}
                     <div className="border-t border-border pt-4">
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>TOTAL</span>
-                        <span>{totalScore}/{maxScore}</span>
+                      <div className="flex justify-between font-blackletter text-lg">
+                        <span className="text-muted-foreground">TOTAL</span>
+                        <span className="text-accent">{totalScore}/{maxScore}</span>
                       </div>
                     </div>
                     {renderFeedbackSections(false)}
@@ -541,16 +545,16 @@ export default function DebatePageContent() {
           </div>
 
           <div className="lg:col-span-3 order-1 lg:order-2">
-            <Card className="border-2 contrast-border">
+            <Card className="border-2 contrast-border relative">
               <CardContent className="p-0">
-                <ScrollArea className="h-[350px] sm:h-[500px] p-3 sm:p-6">
+                <ScrollArea className="h-[350px] sm:h-[500px] p-3 sm:p-6 debate-manuscript relative">
                   {currentDebate.turns.length === 0 && openingStatement && (
                     <div className="mb-8">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-foreground text-background">
+                        <Badge className="bg-foreground text-background font-blackletter tracking-wide">
                           {selectedFigure.name.toUpperCase()}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">OPENING STATEMENT</span>
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Opening Statement</span>
                       </div>
                       <Card className="border-2 contrast-border">
                         <CardContent className="p-4">
@@ -574,35 +578,35 @@ export default function DebatePageContent() {
                         </details>
                       )}
                       <div className="mt-6 text-center">
-                        <p className="text-lg mb-2">Your turn to respond:</p>
+                        <p className="text-sm font-blackletter text-muted-foreground tracking-wide">Your turn to respond</p>
                       </div>
                     </div>
                   )}
                   
                   {currentDebate.turns.length === 0 && !openingStatement && (
                     <div className="text-center py-16">
-                      <p className="text-2xl mb-2">THE DEBATE BEGINS</p>
-                      <p className="text-muted-foreground">Present your opening argument.</p>
+                      <p className="text-2xl font-blackletter mb-2">The Debate Begins</p>
+                      <p className="text-muted-foreground text-sm">Present your opening argument.</p>
                     </div>
                   )}
                   
                   {currentDebate.turns.map((turn) => (
                     <div key={turn.turn_number} className="mb-8">
-                      <div className="mb-4">
+                      <div className="mb-4 pl-4 debate-turn-you">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">YOU</Badge>
-                          <span className="text-xs text-muted-foreground">TURN {turn.turn_number}</span>
+                          <Badge variant="outline" className="font-mono text-xs">YOU</Badge>
+                          <span className="text-xs text-muted-foreground font-blackletter">Turn {turn.turn_number}</span>
                         </div>
-                        <Card className="bg-secondary border-0">
+                        <Card className="bg-secondary/60 border border-border/50">
                           <CardContent className="p-4">
-                            <p className="whitespace-pre-wrap">{turn.user_argument}</p>
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{turn.user_argument}</p>
                           </CardContent>
                         </Card>
                       </div>
                       
-                      <div>
+                      <div className="pl-4 debate-turn-opponent">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-foreground text-background">
+                          <Badge className="bg-foreground text-background font-blackletter tracking-wide">
                             {selectedFigure.name.toUpperCase()}
                           </Badge>
                           {turn.sources_used.length > 0 && (
@@ -648,11 +652,11 @@ export default function DebatePageContent() {
 
             <div className="mt-4 sm:mt-6">
               {isCompleted ? (
-                <Card className="border-2 contrast-border">
+                <Card className="border-2 contrast-border overflow-hidden">
                   <CardContent className="p-4 sm:p-8 text-center">
-                    <p className="text-2xl sm:text-3xl font-bold mb-2">DEBATE COMPLETE</p>
+                    <p className="text-2xl sm:text-3xl font-blackletter tracking-wide mb-2">Debate Complete</p>
                     <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6">
-                      FINAL SCORE: <span className="font-bold text-foreground">{totalScore}/{maxScore}</span>
+                      Final score: <span className="font-blackletter text-accent tabular-nums">{totalScore}/{maxScore}</span>
                     </p>
                     {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
                       <>
