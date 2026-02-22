@@ -193,7 +193,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background pointer-events-none" />
         </div>
 
-        <section className="container mx-auto px-4 sm:px-6 py-6 sm:py-12 md:py-16">
+        <section className="container mx-auto px-4 sm:px-6 py-3 sm:py-8 md:py-10">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="max-w-2xl">
               <h2 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-6 sm:mb-8">
