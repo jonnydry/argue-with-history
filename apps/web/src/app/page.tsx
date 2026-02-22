@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
+import { SplashScreen } from "@/components/splash-screen";
 import type { FigureInfo } from "@/lib/types";
 
 function useInView(threshold = 0.2) {
@@ -142,8 +143,13 @@ export default function Home() {
   const step3 = useInView(0.3);
   const stepRefs = [step1, step2, step3];
 
+  const [showSplash, setShowSplash] = useState(false);
+
   useEffect(() => {
     fetchFigures();
+    if (typeof window !== "undefined" && !sessionStorage.getItem("splash_seen")) {
+      setShowSplash(true);
+    }
   }, [fetchFigures]);
 
   const scrollFigures =
@@ -151,6 +157,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -173,6 +181,18 @@ export default function Home() {
       </header>
 
       <main>
+        <div className="relative w-full h-[120px] sm:h-[180px] md:h-[220px] overflow-hidden">
+          <video
+            src="/splash.mp4"
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background pointer-events-none" />
+        </div>
+
         <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-24 md:py-32">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="max-w-2xl">
