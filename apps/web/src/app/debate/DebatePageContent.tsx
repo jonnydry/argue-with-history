@@ -405,7 +405,7 @@ export default function DebatePageContent() {
       )}
       {hasKeyClaims && (
         <div className="p-4 bg-secondary/40 border-l-2 border-accent/50 rounded-r-md">
-          <p className="text-sm font-blackletter text-foreground/90 mb-2">
+          <p className="text-sm font-scholarly text-foreground/90 mb-2">
             {selectedFigure!.name} argues
           </p>
           <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 mb-3 pl-1">
@@ -461,13 +461,13 @@ export default function DebatePageContent() {
               ARGUE WITH HISTORY
             </Link>
             <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-              <span className="font-blackletter text-foreground/90">{selectedFigure.name}</span>
+              <span className="font-scholarly text-foreground/90">{selectedFigure.name}</span>
               <span className="mx-1.5">·</span>
               {currentDebate.topic}
             </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-xs sm:text-sm font-blackletter text-accent whitespace-nowrap">
+            <span className="text-xs sm:text-sm font-scholarly text-accent whitespace-nowrap">
               {currentDebate.current_turn}/{currentDebate.max_turns}
             </span>
             {!isCompleted && (
@@ -488,7 +488,7 @@ export default function DebatePageContent() {
               className="w-full flex items-center justify-between"
             >
               <div className="flex items-center gap-3 text-sm">
-                <span className="font-blackletter">Score: <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span></span>
+                <span className="font-scholarly">Score: <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span></span>
                 <div className="flex gap-2 text-xs text-muted-foreground">
                   <span>L:{toScore(latestTurn.scores.logic_score)}</span>
                   <span>H:{toScore(latestTurn.scores.historical_accuracy_score)}</span>
@@ -504,7 +504,7 @@ export default function DebatePageContent() {
               <div className="pt-2 pb-1 space-y-2 border-t border-border mt-2">
                 {renderScoreBars("h-2")}
                 <div className="border-t border-border pt-2">
-                  <div className="flex justify-between font-blackletter">
+                  <div className="flex justify-between font-scholarly">
                     <span className="text-muted-foreground">Total</span>
                     <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span>
                   </div>
@@ -521,7 +521,7 @@ export default function DebatePageContent() {
           <div className="hidden lg:block lg:col-span-1 order-2 lg:order-1">
             <Card className="border-2 contrast-border debate-score-accent sticky top-4 lg:top-24 overflow-hidden">
               <CardHeader className="border-b border-border py-3 sm:py-4 px-4 sm:px-6">
-                <CardTitle className="text-base sm:text-lg font-blackletter tracking-wide">SCORE</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-scholarly tracking-wide">SCORE</CardTitle>
               </CardHeader>
               <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 px-4 sm:px-6">
                 {latestTurn?.scores_error ? (
@@ -530,7 +530,7 @@ export default function DebatePageContent() {
                   <>
                     {renderScoreBars("h-3")}
                     <div className="border-t border-border pt-4">
-                      <div className="flex justify-between font-blackletter text-lg">
+                      <div className="flex justify-between font-scholarly text-lg">
                         <span className="text-muted-foreground">TOTAL</span>
                         <span className="text-accent">{totalScore}/{maxScore}</span>
                       </div>
@@ -551,7 +551,7 @@ export default function DebatePageContent() {
                   {currentDebate.turns.length === 0 && openingStatement && (
                     <div className="mb-8">
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-foreground text-background font-blackletter tracking-wide">
+                        <Badge className="bg-foreground text-background font-scholarly tracking-wide">
                           {selectedFigure.name.toUpperCase()}
                         </Badge>
                         <span className="text-xs text-muted-foreground uppercase tracking-wider">Opening Statement</span>
@@ -578,14 +578,14 @@ export default function DebatePageContent() {
                         </details>
                       )}
                       <div className="mt-6 text-center">
-                        <p className="text-sm font-blackletter text-muted-foreground tracking-wide">Your turn to respond</p>
+                        <p className="text-sm font-scholarly text-muted-foreground tracking-wide">Your turn to respond</p>
                       </div>
                     </div>
                   )}
                   
                   {currentDebate.turns.length === 0 && !openingStatement && (
                     <div className="text-center py-16">
-                      <p className="text-2xl font-blackletter mb-2">The Debate Begins</p>
+                      <p className="text-2xl font-scholarly mb-2">The Debate Begins</p>
                       <p className="text-muted-foreground text-sm">Present your opening argument.</p>
                     </div>
                   )}
@@ -595,7 +595,7 @@ export default function DebatePageContent() {
                       <div className="mb-4 pl-4 debate-turn-you">
                         <div className="flex items-center gap-2 mb-2">
                           <Badge variant="outline" className="font-mono text-xs">YOU</Badge>
-                          <span className="text-xs text-muted-foreground font-blackletter">Turn {turn.turn_number}</span>
+                          <span className="text-xs text-muted-foreground font-scholarly">Turn {turn.turn_number}</span>
                         </div>
                         <Card className="bg-secondary/60 border border-border/50">
                           <CardContent className="p-4">
@@ -606,7 +606,7 @@ export default function DebatePageContent() {
                       
                       <div className="pl-4 debate-turn-opponent">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-foreground text-background font-blackletter tracking-wide">
+                          <Badge className="bg-foreground text-background font-scholarly tracking-wide">
                             {selectedFigure.name.toUpperCase()}
                           </Badge>
                           {turn.sources_used.length > 0 && (
@@ -654,9 +654,9 @@ export default function DebatePageContent() {
               {isCompleted ? (
                 <Card className="border-2 contrast-border overflow-hidden">
                   <CardContent className="p-4 sm:p-8 text-center">
-                    <p className="text-2xl sm:text-3xl font-blackletter tracking-wide mb-2">Debate Complete</p>
+                    <p className="text-2xl sm:text-3xl font-scholarly tracking-wide mb-2">Debate Complete</p>
                     <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6">
-                      Final score: <span className="font-blackletter text-accent tabular-nums">{totalScore}/{maxScore}</span>
+                      Final score: <span className="font-scholarly text-accent tabular-nums">{totalScore}/{maxScore}</span>
                     </p>
                     {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
                       <>
