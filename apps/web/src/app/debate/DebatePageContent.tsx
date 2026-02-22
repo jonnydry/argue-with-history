@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { Swords } from "lucide-react";
 
 /** Coerce score value to integer 1-10. Prevents string concatenation in total. */
 function toScore(val: unknown): number {
@@ -9,6 +10,7 @@ function toScore(val: unknown): number {
   const num = !Number.isNaN(n) ? n : 5;
   return Math.min(10, Math.max(1, num));
 }
+
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +42,6 @@ export default function DebatePageContent() {
 
   const [argument, setArgument] = useState("");
   const [debateStarted, setDebateStarted] = useState(false);
-  const [mobileScoreExpanded, setMobileScoreExpanded] = useState(false);
   const [primer, setPrimer] = useState<{
     position_summary?: string;
     sample_quote?: string | null;
@@ -53,7 +54,6 @@ export default function DebatePageContent() {
       ? topicPrimer
       : primer;
 
-  // Clear previous debate when selected figure/topic no longer matches (e.g. user picked new opponent on /figures)
   useEffect(() => {
     clearStaleDebateIfMismatch();
   }, [currentDebate, selectedFigure?.id, selectedTopic?.id, clearStaleDebateIfMismatch]);
@@ -71,9 +71,7 @@ export default function DebatePageContent() {
   useEffect(() => {
     if (selectedFigure && selectedTopic && !debateStarted && !currentDebate) {
       const key = `${selectedFigure.id}:${selectedTopic.id}`;
-      if (topicPrimerKey === key && topicPrimer) {
-        return;
-      }
+      if (topicPrimerKey === key && topicPrimer) return;
       api.figures
         .getTopicPrimer(selectedFigure.id, selectedTopic.id)
         .then(setPrimer)
@@ -104,6 +102,7 @@ export default function DebatePageContent() {
     setArgument("");
   };
 
+  // ── No figure/topic selected ──────────────────────────────────────────────
   if (!selectedFigure || !selectedTopic) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
@@ -126,30 +125,46 @@ export default function DebatePageContent() {
     );
   }
 
+  // ── Pre-debate / READY screen ─────────────────────────────────────────────
   if (!debateStarted || !currentDebate) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
-        <Card className="max-w-lg w-full border-2 contrast-border">
-          <CardHeader>
-            <CardTitle className="text-xl sm:text-2xl">READY TO DEBATE</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">OPPONENT</p>
-              <p className="text-xl font-bold">{selectedFigure.name}</p>
+      <div className="min-h-screen bg-background text-foreground noise-bg">
+        <header className="border-b border-border">
+          <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Swords size={20} strokeWidth={1.5} className="shrink-0" />
+              <Link href="/" className="text-lg sm:text-2xl font-bold tracking-tight hover:underline underline-offset-4">
+                ARGUE WITH HISTORY
+              </Link>
             </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">TOPIC</p>
-              <p className="text-lg">{selectedTopic.title}</p>
+            <Link href="/figures" className="text-xs sm:text-sm font-medium hover:underline underline-offset-4">
+              ← FIGURES
+            </Link>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
+          <div className="max-w-xl mx-auto">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">Ready to Debate</p>
+            <h2 className="text-4xl sm:text-6xl font-bold tracking-tighter leading-[0.9] mb-8 sm:mb-12">
+              {selectedFigure.name.toUpperCase()}
+            </h2>
+
+            <div className="border-t border-border pt-6 mb-6 space-y-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Topic</p>
+                <p className="text-lg font-medium">{selectedTopic.title}</p>
+              </div>
             </div>
+
             {effectivePrimer && (
-              <div className="p-4 bg-secondary/50 border border-border rounded-md space-y-2 text-left">
-                <p className="text-sm font-medium">POSITION PRIMER</p>
+              <div className="border border-border p-4 sm:p-6 mb-6 space-y-3">
+                <p className="text-xs uppercase tracking-[0.2em] font-bold">Position Primer</p>
                 {effectivePrimer.position_summary && (
-                  <p className="text-sm text-muted-foreground">{effectivePrimer.position_summary}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{effectivePrimer.position_summary}</p>
                 )}
                 {effectivePrimer.sample_quote && (
-                  <blockquote className="text-sm border-l-2 border-foreground/30 pl-3 italic">
+                  <blockquote className="text-sm border-l-2 border-foreground/30 pl-3 italic text-muted-foreground">
                     &ldquo;{effectivePrimer.sample_quote}&rdquo;
                   </blockquote>
                 )}
@@ -158,10 +173,11 @@ export default function DebatePageContent() {
                 )}
               </div>
             )}
+
             <Button
               onClick={handleStartDebate}
               disabled={isLoading}
-              className="w-full text-lg py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
+              className="w-full text-base sm:text-lg py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -172,23 +188,26 @@ export default function DebatePageContent() {
                 "BEGIN →"
               )}
             </Button>
-            {error && (
-              <p className="text-destructive text-sm">{error}</p>
-            )}
-          </CardContent>
-        </Card>
+            {error && <p className="text-destructive text-sm mt-3">{error}</p>}
+          </div>
+        </main>
       </div>
     );
   }
 
+  // ── Active debate ─────────────────────────────────────────────────────────
   const isCompleted = currentDebate.status === "completed";
   const latestTurn = currentDebate.turns[currentDebate.turns.length - 1];
   const maxScore = 40;
   const totalScore = latestTurn?.scores
-    ? [latestTurn.scores.logic_score, latestTurn.scores.historical_accuracy_score, latestTurn.scores.rhetoric_score, latestTurn.scores.rebuttal_score ?? 0].reduce((sum, v) => sum + toScore(v), 0)
+    ? [
+        latestTurn.scores.logic_score,
+        latestTurn.scores.historical_accuracy_score,
+        latestTurn.scores.rhetoric_score,
+        latestTurn.scores.rebuttal_score ?? 0,
+      ].reduce((sum, v) => sum + toScore(v), 0)
     : 0;
 
-  // Hoist computed values for use in both mobile and desktop renders
   const claimChecks = latestTurn?.scores && "claim_checks" in latestTurn.scores
     ? (latestTurn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
     : undefined;
@@ -218,229 +237,184 @@ export default function DebatePageContent() {
     ? currentDebate.turns[currentDebate.turns.length - 1].key_claims
     : openingKeyClaims;
   const hasKeyClaims = keyClaims && keyClaims.length > 0 && selectedFigure;
-
   const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
 
-  // Reusable score bars renderer
-  const renderScoreBars = (barHeight: string) => {
-    const logic = toScore(latestTurn!.scores!.logic_score);
-    const historical = toScore(latestTurn!.scores!.historical_accuracy_score);
-    const rhetoric = toScore(latestTurn!.scores!.rhetoric_score);
-    const rebuttal = toScore(latestTurn!.scores!.rebuttal_score);
-    const barFill = (score: number) =>
-      score >= 8 ? "bg-accent" : "bg-foreground";
+  // ── Score cell renderer ───────────────────────────────────────────────────
+  const renderScoreCell = (label: string, score: number, reason?: string) => {
+    const isHigh = score >= 8;
     return (
-      <>
-        <div title={latestTurn?.scores?.logic_reason || undefined}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted-foreground uppercase text-xs tracking-wider">Logic</span>
-            <span className="font-bold tabular-nums">{logic}/10</span>
-          </div>
-          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
-            <div
-              className={`h-full ${barFill(logic)} transition-all duration-500`}
-              style={{ width: `${logic * 10}%` }}
-            />
-          </div>
+      <div className="p-3 sm:p-4" title={reason || undefined}>
+        <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-1">{label}</p>
+        <p className={`text-2xl sm:text-3xl font-bold tabular-nums leading-none mb-2 ${isHigh ? "text-accent" : ""}`}>
+          {score}<span className="text-sm font-normal text-muted-foreground">/10</span>
+        </p>
+        <div className="debate-score-bar-track">
+          <div
+            className={`debate-score-bar-fill ${isHigh ? "bg-accent" : "bg-foreground"}`}
+            style={{ width: `${score * 10}%` }}
+          />
         </div>
-        <div title={latestTurn?.scores?.historical_reason || undefined}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted-foreground uppercase text-xs tracking-wider">Historical</span>
-            <span className="font-bold tabular-nums">{historical}/10</span>
-          </div>
-          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
-            <div
-              className={`h-full ${barFill(historical)} transition-all duration-500`}
-              style={{ width: `${historical * 10}%` }}
-            />
-          </div>
-        </div>
-        <div title={latestTurn?.scores?.rhetoric_reason || undefined}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted-foreground uppercase text-xs tracking-wider">Rhetoric</span>
-            <span className="font-bold tabular-nums">{rhetoric}/10</span>
-          </div>
-          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
-            <div
-              className={`h-full ${barFill(rhetoric)} transition-all duration-500`}
-              style={{ width: `${rhetoric * 10}%` }}
-            />
-          </div>
-        </div>
-        <div title={latestTurn?.scores?.rebuttal_reason || undefined}>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted-foreground uppercase text-xs tracking-wider">Rebuttal</span>
-            <span className="font-bold tabular-nums">{rebuttal}/10</span>
-          </div>
-          <div className={`${barHeight} bg-secondary rounded-sm overflow-hidden`}>
-            <div
-              className={`h-full ${barFill(rebuttal)} transition-all duration-500`}
-              style={{ width: `${rebuttal * 10}%` }}
-            />
-          </div>
-        </div>
-      </>
+      </div>
     );
   };
 
-  // Reusable feedback sections renderer
-  const renderFeedbackSections = (collapsible: boolean) => (
-    <>
-      {latestTurn!.scores!.strengths.length > 0 && (
-        collapsible ? (
-          <details className="group/strengths">
-            <summary className="cursor-pointer text-xs text-green-400 list-none flex items-center gap-1">
-              <span className="group-open/strengths:rotate-90 transition-transform">▶</span>
-              STRENGTHS ({latestTurn!.scores!.strengths.length})
-            </summary>
-            <div className="mt-1 p-2 bg-green-900/20 border border-green-800">
-              {latestTurn!.scores!.strengths.map((s, i) => (
-                <p key={i} className="text-sm">+ {s}</p>
-              ))}
-            </div>
-          </details>
-        ) : (
-          <div className="mt-4 p-3 bg-green-900/20 border border-green-800">
-            <p className="text-xs text-green-400 mb-1">STRENGTHS</p>
-            {latestTurn!.scores!.strengths.map((s, i) => (
-              <p key={i} className="text-sm">+ {s}</p>
-            ))}
-          </div>
-        )
-      )}
-      {latestTurn!.scores!.improvements.length > 0 && (
-        collapsible ? (
-          <details className="group/improvements">
-            <summary className="cursor-pointer text-xs text-amber-400 list-none flex items-center gap-1">
-              <span className="group-open/improvements:rotate-90 transition-transform">▶</span>
-              IMPROVEMENTS ({latestTurn!.scores!.improvements.length})
-            </summary>
-            <div className="mt-1 p-2 bg-amber-900/20 border border-amber-800">
-              {latestTurn!.scores!.improvements.map((s, i) => (
-                <p key={i} className="text-sm">~ {s}</p>
-              ))}
-            </div>
-          </details>
-        ) : (
-          <div className="mt-2 p-3 bg-amber-900/20 border border-amber-800">
-            <p className="text-xs text-amber-400 mb-1">IMPROVEMENTS</p>
-            {latestTurn!.scores!.improvements.map((s, i) => (
-              <p key={i} className="text-sm">~ {s}</p>
-            ))}
-          </div>
-        )
-      )}
-      {hasClaimChecks && (
-        collapsible ? (
-          <details className="group/claims">
-            <summary className="cursor-pointer text-xs text-blue-400 list-none flex items-center gap-1">
-              <span className="group-open/claims:rotate-90 transition-transform">▶</span>
-              CLAIM CHECK ({claimChecks!.length})
-            </summary>
-            <div className="mt-1 p-2 bg-blue-900/20 border border-blue-800">
-              {claimChecks!.map((c, i) => (
-                <p
-                  key={i}
-                  className={`text-sm ${
-                    c.type === "accurate" ? "text-green-400"
-                    : c.type === "mischaracterized" ? "text-amber-400"
-                    : "text-muted-foreground"
-                  }`}
-                >
-                  {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
-                  {c.note}
-                </p>
-              ))}
-            </div>
-          </details>
-        ) : (
-          <div className="mt-2 p-3 bg-blue-900/20 border border-blue-800">
-            <p className="text-xs text-blue-400 mb-1">CLAIM CHECK</p>
-            {claimChecks!.map((c, i) => (
-              <p
-                key={i}
-                className={`text-sm ${
-                  c.type === "accurate" ? "text-green-400"
-                  : c.type === "mischaracterized" ? "text-amber-400"
-                  : "text-muted-foreground"
-                }`}
-              >
-                {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
-                {c.note}
-              </p>
-            ))}
-          </div>
-        )
-      )}
-    </>
-  );
+  // ── Inline scorecard renderer (per turn) ─────────────────────────────────
+  const renderInlineScorecard = (turn: typeof currentDebate.turns[0]) => {
+    if (turn.scores_error) {
+      return (
+        <p className="text-muted-foreground text-sm mt-4">{turn.scores_error}</p>
+      );
+    }
+    if (!turn.scores) return null;
 
-  // Reusable helper sections (scholar sources, tips, key claims)
+    const logic = toScore(turn.scores.logic_score);
+    const historical = toScore(turn.scores.historical_accuracy_score);
+    const rhetoric = toScore(turn.scores.rhetoric_score);
+    const rebuttal = toScore(turn.scores.rebuttal_score);
+    const turnTotal = logic + historical + rhetoric + rebuttal;
+
+    const turnClaimChecks = "claim_checks" in turn.scores
+      ? (turn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
+      : undefined;
+    const hasTurnClaims = Array.isArray(turnClaimChecks) && turnClaimChecks.length > 0;
+
+    return (
+      <div className="mt-6">
+        <div className="debate-scorecard-divider">
+          <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Scorecard</span>
+        </div>
+
+        <div className="debate-score-grid border border-border/30">
+          {renderScoreCell("Logic", logic, turn.scores.logic_reason || undefined)}
+          {renderScoreCell("Historical", historical, turn.scores.historical_reason || undefined)}
+          {renderScoreCell("Rhetoric", rhetoric, turn.scores.rhetoric_reason || undefined)}
+          {renderScoreCell("Rebuttal", rebuttal, turn.scores.rebuttal_reason || undefined)}
+        </div>
+
+        <div className="border border-border/30 border-t-0 px-4 py-3 flex items-center justify-between">
+          <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</span>
+          <span className="text-2xl font-bold tabular-nums">
+            {turnTotal}<span className="text-sm font-normal text-muted-foreground">/{maxScore}</span>
+          </span>
+        </div>
+
+        {(turn.scores.strengths?.length > 0 || turn.scores.improvements?.length > 0 || hasTurnClaims) && (
+          <div className="mt-3 space-y-2">
+            {turn.scores.strengths?.length > 0 && (
+              <details className="group/strengths">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-green-400 list-none flex items-center gap-1.5 py-1">
+                  <span className="group-open/strengths:rotate-90 transition-transform inline-block">▶</span>
+                  Strengths ({turn.scores.strengths.length})
+                </summary>
+                <div className="mt-1 p-3 bg-green-900/20 border border-green-800/50 space-y-1">
+                  {turn.scores.strengths.map((s: string, i: number) => (
+                    <p key={i} className="text-sm text-green-200">+ {s}</p>
+                  ))}
+                </div>
+              </details>
+            )}
+            {turn.scores.improvements?.length > 0 && (
+              <details className="group/improvements">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-amber-400 list-none flex items-center gap-1.5 py-1">
+                  <span className="group-open/improvements:rotate-90 transition-transform inline-block">▶</span>
+                  Improvements ({turn.scores.improvements.length})
+                </summary>
+                <div className="mt-1 p-3 bg-amber-900/20 border border-amber-800/50 space-y-1">
+                  {turn.scores.improvements.map((s: string, i: number) => (
+                    <p key={i} className="text-sm text-amber-200">~ {s}</p>
+                  ))}
+                </div>
+              </details>
+            )}
+            {hasTurnClaims && (
+              <details className="group/claims">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-blue-400 list-none flex items-center gap-1.5 py-1">
+                  <span className="group-open/claims:rotate-90 transition-transform inline-block">▶</span>
+                  Claim Check ({turnClaimChecks!.length})
+                </summary>
+                <div className="mt-1 p-3 bg-blue-900/20 border border-blue-800/50 space-y-1">
+                  {turnClaimChecks!.map((c, i) => (
+                    <p
+                      key={i}
+                      className={`text-sm ${
+                        c.type === "accurate" ? "text-green-400"
+                        : c.type === "mischaracterized" ? "text-amber-400"
+                        : "text-muted-foreground"
+                      }`}
+                    >
+                      {c.type === "accurate" ? "✓ " : c.type === "mischaracterized" ? "~ " : "· "}
+                      {c.note}
+                    </p>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── Helper sections (key claims, tips, scholar sources) ───────────────────
   const renderHelperSections = () => (
     <>
       {scholarPassages.length > 0 && (
-        <div className="mb-4 p-4 bg-secondary/50 border-2 border-border rounded-md">
-          <p className="text-sm font-medium mb-2">SOURCES TO ENGAGE WITH</p>
-          <p className="text-xs text-muted-foreground mb-3">
-            Review these passages before responding.
-          </p>
+        <div className="mb-4 p-4 border border-border">
+          <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">Sources to Engage With</p>
+          <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
           <div className="space-y-3 max-h-48 overflow-y-auto">
             {scholarPassages.map((p, i) => (
               <div key={i} className="pl-3 border-l-2 border-border">
                 <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">
-                  {p.text_excerpt}
-                </p>
+                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
               </div>
             ))}
           </div>
         </div>
       )}
       {tips.length > 0 && (
-        <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800 rounded-md">
+        <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800/50">
           {tips.map((t, i) => (
             <p key={i} className="text-sm text-amber-200">• {t}</p>
           ))}
         </div>
       )}
       {hasKeyClaims && (
-        <div className="p-4 bg-secondary/40 border-l-2 border-accent/50 rounded-r-md">
-          <p className="text-sm font-scholarly text-foreground/90 mb-2">
+        <div className="p-4 border-l-4 border-accent/50 bg-secondary/20 mb-4">
+          <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">
             {selectedFigure!.name} argues
           </p>
-          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 mb-3 pl-1">
+          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 pl-1">
             {keyClaims!.map((c, i) => (
               <li key={i} className="leading-relaxed">{c}</li>
             ))}
           </ol>
-          <p className="text-xs text-muted-foreground italic">
-            How do you respond to these points?
-          </p>
+          <p className="text-xs text-muted-foreground mt-3 italic">How do you respond to these points?</p>
         </div>
       )}
     </>
   );
 
-  // Reusable learning summary content
+  // ── Learning summary ──────────────────────────────────────────────────────
   const renderLearningSummaryContent = () => (
     <>
       {learningSummary!.summary && (
-        <p className="text-muted-foreground text-sm">{learningSummary!.summary}</p>
+        <p className="text-sm leading-relaxed">{learningSummary!.summary}</p>
       )}
       {(learningSummary as { key_takeaway?: string }).key_takeaway && (
-        <div className="mt-3 p-3 bg-secondary/50 border border-border rounded-md">
-          <p className="text-xs font-medium mb-1">KEY TAKEAWAY</p>
+        <div className="mt-3 p-3 border border-foreground/20">
+          <p className="text-xs uppercase tracking-[0.15em] font-bold mb-1">Key Takeaway</p>
           <p className="text-sm">{(learningSummary as { key_takeaway: string }).key_takeaway}</p>
         </div>
       )}
       {learningSummary!.suggested_readings && learningSummary!.suggested_readings.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-medium mb-2">CONTINUE LEARNING</p>
-          <ul className="text-sm text-muted-foreground space-y-1">
+          <p className="text-xs uppercase tracking-[0.15em] font-bold mb-2">Continue Learning</p>
+          <ul className="text-sm space-y-1">
             {learningSummary!.suggested_readings.map((r, i) => {
               const rec = r as { title: string; reason: string; source_id?: string };
               return (
-                <li key={i}>
+                <li key={i} className="opacity-80">
                   • {rec.source_id ? `[${rec.source_id}] ` : ""}
                   {rec.title}: {rec.reason}
                 </li>
@@ -452,26 +426,34 @@ export default function DebatePageContent() {
     </>
   );
 
+  // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
-      <header className="border-b border-border debate-arena-header">
-        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <Link href="/" className="text-sm sm:text-lg font-bold hover:underline">
+
+      {/* Header — matches homepage exactly */}
+      <header className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <Swords size={20} strokeWidth={1.5} className="shrink-0" />
+            <Link href="/" className="text-base sm:text-xl font-bold tracking-tight hover:underline underline-offset-4 whitespace-nowrap">
               ARGUE WITH HISTORY
             </Link>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-              <span className="font-scholarly text-foreground/90">{selectedFigure.name}</span>
-              <span className="mx-1.5">·</span>
-              {currentDebate.topic}
-            </p>
+            <span className="hidden sm:block text-muted-foreground">·</span>
+            <span className="hidden sm:block text-sm text-muted-foreground truncate">
+              {selectedFigure.name} / {currentDebate.topic}
+            </span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <span className="text-xs sm:text-sm font-scholarly text-accent whitespace-nowrap">
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
               {currentDebate.current_turn}/{currentDebate.max_turns}
             </span>
             {!isCompleted && (
-              <Button variant="outline" size="sm" onClick={handleEndDebate} className="btn-press text-xs sm:text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEndDebate}
+                className="btn-press border-foreground/30 text-xs sm:text-sm"
+              >
                 END
               </Button>
             )}
@@ -479,295 +461,255 @@ export default function DebatePageContent() {
         </div>
       </header>
 
-      {/* Mobile-only compact score bar */}
-      {latestTurn?.scores && (
-        <div className="lg:hidden sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm debate-arena-header">
-          <div className="container mx-auto px-3 py-2">
-            <button
-              onClick={() => setMobileScoreExpanded(!mobileScoreExpanded)}
-              className="w-full flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3 text-sm">
-                <span className="font-scholarly">Score: <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span></span>
-                <div className="flex gap-2 text-xs text-muted-foreground">
-                  <span>L:{toScore(latestTurn.scores.logic_score)}</span>
-                  <span>H:{toScore(latestTurn.scores.historical_accuracy_score)}</span>
-                  <span>R:{toScore(latestTurn.scores.rhetoric_score)}</span>
-                  <span>Rb:{toScore(latestTurn.scores.rebuttal_score)}</span>
-                </div>
-              </div>
-              <span className={`transition-transform text-xs ${mobileScoreExpanded ? "rotate-180" : ""}`}>
-                ▼
-              </span>
-            </button>
-            {mobileScoreExpanded && (
-              <div className="pt-2 pb-1 space-y-2 border-t border-border mt-2">
-                {renderScoreBars("h-2")}
-                <div className="border-t border-border pt-2">
-                  <div className="flex justify-between font-scholarly">
-                    <span className="text-muted-foreground">Total</span>
-                    <span className="text-accent tabular-nums">{totalScore}/{maxScore}</span>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div className="max-w-3xl mx-auto">
+
+          {/* Scroll area for transcript */}
+          <ScrollArea className="h-[50vh] sm:h-[60vh] mb-6">
+            <div className="space-y-0 pr-2">
+
+              {/* Opening statement */}
+              {currentDebate.turns.length === 0 && openingStatement && (
+                <div className="mb-6">
+                  <div className="debate-round-divider">
+                    <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Opening Statement</span>
+                  </div>
+
+                  <div className="debate-figure-block p-4 sm:p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs uppercase tracking-[0.2em] font-bold">
+                        {selectedFigure.name.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
+                      {openingStatement}
+                    </p>
+                    {openingPassages.length > 0 && (
+                      <details className="mt-4 group">
+                        <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
+                          <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                          View sources used
+                        </summary>
+                        <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
+                          {openingPassages.map((p, i) => (
+                            <div key={i}>
+                              <p className="text-xs font-medium text-background/70">{p.title}</p>
+                              <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+
+                  <div className="mt-6 text-center">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Your turn to respond</p>
                   </div>
                 </div>
-                {renderFeedbackSections(true)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              )}
 
-      <main className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
-          <div className="hidden lg:block lg:col-span-1 order-2 lg:order-1">
-            <Card className="border-2 contrast-border debate-score-accent sticky top-4 lg:top-24 overflow-hidden">
-              <CardHeader className="border-b border-border py-3 sm:py-4 px-4 sm:px-6">
-                <CardTitle className="text-base sm:text-lg font-scholarly tracking-wide">SCORE</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 px-4 sm:px-6">
-                {latestTurn?.scores_error ? (
-                  <p className="text-muted-foreground text-sm">{latestTurn.scores_error}</p>
-                ) : latestTurn?.scores ? (
-                  <>
-                    {renderScoreBars("h-3")}
-                    <div className="border-t border-border pt-4">
-                      <div className="flex justify-between font-scholarly text-lg">
-                        <span className="text-muted-foreground">TOTAL</span>
-                        <span className="text-accent">{totalScore}/{maxScore}</span>
-                      </div>
+              {/* Empty state */}
+              {currentDebate.turns.length === 0 && !openingStatement && (
+                <div className="py-20 text-center">
+                  <p className="text-4xl font-bold tracking-tighter mb-3">THE DEBATE BEGINS</p>
+                  <p className="text-muted-foreground text-sm uppercase tracking-[0.15em]">Present your opening argument.</p>
+                </div>
+              )}
+
+              {/* Turns */}
+              {currentDebate.turns.map((turn) => (
+                <div key={turn.turn_number}>
+                  {/* Round divider */}
+                  <div className="debate-round-divider">
+                    <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">
+                      Round {String(turn.turn_number).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  {/* Your argument */}
+                  <div className="debate-you-block mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="font-mono text-xs border-foreground/30">YOU</Badge>
                     </div>
-                    {renderFeedbackSections(false)}
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-sm">Submit argument for scores</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                    <div className="bg-secondary/40 border border-border/40 p-4">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{turn.user_argument}</p>
+                    </div>
+                  </div>
 
-          <div className="lg:col-span-3 order-1 lg:order-2">
-            <Card className="border-2 contrast-border relative">
-              <CardContent className="p-0">
-                <ScrollArea className="h-[350px] sm:h-[500px] p-3 sm:p-6 debate-manuscript relative">
-                  {currentDebate.turns.length === 0 && openingStatement && (
-                    <div className="mb-8">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className="bg-foreground text-background font-scholarly tracking-wide">
+                  {/* Figure response */}
+                  <div className="mb-2">
+                    <div className="debate-figure-block p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs uppercase tracking-[0.2em] font-bold text-background">
                           {selectedFigure.name.toUpperCase()}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Opening Statement</span>
+                        </span>
+                        {turn.sources_used.length > 0 && (
+                          <span className="text-xs text-background/50">
+                            {turn.sources_used.join(", ")}
+                          </span>
+                        )}
                       </div>
-                      <Card className="border-2 contrast-border">
-                        <CardContent className="p-4">
-                          <p className="whitespace-pre-wrap">{openingStatement}</p>
-                        </CardContent>
-                      </Card>
-                      {openingPassages.length > 0 && (
-                        <details className="mt-3 group">
-                          <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-                            <span className="group-open:rotate-90 transition-transform">▶</span>
+                      <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
+                        {turn.figure_response}
+                      </p>
+                      {turn.passages && turn.passages.length > 0 && (
+                        <details className="mt-4 group">
+                          <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
+                            <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                             View sources used
                           </summary>
-                          <div className="mt-2 space-y-2 pl-4 border-l-2 border-border">
-                            {openingPassages.map((p, i) => (
-                              <div key={i} className="pl-3">
-                                <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                          <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
+                            {turn.passages.map((p, i) => (
+                              <div key={i}>
+                                <p className="text-xs font-medium text-background/70">{p.title}</p>
+                                <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
                               </div>
                             ))}
                           </div>
                         </details>
                       )}
-                      <div className="mt-6 text-center">
-                        <p className="text-sm font-scholarly text-muted-foreground tracking-wide">Your turn to respond</p>
-                      </div>
                     </div>
-                  )}
-                  
-                  {currentDebate.turns.length === 0 && !openingStatement && (
-                    <div className="text-center py-16">
-                      <p className="text-2xl font-scholarly mb-2">The Debate Begins</p>
-                      <p className="text-muted-foreground text-sm">Present your opening argument.</p>
-                    </div>
-                  )}
-                  
-                  {currentDebate.turns.map((turn) => (
-                    <div key={turn.turn_number} className="mb-8">
-                      <div className="mb-4 pl-4 debate-turn-you">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="font-mono text-xs">YOU</Badge>
-                          <span className="text-xs text-muted-foreground font-scholarly">Turn {turn.turn_number}</span>
-                        </div>
-                        <Card className="bg-secondary/60 border border-border/50">
-                          <CardContent className="p-4">
-                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{turn.user_argument}</p>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      <div className="pl-4 debate-turn-opponent">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-foreground text-background font-scholarly tracking-wide">
-                            {selectedFigure.name.toUpperCase()}
-                          </Badge>
-                          {turn.sources_used.length > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                              {turn.sources_used.join(", ")}
-                            </span>
-                          )}
-                        </div>
-                        <Card className="border-2 contrast-border">
-                          <CardContent className="p-4">
-                            <p className="whitespace-pre-wrap">{turn.figure_response}</p>
-                          </CardContent>
-                        </Card>
-                        {turn.passages && turn.passages.length > 0 && (
-                          <details className="mt-3 group">
-                            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-                              <span className="group-open:rotate-90 transition-transform">▶</span>
-                              View sources used
-                            </summary>
-                            <div className="mt-2 space-y-2 pl-4 border-l-2 border-border">
-                              {turn.passages.map((p, i) => (
-                                <div key={i} className="pl-3">
-                                  <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                                  <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </details>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      <span>Thinking...</span>
-                    </div>
-                  )}
-                  <div ref={scrollAnchorRef} aria-hidden />
-                </ScrollArea>
-              </CardContent>
-            </Card>
 
-            <div className="mt-4 sm:mt-6">
-              {isCompleted ? (
-                <Card className="border-2 contrast-border overflow-hidden">
-                  <CardContent className="p-4 sm:p-8 text-center">
-                    <p className="text-2xl sm:text-3xl font-scholarly tracking-wide mb-2">Debate Complete</p>
-                    <p className="text-lg sm:text-xl text-muted-foreground mb-4 sm:mb-6">
-                      Final score: <span className="font-scholarly text-accent tabular-nums">{totalScore}/{maxScore}</span>
-                    </p>
-                    {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
-                      <>
-                        {/* Mobile: collapsible learning summary */}
-                        <details className="lg:hidden mb-4 text-left max-w-xl mx-auto group/learn">
-                          <summary className="cursor-pointer text-sm font-medium list-none flex items-center gap-1">
-                            <span className="group-open/learn:rotate-90 transition-transform">▶</span>
-                            LEARNING SUMMARY
-                          </summary>
-                          <div className="mt-2">
-                            {renderLearningSummaryContent()}
-                          </div>
-                        </details>
-                        {/* Desktop: always visible */}
-                        <div className="hidden lg:block mb-6 text-left max-w-xl mx-auto">
-                          <p className="text-sm font-medium mb-2">LEARNING SUMMARY</p>
-                          {renderLearningSummaryContent()}
-                        </div>
-                      </>
-                    )}
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                      <Link href="/figures">
-                        <Button className="bg-foreground text-background btn-press">NEW DEBATE</Button>
-                      </Link>
-                      <Button variant="outline" onClick={handleNewDebate} className="btn-press">
-                        DIFFERENT TOPIC
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {/* Mobile: collapse helpers into one toggle */}
-                  {hasAnyHelper && (
-                    <div className="lg:hidden">
-                      <details className="group/helpers mb-2">
-                        <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-                          <span className="group-open/helpers:rotate-90 transition-transform">▶</span>
-                          Debate aids
-                          {tips.length > 0 && (
-                            <Badge variant="outline" className="text-xs ml-1 py-0">Tips</Badge>
-                          )}
-                        </summary>
-                        <div className="mt-2 space-y-3">
-                          {renderHelperSections()}
-                        </div>
-                      </details>
-                    </div>
-                  )}
-                  {/* Desktop: show helpers expanded */}
-                  <div className="hidden lg:block space-y-4">
-                    {renderHelperSections()}
+                    {/* Inline scorecard */}
+                    {renderInlineScorecard(turn)}
                   </div>
-                  <details className="group/details mb-2">
-                    <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground list-none flex items-center gap-1">
-                      <span className="group-open/details:rotate-90 transition-transform">▶</span>
-                      Argument structure helper
-                    </summary>
-                    <div className="mt-2 p-3 bg-secondary/30 border border-border rounded text-sm space-y-1">
-                      <p className="text-muted-foreground">Claim: Your main thesis. Evidence: Cite or paraphrase a passage. Warrant: Why this supports your claim.</p>
-                      <button
-                        type="button"
-                        onClick={() => setStructuredInput(!structuredInput)}
-                        className="text-xs text-foreground/80 hover:underline"
-                      >
-                        {structuredInput ? "Use freeform placeholder" : "Use structured placeholder"}
-                      </button>
-                    </div>
-                  </details>
-                  <Textarea
-                    value={argument}
-                    onChange={(e) => setArgument(e.target.value)}
-                    placeholder={
-                      structuredInput
-                        ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
-                        : "Present your argument..."
-                    }
-                    className="min-h-24 sm:min-h-32 bg-card border-2 border-border focus:border-foreground resize-none text-sm sm:text-base"
-                    disabled={isLoading}
-                  />
-                  <div className="flex gap-2 sm:gap-4">
-                    <Button
-                      onClick={handleSubmitArgument}
-                      disabled={isLoading || !argument.trim()}
-                      className="flex-1 text-sm sm:text-lg py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center gap-2">
-                          <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                          SUBMITTING...
-                        </span>
-                      ) : (
-                        "SUBMIT →"
-                      )}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setArgument("")} 
-                      disabled={isLoading}
-                      className="btn-press"
-                    >
-                      CLEAR
-                    </Button>
-                  </div>
-                  {error && (
-                    <p className="text-destructive text-sm">{error}</p>
-                  )}
+                </div>
+              ))}
+
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="flex items-center gap-3 py-6 text-muted-foreground">
+                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm uppercase tracking-[0.15em]">Thinking...</span>
                 </div>
               )}
+
+              <div ref={scrollAnchorRef} aria-hidden />
             </div>
-          </div>
+          </ScrollArea>
+
+          {/* ── Completed banner ─────────────────────────────────────────── */}
+          {isCompleted ? (
+            <div className="debate-complete-banner p-8 sm:p-12 text-center">
+              <p className="text-xs uppercase tracking-[0.2em] text-background/50 mb-3">Debate Complete</p>
+              <p className="text-6xl sm:text-8xl font-bold tracking-tighter tabular-nums text-background leading-none mb-1">
+                {totalScore}
+              </p>
+              <p className="text-sm text-background/50 mb-6 uppercase tracking-[0.15em]">out of {maxScore}</p>
+
+              {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
+                <div className="text-left max-w-lg mx-auto mb-8 text-background">
+                  <details className="sm:hidden group/learn">
+                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-background list-none flex items-center gap-1.5 mb-2">
+                      <span className="group-open/learn:rotate-90 transition-transform inline-block">▶</span>
+                      Learning Summary
+                    </summary>
+                    <div className="mt-2">{renderLearningSummaryContent()}</div>
+                  </details>
+                  <div className="hidden sm:block">
+                    <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3">Learning Summary</p>
+                    {renderLearningSummaryContent()}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/figures">
+                  <Button className="bg-background text-foreground hover:bg-background/90 btn-press font-bold">
+                    NEW DEBATE →
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  onClick={handleNewDebate}
+                  className="border-background/30 text-background hover:bg-background/10 btn-press"
+                >
+                  DIFFERENT TOPIC
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // ── Input area ────────────────────────────────────────────────
+            <div className="space-y-4">
+              {/* Helpers: desktop expanded, mobile collapsible */}
+              {hasAnyHelper && (
+                <>
+                  <div className="lg:hidden">
+                    <details className="group/helpers">
+                      <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+                        <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
+                        Debate aids
+                        {tips.length > 0 && (
+                          <Badge variant="outline" className="text-xs ml-1 py-0 border-amber-700 text-amber-400">Tips</Badge>
+                        )}
+                      </summary>
+                      <div className="mt-3 space-y-3">{renderHelperSections()}</div>
+                    </details>
+                  </div>
+                  <div className="hidden lg:block space-y-3">{renderHelperSections()}</div>
+                </>
+              )}
+
+              {/* Argument structure helper */}
+              <details className="group/arghelper">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+                  <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
+                  Argument structure helper
+                </summary>
+                <div className="mt-2 p-3 bg-secondary/30 border border-border text-sm space-y-1">
+                  <p className="text-muted-foreground">
+                    Claim: Your main thesis. Evidence: Cite or paraphrase a passage. Warrant: Why this supports your claim.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setStructuredInput(!structuredInput)}
+                    className="text-xs text-foreground/80 hover:underline underline-offset-2"
+                  >
+                    {structuredInput ? "Use freeform placeholder" : "Use structured placeholder"}
+                  </button>
+                </div>
+              </details>
+
+              <Textarea
+                value={argument}
+                onChange={(e) => setArgument(e.target.value)}
+                placeholder={
+                  structuredInput
+                    ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
+                    : "Present your argument..."
+                }
+                className="min-h-28 sm:min-h-36 bg-card border-2 border-border focus:border-foreground resize-none text-sm sm:text-base"
+                disabled={isLoading}
+              />
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSubmitArgument}
+                  disabled={isLoading || !argument.trim()}
+                  className="flex-1 text-sm sm:text-base py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                      SUBMITTING...
+                    </span>
+                  ) : (
+                    "SUBMIT →"
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setArgument("")}
+                  disabled={isLoading}
+                  className="btn-press border-foreground/30"
+                >
+                  CLEAR
+                </Button>
+              </div>
+
+              {error && <p className="text-destructive text-sm">{error}</p>}
+            </div>
+          )}
         </div>
       </main>
     </div>

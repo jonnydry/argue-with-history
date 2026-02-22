@@ -246,36 +246,82 @@
   animation-play-state: paused;
 }
 
-/* Debate page: manuscript / arena aesthetic */
-.debate-manuscript {
-  position: relative;
+/* Debate page: brutalist arena aesthetic */
+
+/* Full-width round divider with centered label */
+.debate-round-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0 1.5rem;
 }
 
-.debate-manuscript::before {
+.debate-round-divider::before,
+.debate-round-divider::after {
   content: '';
-  position: absolute;
-  left: 0.75rem;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(251, 191, 36, 0.15), transparent);
-  pointer-events: none;
+  flex: 1;
+  height: 1px;
+  background: rgba(250, 250, 250, 0.15);
 }
 
-.debate-turn-you {
-  border-left: 3px solid rgba(250, 250, 250, 0.15);
+/* Figure response block — inverted (homepage CTA style) */
+.debate-figure-block {
+  background: #fafafa;
+  color: #18181b;
 }
 
-.debate-turn-opponent {
-  border-left: 3px solid rgba(251, 191, 36, 0.4);
+/* Score grid container */
+.debate-score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(250, 250, 250, 0.1);
+  border: 1px solid rgba(250, 250, 250, 0.1);
 }
 
-.debate-score-accent {
-  border-left: 3px solid rgba(251, 191, 36, 0.6);
+.debate-score-grid > * {
+  background: #09090b;
+  padding: 1rem;
 }
 
-.debate-arena-header {
-  background: linear-gradient(180deg, rgba(24, 24, 27, 0.6) 0%, transparent 100%);
+/* Inline scorecard section divider */
+.debate-scorecard-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.debate-scorecard-divider::before,
+.debate-scorecard-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(250, 250, 250, 0.15);
+}
+
+/* Debate complete banner — full inverted block */
+.debate-complete-banner {
+  background: #fafafa;
+  color: #18181b;
+}
+
+/* YOUR ARGUMENT block */
+.debate-you-block {
+  border-left: 4px solid rgba(250, 250, 250, 0.2);
+  padding-left: 1rem;
+}
+
+/* Score bar (wider/taller for brutalist feel) */
+.debate-score-bar-track {
+  height: 6px;
+  background: rgba(250, 250, 250, 0.12);
+  overflow: hidden;
+}
+
+.debate-score-bar-fill {
+  height: 100%;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scrolling card enhancements */
