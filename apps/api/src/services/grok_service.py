@@ -1,9 +1,83 @@
+import json
+import re
 import httpx
-from typing import Optional
+from typing import Optional, Any
 import logging
 from ..core.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# Inlined JSON schema for xAI structured output (no $ref, no minItems/maxItems/minLength/maxLength)
+_SCORE_RESPONSE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "logic_score": {"type": "integer", "description": "Logic score 1-10"},
+        "historical_accuracy_score": {"type": "integer", "description": "Historical accuracy score 1-10"},
+        "rhetoric_score": {"type": "integer", "description": "Rhetoric score 1-10"},
+        "rebuttal_score": {"type": "integer", "description": "Rebuttal score 1-10"},
+        "logic_reason": {"type": "string", "description": "1-2 sentences explaining the logic score"},
+        "historical_reason": {"type": "string", "description": "1-2 sentences explaining historical accuracy"},
+        "rhetoric_reason": {"type": "string", "description": "1-2 sentences explaining the rhetoric score"},
+        "rebuttal_reason": {"type": "string", "description": "1-2 sentences explaining the rebuttal score"},
+        "strengths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "What the user did well",
+        },
+        "improvements": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Suggestions for improvement",
+        },
+        "claim_checks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": ["accurate", "mischaracterized", "ignored"],
+                        "description": "Type of claim check",
+                    },
+                    "note": {"type": "string", "description": "Short specific note"},
+                },
+                "required": ["type", "note"],
+                "additionalProperties": False,
+            },
+            "description": "Claim validation notes",
+        },
+        "source_used_well": {"type": "boolean", "description": "Whether user used sources well"},
+    },
+    "required": [
+        "logic_score",
+        "historical_accuracy_score",
+        "rhetoric_score",
+        "rebuttal_score",
+        "logic_reason",
+        "historical_reason",
+        "rhetoric_reason",
+        "rebuttal_reason",
+        "strengths",
+        "improvements",
+        "source_used_well",
+    ],
+    "additionalProperties": False,
+}
+
+
+def _coerce_score(val: Any) -> int:
+    """Coerce a score value to an integer 1-10. Handles strings, floats, and malformed input."""
+    if isinstance(val, int) and 1 <= val <= 10:
+        return val
+    if isinstance(val, float) and 1 <= val <= 10:
+        return int(round(val))
+    if isinstance(val, str):
+        # Try to extract leading integer (e.g. "8. Some text" or "Elegant phrasing...")
+        match = re.match(r"(\d)", str(val).strip())
+        if match:
+            n = int(match.group(1))
+            return max(1, min(10, n))
+    return 5  # Fallback for unparseable values
 
 
 class GrokService:
@@ -178,27 +252,24 @@ Be EDUCATIONAL: scores should encourage learning.
 - Gently note areas for improvement
 - Historical accuracy: rate how well the user's claims match or engage with the passages above (if provided)
 
+CRITICAL: Only describe rhetoric and phrases that appear in the USER'S ARGUMENT. Do not attribute quotes, rhetorical devices, or stylistic choices to the user that are not in their text. Do not describe the figure's style as if it were the user's.
+
 CLAIM-CHECK: If the user cited or engaged with specific passages, add to claim_checks:
 - "accurate": User correctly represented a passage (e.g. "You accurately engaged with Chapter 17 on fear vs love.")
 - "mischaracterized": User got a passage wrong (e.g. "Your summary of Socrates' view in Crito was off—he argues obedience to the Laws, not mere custom.")
 - "ignored": User could have addressed a key passage but did not (optional, 0-1 items)
 Use short, specific notes. Omit claim_checks if no passages or no relevant engagement.
 
-Respond ONLY with valid JSON in this exact format:
-{{
-  "logic_score": <integer 1-10>,
-  "historical_accuracy_score": <integer 1-10>,
-  "rhetoric_score": <integer 1-10>,
-  "rebuttal_score": <integer 1-10>,
-  "logic_reason": "<1-2 sentences explaining the logic score>",
-  "historical_reason": "<1-2 sentences explaining the historical accuracy score>",
-  "rhetoric_reason": "<1-2 sentences explaining the rhetoric score>",
-  "rebuttal_reason": "<1-2 sentences explaining the rebuttal score>",
-  "strengths": ["strength 1", "strength 2"],
-  "improvements": ["suggestion 1"],
-  "claim_checks": [{{"type": "accurate"|"mischaracterized"|"ignored", "note": "<short specific note>"}}],
-  "source_used_well": <true or false>
-}}"""
+Respond with valid JSON matching the required schema."""
+
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "score_result",
+                "strict": True,
+                "schema": _SCORE_RESPONSE_SCHEMA,
+            },
+        }
 
         response = await self.client.post(
             "/chat/completions",
@@ -206,7 +277,8 @@ Respond ONLY with valid JSON in this exact format:
                 "model": "grok-4-1-fast-non-reasoning",
                 "messages": [{"role": "user", "content": scoring_prompt}],
                 "temperature": 0.3,
-                "max_tokens": 500,
+                "max_tokens": 650,
+                "response_format": response_format,
             },
         )
 
@@ -219,16 +291,27 @@ Respond ONLY with valid JSON in this exact format:
         if content is None:
             raise ValueError("Empty message content from Grok")
 
-        import json
-
         try:
-            return json.loads(content)
+            parsed = json.loads(content)
         except json.JSONDecodeError as e:
             logger.warning("Grok scoring JSON parse failed: %s", e, exc_info=True)
             return {
                 "scores": None,
                 "scores_error": "Scoring unavailable — response format invalid",
             }
+
+        # Validate and sanitize scores so frontend never receives strings
+        if isinstance(parsed, dict):
+            for key in (
+                "logic_score",
+                "historical_accuracy_score",
+                "rhetoric_score",
+                "rebuttal_score",
+            ):
+                if key in parsed:
+                    parsed[key] = _coerce_score(parsed[key])
+
+        return parsed
 
     async def generate_learning_summary(
         self,

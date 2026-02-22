@@ -2,6 +2,13 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+
+/** Coerce score value to integer 1-10. Prevents string concatenation in total. */
+function toScore(val: unknown): number {
+  const n = typeof val === "number" && !Number.isNaN(val) ? Math.round(val) : parseInt(String(val ?? ""), 10);
+  const num = !Number.isNaN(n) ? n : 5;
+  return Math.min(10, Math.max(1, num));
+}
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -172,10 +179,7 @@ export default function DebatePageContent() {
   const latestTurn = currentDebate.turns[currentDebate.turns.length - 1];
   const maxScore = 40;
   const totalScore = latestTurn?.scores
-    ? latestTurn.scores.logic_score +
-      latestTurn.scores.historical_accuracy_score +
-      latestTurn.scores.rhetoric_score +
-      (latestTurn.scores.rebuttal_score ?? 0)
+    ? [latestTurn.scores.logic_score, latestTurn.scores.historical_accuracy_score, latestTurn.scores.rhetoric_score, latestTurn.scores.rebuttal_score ?? 0].reduce((sum, v) => sum + toScore(v), 0)
     : 0;
 
   // Hoist computed values for use in both mobile and desktop renders
@@ -193,13 +197,13 @@ export default function DebatePageContent() {
   const tips: string[] = [];
   if (latestTurn?.scores && !isCompleted) {
     const s = latestTurn.scores;
-    if ((s.historical_accuracy_score ?? 10) < 6) {
+    if (toScore(s.historical_accuracy_score) < 6) {
       tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
     }
-    if (typeof s.rebuttal_score === "number" && s.rebuttal_score < 6) {
+    if (toScore(s.rebuttal_score) < 6) {
       tips.push("Tip: Respond directly to a claim they made.");
     }
-    if ((s.logic_score ?? 10) < 6) {
+    if (toScore(s.logic_score) < 6) {
       tips.push("Tip: Make your claim clear, then support it with evidence and reasoning.");
     }
   }
@@ -212,60 +216,64 @@ export default function DebatePageContent() {
   const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
 
   // Reusable score bars renderer
-  const renderScoreBars = (barHeight: string) => (
-    <>
-      <div title={latestTurn?.scores?.logic_reason || undefined}>
-        <div className="flex justify-between text-sm mb-1">
-          <span>LOGIC</span>
-          <span className="font-bold">{latestTurn!.scores!.logic_score}/10</span>
-        </div>
-        <div className={`${barHeight} bg-secondary`}>
-          <div
-            className="h-full bg-foreground transition-all duration-500"
-            style={{ width: `${latestTurn!.scores!.logic_score * 10}%` }}
-          />
-        </div>
-      </div>
-      <div title={latestTurn?.scores?.historical_reason || undefined}>
-        <div className="flex justify-between text-sm mb-1">
-          <span>HISTORICAL</span>
-          <span className="font-bold">{latestTurn!.scores!.historical_accuracy_score}/10</span>
-        </div>
-        <div className={`${barHeight} bg-secondary`}>
-          <div
-            className="h-full bg-foreground transition-all duration-500"
-            style={{ width: `${latestTurn!.scores!.historical_accuracy_score * 10}%` }}
-          />
-        </div>
-      </div>
-      <div title={latestTurn?.scores?.rhetoric_reason || undefined}>
-        <div className="flex justify-between text-sm mb-1">
-          <span>RHETORIC</span>
-          <span className="font-bold">{latestTurn!.scores!.rhetoric_score}/10</span>
-        </div>
-        <div className={`${barHeight} bg-secondary`}>
-          <div
-            className="h-full bg-foreground transition-all duration-500"
-            style={{ width: `${latestTurn!.scores!.rhetoric_score * 10}%` }}
-          />
-        </div>
-      </div>
-      {typeof latestTurn!.scores!.rebuttal_score === "number" && (
-        <div title={latestTurn?.scores?.rebuttal_reason || undefined}>
+  const renderScoreBars = (barHeight: string) => {
+    const logic = toScore(latestTurn!.scores!.logic_score);
+    const historical = toScore(latestTurn!.scores!.historical_accuracy_score);
+    const rhetoric = toScore(latestTurn!.scores!.rhetoric_score);
+    const rebuttal = toScore(latestTurn!.scores!.rebuttal_score);
+    return (
+      <>
+        <div title={latestTurn?.scores?.logic_reason || undefined}>
           <div className="flex justify-between text-sm mb-1">
-            <span>REBUTTAL</span>
-            <span className="font-bold">{latestTurn!.scores!.rebuttal_score}/10</span>
+            <span>LOGIC</span>
+            <span className="font-bold">{logic}/10</span>
           </div>
           <div className={`${barHeight} bg-secondary`}>
             <div
               className="h-full bg-foreground transition-all duration-500"
-              style={{ width: `${latestTurn!.scores!.rebuttal_score * 10}%` }}
+              style={{ width: `${logic * 10}%` }}
             />
           </div>
         </div>
-      )}
-    </>
-  );
+        <div title={latestTurn?.scores?.historical_reason || undefined}>
+          <div className="flex justify-between text-sm mb-1">
+            <span>HISTORICAL</span>
+            <span className="font-bold">{historical}/10</span>
+          </div>
+          <div className={`${barHeight} bg-secondary`}>
+            <div
+              className="h-full bg-foreground transition-all duration-500"
+              style={{ width: `${historical * 10}%` }}
+            />
+          </div>
+        </div>
+        <div title={latestTurn?.scores?.rhetoric_reason || undefined}>
+          <div className="flex justify-between text-sm mb-1">
+            <span>RHETORIC</span>
+            <span className="font-bold">{rhetoric}/10</span>
+          </div>
+          <div className={`${barHeight} bg-secondary`}>
+            <div
+              className="h-full bg-foreground transition-all duration-500"
+              style={{ width: `${rhetoric * 10}%` }}
+            />
+          </div>
+        </div>
+        <div title={latestTurn?.scores?.rebuttal_reason || undefined}>
+          <div className="flex justify-between text-sm mb-1">
+            <span>REBUTTAL</span>
+            <span className="font-bold">{rebuttal}/10</span>
+          </div>
+          <div className={`${barHeight} bg-secondary`}>
+            <div
+              className="h-full bg-foreground transition-all duration-500"
+              style={{ width: `${rebuttal * 10}%` }}
+            />
+          </div>
+        </div>
+      </>
+    );
+  };
 
   // Reusable feedback sections renderer
   const renderFeedbackSections = (collapsible: boolean) => (
@@ -472,12 +480,10 @@ export default function DebatePageContent() {
               <div className="flex items-center gap-3 text-sm">
                 <span className="font-bold">SCORE: {totalScore}/{maxScore}</span>
                 <div className="flex gap-2 text-xs text-muted-foreground">
-                  <span>L:{latestTurn.scores.logic_score}</span>
-                  <span>H:{latestTurn.scores.historical_accuracy_score}</span>
-                  <span>R:{latestTurn.scores.rhetoric_score}</span>
-                  {typeof latestTurn.scores.rebuttal_score === "number" && (
-                    <span>Rb:{latestTurn.scores.rebuttal_score}</span>
-                  )}
+                  <span>L:{toScore(latestTurn.scores.logic_score)}</span>
+                  <span>H:{toScore(latestTurn.scores.historical_accuracy_score)}</span>
+                  <span>R:{toScore(latestTurn.scores.rhetoric_score)}</span>
+                  <span>Rb:{toScore(latestTurn.scores.rebuttal_score)}</span>
                 </div>
               </div>
               <span className={`transition-transform text-xs ${mobileScoreExpanded ? "rotate-180" : ""}`}>
