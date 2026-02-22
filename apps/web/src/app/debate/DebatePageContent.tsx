@@ -117,21 +117,19 @@ export default function DebatePageContent() {
   if (!selectedFigure || !selectedTopic) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
-        <Card className="max-w-md w-full border-2 contrast-border">
-          <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">NO DEBATE SELECTED</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-              Choose a figure and topic first.
-            </p>
-            <Link href="/figures">
-              <Button className="w-full bg-foreground text-background btn-press">
-                SELECT OPPONENT
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full text-center arena-enter">
+          <Swords size={40} className="mx-auto mb-6 text-muted-foreground/30" />
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-3">NO OPPONENT<br/><span className="text-stroke-heavy">SELECTED</span></h2>
+          <p className="text-muted-foreground mb-8 text-sm sm:text-base">
+            Choose a figure and topic to enter the arena.
+          </p>
+          <Link href="/figures">
+            <Button className="w-full text-base py-5 h-auto bg-foreground text-background btn-press font-bold tracking-wider">
+              <Swords size={18} className="mr-2" />
+              SELECT OPPONENT
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -155,16 +153,31 @@ export default function DebatePageContent() {
         </header>
 
         <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
-          <div className="max-w-xl mx-auto">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4">Ready to Debate</p>
-            <h2 className="text-4xl sm:text-6xl font-bold tracking-tighter leading-[0.9] mb-8 sm:mb-12">
-              {selectedFigure.name.toUpperCase()}
+          <div className="max-w-xl mx-auto arena-enter">
+            <p className="war-label mb-4">// ENTERING THE ARENA</p>
+            <h2 className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter leading-[0.85] mb-4">
+              {selectedFigure.name.split(' ').map((word, i) => (
+                <span key={i}>
+                  {i === selectedFigure.name.split(' ').length - 1 ? (
+                    <span className="text-stroke-heavy">{word.toUpperCase()}</span>
+                  ) : (
+                    <>{word.toUpperCase()} </>
+                  )}
+                </span>
+              ))}
             </h2>
+            <p className="text-sm text-muted-foreground mb-8 sm:mb-12">
+              {selectedFigure.era} · {selectedFigure.traits?.slice(0, 3).join(' · ')}
+            </p>
 
-            <div className="border-t border-border pt-6 mb-6 space-y-4">
+            <div className="arena-divider mb-6">
+              <Swords size={14} className="text-muted-foreground/40" />
+            </div>
+
+            <div className="mb-6 space-y-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Topic</p>
-                <p className="text-lg font-medium">{selectedTopic.title}</p>
+                <p className="war-label mb-2">// TOPIC OF CONTENTION</p>
+                <p className="text-xl sm:text-2xl font-bold tracking-tight">{selectedTopic.title}</p>
               </div>
             </div>
 
@@ -185,18 +198,25 @@ export default function DebatePageContent() {
               </div>
             )}
 
+            <div className="arena-divider mb-6">
+              <Swords size={14} className="text-muted-foreground/40" />
+            </div>
+
             <Button
               onClick={handleStartDebate}
               disabled={isLoading}
-              className="w-full text-base sm:text-lg py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press"
+              className="w-full text-lg sm:text-xl py-7 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                  LOADING...
+                  <span className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                  PREPARING ARENA...
                 </span>
               ) : (
-                "BEGIN →"
+                <span className="flex items-center gap-3">
+                  <Swords size={20} />
+                  ENTER THE ARENA
+                </span>
               )}
             </Button>
             {error && <p className="text-destructive text-sm mt-3">{error}</p>}
@@ -535,16 +555,20 @@ export default function DebatePageContent() {
                   </div>
 
                   <div className="mt-6 text-center">
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Your turn to respond</p>
+                    <div className="arena-divider">
+                      <Swords size={12} className="text-muted-foreground/30" />
+                    </div>
+                    <p className="war-label">Your turn to respond</p>
                   </div>
                 </div>
               )}
 
               {/* Empty state */}
               {currentDebate.turns.length === 0 && !openingStatement && (
-                <div className="py-20 text-center">
-                  <p className="text-4xl font-bold tracking-tighter mb-3">THE DEBATE BEGINS</p>
-                  <p className="text-muted-foreground text-sm uppercase tracking-[0.15em]">Present your opening argument.</p>
+                <div className="py-20 text-center arena-enter">
+                  <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
+                  <p className="text-4xl sm:text-5xl font-bold tracking-tighter mb-3">THE ARENA<br/><span className="text-stroke-heavy">AWAITS</span></p>
+                  <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
                 </div>
               )}
 
@@ -610,9 +634,11 @@ export default function DebatePageContent() {
 
               {/* Loading indicator */}
               {isLoading && (
-                <div className="flex items-center gap-3 py-6 text-muted-foreground">
-                  <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm uppercase tracking-[0.15em]">Thinking...</span>
+                <div className="flex items-center gap-3 py-8 text-muted-foreground arena-enter">
+                  <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm uppercase tracking-[0.2em] font-bold">
+                    {selectedFigure.name.toUpperCase()} is formulating a response...
+                  </span>
                 </div>
               )}
 
@@ -622,12 +648,15 @@ export default function DebatePageContent() {
 
           {/* ── Completed banner ─────────────────────────────────────────── */}
           {isCompleted ? (
-            <div className="debate-complete-banner p-8 sm:p-12 text-center">
-              <p className="text-xs uppercase tracking-[0.2em] text-background/50 mb-3">Debate Complete</p>
-              <p className="text-6xl sm:text-8xl font-bold tracking-tighter tabular-nums text-background leading-none mb-1">
+            <div className="debate-complete-banner p-8 sm:p-12 text-center arena-enter">
+              <Swords size={28} className="mx-auto mb-3 text-background/30" />
+              <p className="text-xs uppercase tracking-[0.3em] text-background/50 mb-4">
+                {aggregateScore >= 30 ? "VICTORY" : aggregateScore >= 20 ? "WELL FOUGHT" : "DEFEATED"}
+              </p>
+              <p className="text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums text-background leading-none mb-1 score-reveal">
                 {aggregateScore}
               </p>
-              <p className="text-sm text-background/50 mb-6 uppercase tracking-[0.15em]">average turn score out of {maxScore}</p>
+              <p className="text-sm text-background/50 mb-8 uppercase tracking-[0.15em]">of {maxScore} possible</p>
 
               {roundTrend.length > 0 && (
                 <div className="max-w-lg mx-auto mb-8 text-left">
@@ -728,31 +757,39 @@ export default function DebatePageContent() {
                 </div>
               </details>
 
-              <Textarea
-                value={argument}
-                onChange={(e) => setArgument(e.target.value)}
-                placeholder={
-                  structuredInput
-                    ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
-                    : "Present your argument..."
-                }
-                className="min-h-28 sm:min-h-36 bg-card border-2 border-border focus:border-foreground resize-none text-sm sm:text-base"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Textarea
+                  value={argument}
+                  onChange={(e) => setArgument(e.target.value)}
+                  placeholder={
+                    structuredInput
+                      ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
+                      : "Present your argument..."
+                  }
+                  className="min-h-32 sm:min-h-40 bg-card border-2 ink-border focus:border-foreground resize-none text-sm sm:text-base"
+                  disabled={isLoading}
+                />
+                <span className="absolute bottom-2 right-3 text-xs text-muted-foreground/40 tabular-nums">
+                  {argument.length > 0 ? `${argument.length} chars` : ''}
+                </span>
+              </div>
 
               <div className="flex gap-3">
                 <Button
                   onClick={handleSubmitArgument}
                   disabled={isLoading || !argument.trim()}
-                  className="flex-1 text-sm sm:text-base py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold"
+                  className="flex-1 text-sm sm:text-base py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      SUBMITTING...
+                      JUDGING...
                     </span>
                   ) : (
-                    "SUBMIT →"
+                    <span className="flex items-center gap-2">
+                      <Swords size={16} />
+                      STRIKE
+                    </span>
                   )}
                 </Button>
                 <Button

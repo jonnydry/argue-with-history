@@ -135,15 +135,19 @@ export default function FiguresPage() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-8 sm:mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3">
+        <div className="mb-8 sm:mb-12 arena-enter">
+          <p className="war-label mb-3">// SELECT YOUR ADVERSARY</p>
+          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3 sm:mb-4">
             CHOOSE YOUR
             <br />
-            OPPONENT
+            <span className="text-stroke-heavy">OPPONENT</span>
           </h2>
-          <p className="text-muted-foreground text-sm sm:text-lg">
-            Select wisely. Your arguments will be tested.
+          <p className="text-muted-foreground text-sm sm:text-lg max-w-md">
+            Each has centuries of wisdom. You have your wits. Select wisely.
           </p>
+          <div className="arena-divider mt-6">
+            <Swords size={16} className="text-muted-foreground/40" />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6 justify-center sm:justify-start max-w-5xl mx-auto">
@@ -170,9 +174,9 @@ export default function FiguresPage() {
             <Card
               key={figure.id}
               onClick={() => handleFigureClick(figure)}
-              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden rounded-xl shadow-lg hover:shadow-xl ${
+              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden rounded-xl shadow-lg hover:shadow-xl arena-texture ${
                 isSelected
-                  ? "bg-foreground text-background border-foreground shadow-lg"
+                  ? "bg-foreground text-background border-foreground shadow-lg arena-pulse"
                   : isHighlighted
                   ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50 shadow-lg"
                   : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
@@ -269,11 +273,16 @@ export default function FiguresPage() {
         )}
 
         {selectedFigure && (
-          <div ref={topicSectionRef} className="max-w-3xl mx-auto animate-fade-up">
+          <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter">
             <div className="mb-8">
-              <h3 className="text-2xl font-bold tracking-tight mb-2">
+              <div className="arena-divider">
+                <Swords size={14} className="text-muted-foreground/40" />
+              </div>
+              <p className="war-label mb-2">// CHOOSE YOUR BATTLEFIELD</p>
+              <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
                 SELECT A TOPIC
               </h3>
+              <p className="text-sm text-muted-foreground">What ground will you fight on?</p>
             </div>
             
             <div className="grid sm:grid-cols-2 gap-3 mb-10">
@@ -337,9 +346,13 @@ export default function FiguresPage() {
         )}
 
         {selectedFigure && selectedTopic && (
-          <div ref={settingsSectionRef} className="max-w-2xl mx-auto animate-fade-up delay-200">
+          <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter">
             <div className="mb-8">
-              <h3 className="text-2xl font-bold tracking-tight mb-6">
+              <div className="arena-divider">
+                <Swords size={14} className="text-muted-foreground/40" />
+              </div>
+              <p className="war-label mb-2">// CONFIGURE YOUR BATTLE</p>
+              <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-6">
                 SETTINGS
               </h3>
               
