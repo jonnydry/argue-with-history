@@ -11,7 +11,6 @@ function toScore(val: unknown): number {
   return Math.min(10, Math.max(1, num));
 }
 
-import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +27,9 @@ export default function DebatePageContent() {
   const openingPassages = useDebateStore((s) => s.openingPassages);
   const isLoading = useDebateStore((s) => s.isLoading);
   const error = useDebateStore((s) => s.error);
+  const fetchFigures = useDebateStore((s) => s.fetchFigures);
+  const prefetchTopicPrimer = useDebateStore((s) => s.prefetchTopicPrimer);
+  const hydrateSelectionsFromDebate = useDebateStore((s) => s.hydrateSelectionsFromDebate);
   const structuredInput = useDebateStore((s) => s.structuredInput);
   const setStructuredInput = useDebateStore((s) => s.setStructuredInput);
   const scholarMode = useDebateStore((s) => s.scholarMode);
@@ -41,49 +43,42 @@ export default function DebatePageContent() {
   const topicPrimerKey = useDebateStore((s) => s.topicPrimerKey);
 
   const [argument, setArgument] = useState("");
-  const [debateStarted, setDebateStarted] = useState(false);
-  const [primer, setPrimer] = useState<{
-    position_summary?: string;
-    sample_quote?: string | null;
-    user_task?: string;
-  } | null>(null);
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
   const effectivePrimer =
     topicPrimer && topicPrimerKey && selectedFigure && selectedTopic && topicPrimerKey === `${selectedFigure.id}:${selectedTopic.id}`
       ? topicPrimer
-      : primer;
+      : null;
 
   useEffect(() => {
     clearStaleDebateIfMismatch();
   }, [currentDebate, selectedFigure?.id, selectedTopic?.id, clearStaleDebateIfMismatch]);
 
   useEffect(() => {
-    if (currentDebate && currentDebate.turns.length > 0) {
-      setDebateStarted(true);
+    if (!currentDebate || (selectedFigure && selectedTopic)) return;
+    let cancelled = false;
+    const restoreSelections = async () => {
+      await fetchFigures();
+      if (!cancelled) hydrateSelectionsFromDebate();
+    };
+    void restoreSelections();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentDebate, selectedFigure, selectedTopic, fetchFigures, hydrateSelectionsFromDebate]);
+
+  useEffect(() => {
+    if (selectedFigure && selectedTopic && !currentDebate) {
+      void prefetchTopicPrimer();
     }
-  }, [currentDebate]);
+  }, [selectedFigure, selectedTopic, currentDebate, prefetchTopicPrimer]);
 
   useEffect(() => {
     scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [currentDebate?.turns, openingStatement]);
 
-  useEffect(() => {
-    if (selectedFigure && selectedTopic && !debateStarted && !currentDebate) {
-      const key = `${selectedFigure.id}:${selectedTopic.id}`;
-      if (topicPrimerKey === key && topicPrimer) return;
-      api.figures
-        .getTopicPrimer(selectedFigure.id, selectedTopic.id)
-        .then(setPrimer)
-        .catch(() => setPrimer(null));
-    } else {
-      setPrimer(null);
-    }
-  }, [selectedFigure?.id, selectedTopic?.id, debateStarted, currentDebate, topicPrimerKey, topicPrimer]);
-
   const handleStartDebate = async () => {
     await startDebate();
-    setDebateStarted(true);
   };
 
   const handleSubmitArgument = async () => {
@@ -98,11 +93,27 @@ export default function DebatePageContent() {
 
   const handleNewDebate = () => {
     reset();
-    setDebateStarted(false);
     setArgument("");
   };
 
   // ── No figure/topic selected ──────────────────────────────────────────────
+  if (currentDebate && (!selectedFigure || !selectedTopic)) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
+        <Card className="max-w-md w-full border-2 contrast-border">
+          <CardHeader>
+            <CardTitle className="text-lg sm:text-xl">RESTORING DEBATE</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">
+              Restoring your saved figure and topic selections...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!selectedFigure || !selectedTopic) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
@@ -126,7 +137,7 @@ export default function DebatePageContent() {
   }
 
   // ── Pre-debate / READY screen ─────────────────────────────────────────────
-  if (!debateStarted || !currentDebate) {
+  if (!currentDebate) {
     return (
       <div className="min-h-screen bg-background text-foreground noise-bg">
         <header className="border-b border-border">
@@ -199,7 +210,7 @@ export default function DebatePageContent() {
   const isCompleted = currentDebate.status === "completed";
   const latestTurn = currentDebate.turns[currentDebate.turns.length - 1];
   const maxScore = 40;
-  const totalScore = latestTurn?.scores
+  const latestTurnScore = latestTurn?.scores
     ? [
         latestTurn.scores.logic_score,
         latestTurn.scores.historical_accuracy_score,
@@ -207,11 +218,32 @@ export default function DebatePageContent() {
         latestTurn.scores.rebuttal_score ?? 0,
       ].reduce((sum, v) => sum + toScore(v), 0)
     : 0;
-
-  const claimChecks = latestTurn?.scores && "claim_checks" in latestTurn.scores
-    ? (latestTurn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
-    : undefined;
-  const hasClaimChecks = Array.isArray(claimChecks) && claimChecks.length > 0;
+  const scoredTurnTotals = currentDebate.turns
+    .filter((turn) => Boolean(turn.scores))
+    .map((turn) =>
+      [
+        turn.scores!.logic_score,
+        turn.scores!.historical_accuracy_score,
+        turn.scores!.rhetoric_score,
+        turn.scores!.rebuttal_score ?? 0,
+      ].reduce((sum, v) => sum + toScore(v), 0)
+    );
+  const aggregateScore =
+    scoredTurnTotals.length > 0
+      ? Math.round(scoredTurnTotals.reduce((sum, n) => sum + n, 0) / scoredTurnTotals.length)
+      : latestTurnScore;
+  const roundTrend = currentDebate.turns.map((turn) => {
+    if (!turn.scores) {
+      return { turnNumber: turn.turn_number, score: null as number | null };
+    }
+    const score = [
+      turn.scores.logic_score,
+      turn.scores.historical_accuracy_score,
+      turn.scores.rhetoric_score,
+      turn.scores.rebuttal_score ?? 0,
+    ].reduce((sum, v) => sum + toScore(v), 0);
+    return { turnNumber: turn.turn_number, score };
+  });
 
   const scholarPassages = scholarMode
     ? (currentDebate.turns.length > 0
@@ -593,9 +625,35 @@ export default function DebatePageContent() {
             <div className="debate-complete-banner p-8 sm:p-12 text-center">
               <p className="text-xs uppercase tracking-[0.2em] text-background/50 mb-3">Debate Complete</p>
               <p className="text-6xl sm:text-8xl font-bold tracking-tighter tabular-nums text-background leading-none mb-1">
-                {totalScore}
+                {aggregateScore}
               </p>
-              <p className="text-sm text-background/50 mb-6 uppercase tracking-[0.15em]">out of {maxScore}</p>
+              <p className="text-sm text-background/50 mb-6 uppercase tracking-[0.15em]">average turn score out of {maxScore}</p>
+
+              {roundTrend.length > 0 && (
+                <div className="max-w-lg mx-auto mb-8 text-left">
+                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-background/80">Round Trend</p>
+                  <div className="space-y-2">
+                    {roundTrend.map((entry) => (
+                      <div key={entry.turnNumber} className="flex items-center gap-3">
+                        <span className="text-xs uppercase tracking-[0.15em] w-14 text-background/60">
+                          R{String(entry.turnNumber).padStart(2, "0")}
+                        </span>
+                        <div className="flex-1 h-2 bg-background/20 overflow-hidden">
+                          {entry.score !== null && (
+                            <div
+                              className="h-full bg-foreground"
+                              style={{ width: `${(entry.score / maxScore) * 100}%` }}
+                            />
+                          )}
+                        </div>
+                        <span className="text-xs tabular-nums w-12 text-right text-background/70">
+                          {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
                 <div className="text-left max-w-lg mx-auto mb-8 text-background">

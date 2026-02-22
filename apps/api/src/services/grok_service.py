@@ -72,8 +72,8 @@ def _coerce_score(val: Any) -> int:
     if isinstance(val, float) and 1 <= val <= 10:
         return int(round(val))
     if isinstance(val, str):
-        # Try to extract leading integer (e.g. "8. Some text" or "Elegant phrasing...")
-        match = re.match(r"(\d)", str(val).strip())
+        # Try to extract leading integer (e.g. "8. Some text" or "10 / 10")
+        match = re.match(r"^(\d{1,2})", str(val).strip())
         if match:
             n = int(match.group(1))
             return max(1, min(10, n))

@@ -169,14 +169,23 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
         debate_history.append({"role": "user", "content": turn.user_argument})
         debate_history.append({"role": "assistant", "content": turn.figure_response})
 
-    figure_response = await grok_service.generate_response(
-        system_prompt=persona_prompt,
-        context=context.get("formatted", ""),
-        topic=debate.topic,
-        debate_history=debate_history,
-        user_argument=request.argument,
-        figure_name=figure_info.name,
-    )
+    generation_failed = False
+    try:
+        figure_response = await grok_service.generate_response(
+            system_prompt=persona_prompt,
+            context=context.get("formatted", ""),
+            topic=debate.topic,
+            debate_history=debate_history,
+            user_argument=request.argument,
+            figure_name=figure_info.name,
+        )
+    except Exception as exc:
+        logger.warning("Turn response generation failed: %s", exc, exc_info=True)
+        generation_failed = True
+        figure_response = (
+            f"I cannot fully respond right now, but your point on '{debate.topic}' is noted. "
+            "Please submit again and I will continue."
+        )
 
     raw_passages = context.get("passages", [])
 
@@ -193,15 +202,28 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
     elif debate.turns:
         previous_figure_response = debate.turns[-1].figure_response
 
-    score_result = await grok_service.score_argument(
-        user_argument=request.argument,
-        figure_response=figure_response,
-        topic=debate.topic,
-        sources=context.get("sources", []),
-        figure_name=figure_info.name,
-        passages=raw_passages,
-        previous_figure_response=previous_figure_response or None,
-    )
+    if generation_failed:
+        score_result = {
+            "scores": None,
+            "scores_error": "Scoring unavailable — response generation failed",
+        }
+    else:
+        try:
+            score_result = await grok_service.score_argument(
+                user_argument=request.argument,
+                figure_response=figure_response,
+                topic=debate.topic,
+                sources=context.get("sources", []),
+                figure_name=figure_info.name,
+                passages=raw_passages,
+                previous_figure_response=previous_figure_response or None,
+            )
+        except Exception as exc:
+            logger.warning("Turn scoring failed: %s", exc, exc_info=True)
+            score_result = {
+                "scores": None,
+                "scores_error": "Scoring unavailable — temporary scoring error",
+            }
     passages = [Passage(**p) for p in raw_passages] if raw_passages else []
 
     scores = score_result.get("scores") if "scores_error" in score_result else score_result

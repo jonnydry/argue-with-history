@@ -63,14 +63,15 @@ interface DebateStore {
   figuresLastFetched: number | null;
 
   fetchFigures: () => Promise<void>;
-  prefetchTopicPrimer: () => void;
+  prefetchTopicPrimer: () => Promise<void>;
+  hydrateSelectionsFromDebate: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
   setDebateMode: (mode: "structured" | "freeform") => void;
   setMaxTurns: (turns: number) => void;
   setStructuredInput: (enabled: boolean) => void;
   setScholarMode: (enabled: boolean) => void;
-  startDebate: () => Promise<void>;
+  startDebate: () => Promise<boolean>;
   submitArgument: (argument: string) => Promise<void>;
   endDebate: () => Promise<void>;
   reset: () => void;
@@ -79,6 +80,8 @@ interface DebateStore {
 }
 
 let fetchPromise: Promise<void> | null = null;
+let primerPromise: Promise<void> | null = null;
+let primerPromiseKey: string | null = null;
 
 export const useDebateStore = create<DebateStore>()(
   persist(
@@ -121,6 +124,7 @@ export const useDebateStore = create<DebateStore>()(
         fetchPromise = api.figures.list()
           .then((figures) => {
             set({ figures, isLoading: false, figuresLastFetched: Date.now() });
+            get().hydrateSelectionsFromDebate();
           })
           .catch((error) => {
             set({ error: error.message, isLoading: false });
@@ -140,15 +144,52 @@ export const useDebateStore = create<DebateStore>()(
         set({ selectedTopic: topic });
       },
 
-      prefetchTopicPrimer: () => {
+      hydrateSelectionsFromDebate: () => {
+        const { currentDebate, figures, selectedFigure, selectedTopic } = get();
+        if (!currentDebate || figures.length === 0) return;
+        if (selectedFigure && selectedTopic) return;
+
+        const figure = figures.find((f) => f.id === currentDebate.figure);
+        if (!figure) return;
+
+        const topic = figure.topics.find(
+          (t) =>
+            t.id === (currentDebate as { topic_id?: string }).topic_id ||
+            t.title === currentDebate.topic
+        );
+        if (!topic) return;
+
+        set({ selectedFigure: figure, selectedTopic: topic });
+      },
+
+      prefetchTopicPrimer: async () => {
         const { selectedFigure, selectedTopic } = get();
         if (!selectedFigure || !selectedTopic) return;
         const key = `${selectedFigure.id}:${selectedTopic.id}`;
         if (get().topicPrimerKey === key) return;
-        api.figures
-          .getTopicPrimer(selectedFigure.id, selectedTopic.id)
-          .then((primer) => set({ topicPrimer: primer, topicPrimerKey: key }))
-          .catch(() => set({ topicPrimer: null, topicPrimerKey: null }));
+        if (primerPromise && primerPromiseKey === key) {
+          await primerPromise;
+          return;
+        }
+
+        primerPromiseKey = key;
+        primerPromise = (async () => {
+          try {
+            const primer = await api.figures.getTopicPrimer(
+              selectedFigure.id,
+              selectedTopic.id
+            );
+            set({ topicPrimer: primer, topicPrimerKey: key });
+          } catch {
+            set({ topicPrimer: null, topicPrimerKey: null });
+          } finally {
+            if (primerPromiseKey === key) {
+              primerPromise = null;
+              primerPromiseKey = null;
+            }
+          }
+        })();
+        await primerPromise;
       },
 
       setDebateMode: (mode) => {
@@ -171,7 +212,7 @@ export const useDebateStore = create<DebateStore>()(
         const { selectedFigure, selectedTopic, debateMode, maxTurns } = get();
         if (!selectedFigure || !selectedTopic) {
           set({ error: "Please select a figure and topic" });
-          return;
+          return false;
         }
 
         set({ isLoading: true, error: null });
@@ -190,8 +231,10 @@ export const useDebateStore = create<DebateStore>()(
             openingPassages: response.passages ?? [],
             isLoading: false 
           });
+          return true;
         } catch (error) {
           set({ error: (error as Error).message, isLoading: false });
+          return false;
         }
       },
 
@@ -287,6 +330,8 @@ export const useDebateStore = create<DebateStore>()(
       partialize: (state) => ({
         figures: state.figures,
         figuresLastFetched: state.figuresLastFetched,
+        selectedFigure: state.selectedFigure,
+        selectedTopic: state.selectedTopic,
         currentDebate: state.currentDebate,
         debateMode: state.debateMode,
         maxTurns: state.maxTurns,

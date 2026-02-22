@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Swords } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,8 @@ export default function FiguresPage() {
   const [selectedEra, setSelectedEra] = useState<EraCategory>("All");
   const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
   const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
+  const selectedFigureId = selectedFigure?.id;
+  const selectedTopicId = selectedTopic?.id;
 
   const filteredFigures = filterFiguresByEra(figures, selectedEra);
 
@@ -86,10 +88,10 @@ export default function FiguresPage() {
   }, [selectedFigure, selectedTopic]);
 
   useEffect(() => {
-    if (selectedFigure && selectedTopic) {
-      prefetchTopicPrimer();
+    if (selectedFigureId && selectedTopicId) {
+      void prefetchTopicPrimer();
     }
-  }, [selectedFigure?.id, selectedTopic?.id, prefetchTopicPrimer]);
+  }, [selectedFigureId, selectedTopicId, prefetchTopicPrimer]);
 
   const handleFigureClick = (figure: FigureInfo) => {
     if (selectedFigure?.id === figure.id) return;

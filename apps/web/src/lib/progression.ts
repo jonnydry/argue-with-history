@@ -49,7 +49,7 @@ export function getTopicCompleted(figureId: string, topicId: string): boolean {
   return load().byFigureTopic[figureId]?.[topicId] ?? false;
 }
 
-export function getTopicsCompletedForFigure(figureId: string, totalTopics: number): number {
+export function getTopicsCompletedForFigure(figureId: string): number {
   const topicMap = load().byFigureTopic[figureId];
   if (!topicMap) return 0;
   return Object.keys(topicMap).length;

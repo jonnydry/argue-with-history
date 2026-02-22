@@ -57,7 +57,7 @@ function FigureSkeleton() {
   );
 }
 
-function FigureCard({ figure, index }: { figure: FigureInfo; index: number }) {
+function FigureCard({ figure }: { figure: FigureInfo }) {
   return (
     <Card 
       className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer group overflow-hidden"
@@ -227,7 +227,7 @@ export default function Home() {
               ) : (
                 <div className="space-y-3 animate-scroll-vertical px-4">
                   {scrollFigures.map((figure, index) => (
-                    <FigureCard key={`${figure.id}-${index}`} figure={figure} index={index} />
+                    <FigureCard key={`${figure.id}-${index}`} figure={figure} />
                   ))}
                 </div>
               )}

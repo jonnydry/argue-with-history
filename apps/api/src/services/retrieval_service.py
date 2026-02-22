@@ -11,6 +11,7 @@ except ImportError:
 class RetrievalService:
     _instance = None
     _shared_cache = {}
+    _shared_embedding_cache = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -26,6 +27,7 @@ class RetrievalService:
             Path(__file__).parent.parent.parent.parent.parent / "data" / "figures"
         )
         self._cache = self._shared_cache
+        self._embedding_cache = self._shared_embedding_cache
 
     def _load_json(self, figure: str, filename: str) -> dict:
         cache_key = f"{figure}/{filename}"
@@ -264,14 +266,28 @@ class RetrievalService:
             return ""
         return text[:max_len] + ("..." if len(text) > max_len else "")
 
+    def _load_embeddings(self, figure: str) -> Optional[dict]:
+        emb_path = self.data_path / figure / "embeddings.json"
+        if not emb_path.exists():
+            return None
+        mtime = emb_path.stat().st_mtime
+        cached = self._embedding_cache.get(figure)
+        if cached and cached.get("mtime") == mtime:
+            return cached.get("data")
+        try:
+            embs = json.loads(emb_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return None
+        if not isinstance(embs, dict):
+            return None
+        self._embedding_cache[figure] = {"mtime": mtime, "data": embs}
+        return embs
+
     def _get_context_semantic(self, figure: str, topic: str, user_argument: str) -> dict | None:
         """Use embeddings when available. Returns None to fall back to keyword."""
         if not embedding_service or not embedding_service._client:
             return None
-        emb_path = self.data_path / figure / "embeddings.json"
-        if not emb_path.exists():
-            return None
-        embs = json.loads(emb_path.read_text(encoding="utf-8"))
+        embs = self._load_embeddings(figure)
         if not embs:
             return None
         query = f"{topic} {user_argument}".strip()
