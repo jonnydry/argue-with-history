@@ -137,11 +137,40 @@ export const useDebateStore = create<DebateStore>()(
       },
 
       selectFigure: (figure) => {
-        set({ selectedFigure: figure, selectedTopic: null, topicPrimer: null, topicPrimerKey: null });
+        const { currentDebate } = get();
+        const figureChanged = currentDebate && currentDebate.figure !== figure.id;
+        set({
+          selectedFigure: figure,
+          selectedTopic: null,
+          topicPrimer: null,
+          topicPrimerKey: null,
+          ...(figureChanged ? {
+            currentDebate: null,
+            openingStatement: null,
+            openingKeyClaims: [],
+            debateSources: [],
+            openingPassages: [],
+            learningSummary: null,
+          } : {}),
+        });
       },
 
       selectTopic: (topic) => {
-        set({ selectedTopic: topic });
+        const { currentDebate } = get();
+        const topicChanged = currentDebate && 
+          (currentDebate as { topic_id?: string }).topic_id !== topic.id &&
+          currentDebate.topic !== topic.title;
+        set({
+          selectedTopic: topic,
+          ...(topicChanged ? {
+            currentDebate: null,
+            openingStatement: null,
+            openingKeyClaims: [],
+            debateSources: [],
+            openingPassages: [],
+            learningSummary: null,
+          } : {}),
+        });
       },
 
       hydrateSelectionsFromDebate: () => {
