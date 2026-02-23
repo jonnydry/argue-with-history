@@ -140,7 +140,7 @@ export default function FiguresPage() {
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3 sm:mb-4">
             CHOOSE YOUR
             <br />
-            <span className="text-stroke-heavy">OPPONENT</span>
+            <span className="text-muted-foreground">OPPONENT</span>
           </h2>
           <p className="text-muted-foreground text-sm sm:text-lg max-w-md">
             Each has centuries of wisdom. You have your wits. Select wisely.
