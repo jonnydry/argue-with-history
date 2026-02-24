@@ -65,6 +65,7 @@ interface DebateStore {
   fetchFigures: () => Promise<void>;
   prefetchTopicPrimer: () => Promise<void>;
   hydrateSelectionsFromDebate: () => void;
+  clearSelections: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
   setDebateMode: (mode: "structured" | "freeform") => void;
@@ -124,7 +125,6 @@ export const useDebateStore = create<DebateStore>()(
         fetchPromise = api.figures.list()
           .then((figures) => {
             set({ figures, isLoading: false, figuresLastFetched: Date.now() });
-            get().hydrateSelectionsFromDebate();
           })
           .catch((error) => {
             set({ error: error.message, isLoading: false });
@@ -189,6 +189,15 @@ export const useDebateStore = create<DebateStore>()(
         if (!topic) return;
 
         set({ selectedFigure: figure, selectedTopic: topic });
+      },
+
+      clearSelections: () => {
+        set({
+          selectedFigure: null,
+          selectedTopic: null,
+          topicPrimer: null,
+          topicPrimerKey: null,
+        });
       },
 
       prefetchTopicPrimer: async () => {

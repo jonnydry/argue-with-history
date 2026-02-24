@@ -25,6 +25,7 @@ import {
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
   const fetchFigures = useDebateStore((s) => s.fetchFigures);
+  const clearSelections = useDebateStore((s) => s.clearSelections);
   const selectFigure = useDebateStore((s) => s.selectFigure);
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
   const selectTopic = useDebateStore((s) => s.selectTopic);
@@ -44,8 +45,11 @@ export default function FiguresPage() {
   const [selectedEra, setSelectedEra] = useState<EraCategory>("All");
   const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
   const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
-  const selectedFigureId = selectedFigure?.id;
-  const selectedTopicId = selectedTopic?.id;
+  const [selectionsInitialized, setSelectionsInitialized] = useState(false);
+  const activeSelectedFigure = selectionsInitialized ? selectedFigure : null;
+  const activeSelectedTopic = selectionsInitialized ? selectedTopic : null;
+  const selectedFigureId = activeSelectedFigure?.id;
+  const selectedTopicId = activeSelectedTopic?.id;
 
   const filteredFigures = filterFiguresByEra(figures, selectedEra);
 
@@ -57,10 +61,13 @@ export default function FiguresPage() {
   const settingsSectionRef = useRef<HTMLDivElement>(null);
 
   const fetchPreview = async () => {
-    if (!selectedFigure || !selectedTopic) return;
+    if (!activeSelectedFigure || !activeSelectedTopic) return;
     setPreviewLoading(true);
     try {
-      const res = await api.figures.getTopicPreview(selectedFigure.id, selectedTopic.id);
+      const res = await api.figures.getTopicPreview(
+        activeSelectedFigure.id,
+        activeSelectedTopic.id
+      );
       setPreviewPassages(res.passages);
     } catch {
       setPreviewPassages([]);
@@ -76,16 +83,23 @@ export default function FiguresPage() {
   }, [figures.length, fetchFigures]);
 
   useEffect(() => {
-    if (selectedFigure) {
-      topicSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [selectedFigure]);
+    clearSelections();
+    setHighlightedFigureId(null);
+    setHighlightedTopicId(null);
+    setSelectionsInitialized(true);
+  }, [clearSelections]);
 
   useEffect(() => {
-    if (selectedFigure && selectedTopic) {
+    if (activeSelectedFigure) {
+      topicSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [activeSelectedFigure]);
+
+  useEffect(() => {
+    if (activeSelectedFigure && activeSelectedTopic) {
       settingsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selectedFigure, selectedTopic]);
+  }, [activeSelectedFigure, activeSelectedTopic]);
 
   useEffect(() => {
     if (selectedFigureId && selectedTopicId) {
@@ -94,7 +108,7 @@ export default function FiguresPage() {
   }, [selectedFigureId, selectedTopicId, prefetchTopicPrimer]);
 
   const handleFigureClick = (figure: FigureInfo) => {
-    if (selectedFigure?.id === figure.id) return;
+    if (activeSelectedFigure?.id === figure.id) return;
     if (highlightedFigureId === figure.id) {
       setHighlightedFigureId(null);
       setHighlightedTopicId(null);
@@ -106,8 +120,8 @@ export default function FiguresPage() {
   };
 
   const handleTopicClick = (topic: DebateTopic) => {
-    if (!selectedFigure) return;
-    if (selectedTopic?.id === topic.id) return;
+    if (!activeSelectedFigure) return;
+    if (activeSelectedTopic?.id === topic.id) return;
     if (highlightedTopicId === topic.id) {
       setHighlightedTopicId(null);
       selectTopic(topic);
@@ -168,7 +182,7 @@ export default function FiguresPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
           {filteredFigures.slice(0, visibleCount).map((figure) => {
-            const isSelected = selectedFigure?.id === figure.id;
+            const isSelected = activeSelectedFigure?.id === figure.id;
             const isHighlighted = highlightedFigureId === figure.id;
             return (
             <Card
@@ -272,7 +286,7 @@ export default function FiguresPage() {
           </div>
         )}
 
-        {selectedFigure && (
+        {activeSelectedFigure && (
           <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter">
             <div className="mb-8">
               <div className="arena-divider">
@@ -286,8 +300,8 @@ export default function FiguresPage() {
             </div>
             
             <div className="grid sm:grid-cols-2 gap-3 mb-10">
-              {selectedFigure.topics.map((topic) => {
-                const isTopicSelected = selectedTopic?.id === topic.id;
+              {activeSelectedFigure.topics.map((topic) => {
+                const isTopicSelected = activeSelectedTopic?.id === topic.id;
                 const isTopicHighlighted = highlightedTopicId === topic.id;
                 return (
                 <Card
@@ -310,7 +324,7 @@ export default function FiguresPage() {
                           ? "bg-foreground/20 text-foreground"
                           : "bg-foreground/10 text-foreground"
                       }`}>
-                        {selectedFigure.name.charAt(0)}
+                        {activeSelectedFigure.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm mb-1">
@@ -345,7 +359,7 @@ export default function FiguresPage() {
           </div>
         )}
 
-        {selectedFigure && selectedTopic && (
+        {activeSelectedFigure && activeSelectedTopic && (
           <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter">
             <div className="mb-8">
               <div className="arena-divider">
