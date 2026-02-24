@@ -199,7 +199,7 @@ export default function Home() {
               <h2 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-6 sm:mb-8">
                 DON&apos;T READ
                 <br />
-                <span className="text-stroke">HISTORY.</span>
+                <span className="headline-emphasis">HISTORY.</span>
                 <br />
                 <span className="underline-thick decoration-foreground">DEFEAT IT.</span>
               </h2>

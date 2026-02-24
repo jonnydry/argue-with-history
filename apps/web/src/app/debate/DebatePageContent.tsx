@@ -11,6 +11,23 @@ function toScore(val: unknown): number {
   return Math.min(10, Math.max(1, num));
 }
 
+type ScoreTone = "high" | "medium" | "low";
+
+function getScoreTone(score: number, max: number): ScoreTone {
+  const ratio = max > 0 ? score / max : 0;
+  if (ratio >= 0.75) return "high";
+  if (ratio >= 0.5) return "medium";
+  return "low";
+}
+
+function scoreToneTextClass(tone: ScoreTone): string {
+  return `score-text-${tone}`;
+}
+
+function scoreToneBarClass(tone: ScoreTone): string {
+  return `score-bar-${tone}`;
+}
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +60,21 @@ export default function DebatePageContent() {
   const topicPrimerKey = useDebateStore((s) => s.topicPrimerKey);
 
   const [argument, setArgument] = useState("");
-  const scrollAnchorRef = useRef<HTMLDivElement>(null);
+  const transcriptContentRef = useRef<HTMLDivElement>(null);
+  const transcriptViewportRef = useRef<HTMLDivElement | null>(null);
+  const isPinnedToBottomRef = useRef(true);
+  const previousTurnCountRef = useRef(0);
+  const previousLatestTurnScoredRef = useRef(false);
+  const SCROLL_PIN_THRESHOLD_PX = 40;
+  const currentDebateId = currentDebate?.id ?? null;
+  const turnCount = currentDebate?.turns.length ?? 0;
+  const latestTurnHasScore = Boolean(currentDebate?.turns[turnCount - 1]?.scores);
+
+  const scrollTranscriptToBottom = (behavior: ScrollBehavior = "auto") => {
+    const viewport = transcriptViewportRef.current;
+    if (!viewport) return;
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+  };
 
   const effectivePrimer =
     topicPrimer && topicPrimerKey && selectedFigure && selectedTopic && topicPrimerKey === `${selectedFigure.id}:${selectedTopic.id}`
@@ -74,8 +105,40 @@ export default function DebatePageContent() {
   }, [selectedFigure, selectedTopic, currentDebate, prefetchTopicPrimer]);
 
   useEffect(() => {
-    scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [currentDebate?.turns, openingStatement]);
+    const viewport = transcriptContentRef.current?.parentElement;
+    if (!viewport) return;
+
+    transcriptViewportRef.current = viewport as HTMLDivElement;
+
+    const updatePinnedState = () => {
+      const distanceFromBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      isPinnedToBottomRef.current = distanceFromBottom <= SCROLL_PIN_THRESHOLD_PX;
+    };
+
+    updatePinnedState();
+    viewport.addEventListener("scroll", updatePinnedState);
+    return () => {
+      viewport.removeEventListener("scroll", updatePinnedState);
+    };
+  }, [currentDebateId, SCROLL_PIN_THRESHOLD_PX]);
+
+  useEffect(() => {
+    if (!currentDebateId) return;
+
+    const appendedTurn = turnCount > previousTurnCountRef.current;
+    const scoreJustArrived =
+      turnCount === previousTurnCountRef.current &&
+      latestTurnHasScore &&
+      !previousLatestTurnScoredRef.current;
+
+    if (isPinnedToBottomRef.current) {
+      scrollTranscriptToBottom(appendedTurn || scoreJustArrived ? "smooth" : "auto");
+    }
+
+    previousTurnCountRef.current = turnCount;
+    previousLatestTurnScoredRef.current = latestTurnHasScore;
+  }, [currentDebateId, turnCount, latestTurnHasScore, openingStatement]);
 
   const handleStartDebate = async () => {
     await startDebate();
@@ -100,7 +163,7 @@ export default function DebatePageContent() {
   if (currentDebate && (!selectedFigure || !selectedTopic)) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
-        <Card className="max-w-md w-full border-2 contrast-border">
+        <Card className="max-w-md w-full arena-panel">
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">RESTORING DEBATE</CardTitle>
           </CardHeader>
@@ -119,7 +182,7 @@ export default function DebatePageContent() {
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
         <div className="max-w-md w-full text-center arena-enter">
           <Swords size={40} className="mx-auto mb-6 text-muted-foreground/30" />
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-3">NO OPPONENT<br/><span className="text-stroke-heavy">SELECTED</span></h2>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-3">NO OPPONENT<br/><span className="headline-emphasis">SELECTED</span></h2>
           <p className="text-muted-foreground mb-8 text-sm sm:text-base">
             Choose a figure and topic to enter the arena.
           </p>
@@ -159,7 +222,7 @@ export default function DebatePageContent() {
               {selectedFigure.name.split(' ').map((word, i) => (
                 <span key={i}>
                   {i === selectedFigure.name.split(' ').length - 1 ? (
-                    <span className="text-stroke-heavy">{word.toUpperCase()}</span>
+                    <span className="headline-emphasis">{word.toUpperCase()}</span>
                   ) : (
                     <>{word.toUpperCase()} </>
                   )}
@@ -252,6 +315,9 @@ export default function DebatePageContent() {
     scoredTurnTotals.length > 0
       ? Math.round(scoredTurnTotals.reduce((sum, n) => sum + n, 0) / scoredTurnTotals.length)
       : latestTurnScore;
+  const outcomeLabel =
+    aggregateScore >= 30 ? "VICTORY" : aggregateScore >= 20 ? "WELL FOUGHT" : "DEFEATED";
+  const outcomeToneClass = scoreToneTextClass(getScoreTone(aggregateScore, maxScore));
   const roundTrend = currentDebate.turns.map((turn) => {
     if (!turn.scores) {
       return { turnNumber: turn.turn_number, score: null as number | null };
@@ -290,19 +356,32 @@ export default function DebatePageContent() {
     : openingKeyClaims;
   const hasKeyClaims = keyClaims && keyClaims.length > 0 && selectedFigure;
   const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
+  const latestScoredTurn = [...currentDebate.turns].reverse().find((turn) => Boolean(turn.scores));
+  const latestScoredTurnTotal = latestScoredTurn?.scores
+    ? [
+        latestScoredTurn.scores.logic_score,
+        latestScoredTurn.scores.historical_accuracy_score,
+        latestScoredTurn.scores.rhetoric_score,
+        latestScoredTurn.scores.rebuttal_score ?? 0,
+      ].reduce((sum, v) => sum + toScore(v), 0)
+    : null;
+  const latestScoreToneClass =
+    latestScoredTurnTotal !== null
+      ? scoreToneTextClass(getScoreTone(latestScoredTurnTotal, maxScore))
+      : "";
 
   // ── Score cell renderer ───────────────────────────────────────────────────
   const renderScoreCell = (label: string, score: number, reason?: string) => {
-    const isHigh = score >= 8;
+    const tone = getScoreTone(score, 10);
     return (
       <div className="p-3 sm:p-4" title={reason || undefined}>
         <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-1">{label}</p>
-        <p className={`text-2xl sm:text-3xl font-bold tabular-nums leading-none mb-2 ${isHigh ? "text-accent" : ""}`}>
+        <p className={`text-2xl sm:text-3xl font-bold tabular-nums leading-none mb-2 ${scoreToneTextClass(tone)}`}>
           {score}<span className="text-sm font-normal text-muted-foreground">/10</span>
         </p>
         <div className="debate-score-bar-track">
           <div
-            className={`debate-score-bar-fill ${isHigh ? "bg-accent" : "bg-foreground"}`}
+            className={`debate-score-bar-fill ${scoreToneBarClass(tone)}`}
             style={{ width: `${score * 10}%` }}
           />
         </div>
@@ -311,7 +390,10 @@ export default function DebatePageContent() {
   };
 
   // ── Inline scorecard renderer (per turn) ─────────────────────────────────
-  const renderInlineScorecard = (turn: typeof currentDebate.turns[0]) => {
+  const renderInlineScorecard = (
+    turn: typeof currentDebate.turns[0],
+    isLatestTurn: boolean
+  ) => {
     if (turn.scores_error) {
       return (
         <p className="text-muted-foreground text-sm mt-4">{turn.scores_error}</p>
@@ -329,13 +411,13 @@ export default function DebatePageContent() {
       ? (turn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
       : undefined;
     const hasTurnClaims = Array.isArray(turnClaimChecks) && turnClaimChecks.length > 0;
+    const hasDetails =
+      turn.scores.strengths?.length > 0 ||
+      turn.scores.improvements?.length > 0 ||
+      hasTurnClaims;
 
-    return (
-      <div className="mt-6">
-        <div className="debate-scorecard-divider">
-          <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Scorecard</span>
-        </div>
-
+    const scorecardDetails = (
+      <>
         <div className="debate-score-grid border border-border/30">
           {renderScoreCell("Logic", logic, turn.scores.logic_reason || undefined)}
           {renderScoreCell("Historical", historical, turn.scores.historical_reason || undefined)}
@@ -350,47 +432,47 @@ export default function DebatePageContent() {
           </span>
         </div>
 
-        {(turn.scores.strengths?.length > 0 || turn.scores.improvements?.length > 0 || hasTurnClaims) && (
+        {hasDetails && (
           <div className="mt-3 space-y-2">
             {turn.scores.strengths?.length > 0 && (
               <details className="group/strengths">
-                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-green-400 list-none flex items-center gap-1.5 py-1">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/85 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/strengths:rotate-90 transition-transform inline-block">▶</span>
                   Strengths ({turn.scores.strengths.length})
                 </summary>
-                <div className="mt-1 p-3 bg-green-900/20 border border-green-800/50 space-y-1">
+                <div className="mt-1 p-3 bg-secondary/30 border border-border/50 border-l-2 border-l-accent/60 space-y-1">
                   {turn.scores.strengths.map((s: string, i: number) => (
-                    <p key={i} className="text-sm text-green-200">+ {s}</p>
+                    <p key={i} className="text-sm text-foreground/90">+ {s}</p>
                   ))}
                 </div>
               </details>
             )}
             {turn.scores.improvements?.length > 0 && (
               <details className="group/improvements">
-                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-amber-400 list-none flex items-center gap-1.5 py-1">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/improvements:rotate-90 transition-transform inline-block">▶</span>
                   Improvements ({turn.scores.improvements.length})
                 </summary>
-                <div className="mt-1 p-3 bg-amber-900/20 border border-amber-800/50 space-y-1">
+                <div className="mt-1 p-3 bg-secondary/20 border border-border/50 border-l-2 border-l-foreground/40 space-y-1">
                   {turn.scores.improvements.map((s: string, i: number) => (
-                    <p key={i} className="text-sm text-amber-200">~ {s}</p>
+                    <p key={i} className="text-sm text-muted-foreground">~ {s}</p>
                   ))}
                 </div>
               </details>
             )}
             {hasTurnClaims && (
               <details className="group/claims">
-                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-blue-400 list-none flex items-center gap-1.5 py-1">
+                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/75 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/claims:rotate-90 transition-transform inline-block">▶</span>
                   Claim Check ({turnClaimChecks!.length})
                 </summary>
-                <div className="mt-1 p-3 bg-blue-900/20 border border-blue-800/50 space-y-1">
+                <div className="mt-1 p-3 bg-secondary/20 border border-border/50 border-l-2 border-l-foreground/30 space-y-1">
                   {turnClaimChecks!.map((c, i) => (
                     <p
                       key={i}
                       className={`text-sm ${
-                        c.type === "accurate" ? "text-green-400"
-                        : c.type === "mischaracterized" ? "text-amber-400"
+                        c.type === "accurate" ? "text-foreground"
+                        : c.type === "mischaracterized" ? "text-foreground/85"
                         : "text-muted-foreground"
                       }`}
                     >
@@ -403,6 +485,30 @@ export default function DebatePageContent() {
             )}
           </div>
         )}
+      </>
+    );
+
+    if (!isLatestTurn) {
+      return (
+        <details className="mt-4 group/turnscore">
+          <summary className="cursor-pointer list-none arena-panel px-4 py-3 flex items-center gap-2">
+            <span className="group-open/turnscore:rotate-90 transition-transform inline-block text-muted-foreground">▶</span>
+            <span className="text-xs uppercase tracking-[0.2em] font-bold text-foreground/80">Scorecard</span>
+            <span className="ml-auto text-sm tabular-nums font-semibold">
+              {turnTotal}<span className="text-xs font-normal text-muted-foreground">/{maxScore}</span>
+            </span>
+          </summary>
+          <div className="mt-3">{scorecardDetails}</div>
+        </details>
+      );
+    }
+
+    return (
+      <div className="mt-6">
+        <div className="debate-scorecard-divider">
+          <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Scorecard</span>
+        </div>
+        {scorecardDetails}
       </div>
     );
   };
@@ -425,9 +531,9 @@ export default function DebatePageContent() {
         </div>
       )}
       {tips.length > 0 && (
-        <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800/50">
+        <div className="mb-4 p-3 bg-secondary/25 border border-border/50 border-l-2 border-l-accent/60">
           {tips.map((t, i) => (
-            <p key={i} className="text-sm text-amber-200">• {t}</p>
+            <p key={i} className="text-sm text-foreground/85">• {t}</p>
           ))}
         </div>
       )}
@@ -518,7 +624,7 @@ export default function DebatePageContent() {
 
           {/* Scroll area for transcript */}
           <ScrollArea className="h-[50vh] sm:h-[60vh] mb-6">
-            <div className="space-y-0 pr-2">
+            <div ref={transcriptContentRef} className="space-y-0 pr-2">
 
               {/* Opening statement */}
               {currentDebate.turns.length === 0 && openingStatement && (
@@ -567,13 +673,15 @@ export default function DebatePageContent() {
               {currentDebate.turns.length === 0 && !openingStatement && (
                 <div className="py-20 text-center arena-enter">
                   <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
-                  <p className="text-4xl sm:text-5xl font-bold tracking-tighter mb-3">THE ARENA<br/><span className="text-stroke-heavy">AWAITS</span></p>
+                  <p className="text-4xl sm:text-5xl font-bold tracking-tighter mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
                   <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
                 </div>
               )}
 
               {/* Turns */}
-              {currentDebate.turns.map((turn) => (
+              {currentDebate.turns.map((turn) => {
+                const isLatestTurn = turn.turn_number === latestTurn?.turn_number;
+                return (
                 <div key={turn.turn_number}>
                   {/* Round divider */}
                   <div className="debate-round-divider">
@@ -627,10 +735,11 @@ export default function DebatePageContent() {
                     </div>
 
                     {/* Inline scorecard */}
-                    {renderInlineScorecard(turn)}
+                    {renderInlineScorecard(turn, isLatestTurn)}
                   </div>
                 </div>
-              ))}
+              );
+              })}
 
               {/* Loading indicator */}
               {isLoading && (
@@ -642,40 +751,39 @@ export default function DebatePageContent() {
                 </div>
               )}
 
-              <div ref={scrollAnchorRef} aria-hidden />
             </div>
           </ScrollArea>
 
           {/* ── Completed banner ─────────────────────────────────────────── */}
           {isCompleted ? (
-            <div className="debate-complete-banner p-8 sm:p-12 text-center arena-enter">
-              <Swords size={28} className="mx-auto mb-3 text-background/30" />
-              <p className="text-xs uppercase tracking-[0.3em] text-background/50 mb-4">
-                {aggregateScore >= 30 ? "VICTORY" : aggregateScore >= 20 ? "WELL FOUGHT" : "DEFEATED"}
+            <div className="arena-panel p-8 sm:p-12 text-center arena-enter">
+              <Swords size={28} className="mx-auto mb-3 text-foreground/25" />
+              <p className={`war-label mb-4 ${outcomeToneClass}`}>
+                {outcomeLabel}
               </p>
-              <p className="text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums text-background leading-none mb-1 score-reveal">
+              <p className={`text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums leading-none mb-1 score-reveal ${outcomeToneClass}`}>
                 {aggregateScore}
               </p>
-              <p className="text-sm text-background/50 mb-8 uppercase tracking-[0.15em]">of {maxScore} possible</p>
+              <p className="text-sm text-muted-foreground mb-8 uppercase tracking-[0.15em]">of {maxScore} possible</p>
 
               {roundTrend.length > 0 && (
-                <div className="max-w-lg mx-auto mb-8 text-left">
-                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-background/80">Round Trend</p>
+                <div className="max-w-lg mx-auto mb-8 text-left arena-panel px-4 py-4 sm:px-5">
+                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground/80">Round Trend</p>
                   <div className="space-y-2">
                     {roundTrend.map((entry) => (
                       <div key={entry.turnNumber} className="flex items-center gap-3">
-                        <span className="text-xs uppercase tracking-[0.15em] w-14 text-background/60">
+                        <span className="text-xs uppercase tracking-[0.15em] w-14 text-muted-foreground">
                           R{String(entry.turnNumber).padStart(2, "0")}
                         </span>
-                        <div className="flex-1 h-2 bg-background/20 overflow-hidden">
+                        <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
                           {entry.score !== null && (
                             <div
-                              className="h-full bg-foreground"
+                              className={`h-full ${scoreToneBarClass(getScoreTone(entry.score, maxScore))}`}
                               style={{ width: `${(entry.score / maxScore) * 100}%` }}
                             />
                           )}
                         </div>
-                        <span className="text-xs tabular-nums w-12 text-right text-background/70">
+                        <span className="text-xs tabular-nums w-12 text-right text-muted-foreground">
                           {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
                         </span>
                       </div>
@@ -685,16 +793,16 @@ export default function DebatePageContent() {
               )}
 
               {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
-                <div className="text-left max-w-lg mx-auto mb-8 text-background">
+                <div className="text-left max-w-lg mx-auto mb-8 arena-panel px-4 py-4 sm:px-5">
                   <details className="sm:hidden group/learn">
-                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-background list-none flex items-center gap-1.5 mb-2">
+                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-foreground list-none flex items-center gap-1.5 mb-2">
                       <span className="group-open/learn:rotate-90 transition-transform inline-block">▶</span>
                       Learning Summary
                     </summary>
-                    <div className="mt-2">{renderLearningSummaryContent()}</div>
+                    <div className="mt-2 text-foreground">{renderLearningSummaryContent()}</div>
                   </details>
-                  <div className="hidden sm:block">
-                    <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3">Learning Summary</p>
+                  <div className="hidden sm:block text-foreground">
+                    <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground">Learning Summary</p>
                     {renderLearningSummaryContent()}
                   </div>
                 </div>
@@ -702,14 +810,14 @@ export default function DebatePageContent() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/figures">
-                  <Button className="bg-background text-foreground hover:bg-background/90 btn-press font-bold">
+                  <Button className="bg-foreground text-background hover:bg-foreground/90 btn-press font-bold">
                     NEW DEBATE →
                   </Button>
                 </Link>
                 <Button
                   variant="outline"
                   onClick={handleNewDebate}
-                  className="border-background/30 text-background hover:bg-background/10 btn-press"
+                  className="border-foreground/30 text-foreground hover:bg-secondary/40 btn-press"
                 >
                   DIFFERENT TOPIC
                 </Button>
@@ -718,6 +826,23 @@ export default function DebatePageContent() {
           ) : (
             // ── Input area ────────────────────────────────────────────────
             <div className="space-y-4">
+              {latestScoredTurn?.scores && latestScoredTurnTotal !== null && (
+                <div className="arena-panel px-4 py-3 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="war-label mb-1">
+                      Latest score · Round {String(latestScoredTurn.turn_number).padStart(2, "0")}
+                    </p>
+                    <p className="text-xs sm:text-sm text-foreground/80">
+                      Logic {toScore(latestScoredTurn.scores.logic_score)} · Historical {toScore(latestScoredTurn.scores.historical_accuracy_score)} · Rhetoric {toScore(latestScoredTurn.scores.rhetoric_score)} · Rebuttal {toScore(latestScoredTurn.scores.rebuttal_score)}
+                    </p>
+                  </div>
+                  <p className={`text-3xl font-bold tabular-nums shrink-0 ${latestScoreToneClass}`}>
+                    {latestScoredTurnTotal}
+                    <span className="text-xs font-normal text-muted-foreground">/{maxScore}</span>
+                  </p>
+                </div>
+              )}
+
               {/* Helpers: desktop expanded, mobile collapsible */}
               {hasAnyHelper && (
                 <>
@@ -727,7 +852,7 @@ export default function DebatePageContent() {
                         <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
                         Debate aids
                         {tips.length > 0 && (
-                          <Badge variant="outline" className="text-xs ml-1 py-0 border-amber-700 text-amber-400">Tips</Badge>
+                          <Badge variant="outline" className="text-xs ml-1 py-0 border-foreground/30 text-foreground/80">Tips</Badge>
                         )}
                       </summary>
                       <div className="mt-3 space-y-3">{renderHelperSections()}</div>

@@ -154,7 +154,7 @@ export default function FiguresPage() {
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3 sm:mb-4">
             CHOOSE YOUR
             <br />
-            <span className="text-muted-foreground">OPPONENT</span>
+            <span className="headline-emphasis">OPPONENT</span>
           </h2>
           <p className="text-muted-foreground text-sm sm:text-lg max-w-md">
             Each has centuries of wisdom. You have your wits. Select wisely.
@@ -370,7 +370,7 @@ export default function FiguresPage() {
                 SETTINGS
               </h3>
               
-              <Card className="border-2 contrast-border">
+              <Card className="arena-panel">
                 <CardContent className="p-6">
                   <div className="grid sm:grid-cols-2 gap-8">
                     <div>
@@ -443,7 +443,7 @@ export default function FiguresPage() {
                   ) : previewPassages.length > 0 ? (
                     <div className="space-y-4 mt-4">
                       {previewPassages.map((p, i) => (
-                        <Card key={i} className="border-2 contrast-border">
+                        <Card key={i} className="arena-panel">
                           <CardContent className="p-4">
                             <p className="text-xs font-medium text-muted-foreground mb-2">{p.title}</p>
                             <p className="text-sm whitespace-pre-wrap">{p.text_excerpt}</p>
