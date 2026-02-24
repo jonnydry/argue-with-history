@@ -48,6 +48,9 @@ Thumbs.db
 *.swp
 *.swo
 
+# Replit internal state
+.local/
+
 # Logs
 *.log
 logs/
