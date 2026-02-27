@@ -66,6 +66,7 @@ interface DebateStore {
   prefetchTopicPrimer: () => Promise<void>;
   hydrateSelectionsFromDebate: () => void;
   clearSelections: () => void;
+  clearForNewTopic: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
   setDebateMode: (mode: "structured" | "freeform") => void;
@@ -197,6 +198,21 @@ export const useDebateStore = create<DebateStore>()(
           selectedTopic: null,
           topicPrimer: null,
           topicPrimerKey: null,
+        });
+      },
+
+      clearForNewTopic: () => {
+        set({
+          selectedTopic: null,
+          currentDebate: null,
+          openingStatement: null,
+          openingKeyClaims: [],
+          debateSources: [],
+          openingPassages: [],
+          learningSummary: null,
+          topicPrimer: null,
+          topicPrimerKey: null,
+          error: null,
         });
       },
 

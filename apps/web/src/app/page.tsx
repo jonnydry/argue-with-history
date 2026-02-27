@@ -59,10 +59,11 @@ function FigureSkeleton() {
 
 function FigureCard({ figure }: { figure: FigureInfo }) {
   return (
-    <Card 
-      className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer group overflow-hidden"
-    >
-      <CardContent className="p-6">
+    <Link href="/figures" className="block">
+      <Card 
+        className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer group overflow-hidden"
+      >
+        <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-3xl shrink-0">
             {figure.name.charAt(0)}
@@ -93,6 +94,7 @@ function FigureCard({ figure }: { figure: FigureInfo }) {
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }
 
