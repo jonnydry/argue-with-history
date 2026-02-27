@@ -24,6 +24,7 @@ import {
 
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
+  const currentDebate = useDebateStore((s) => s.currentDebate);
   const fetchFigures = useDebateStore((s) => s.fetchFigures);
   const clearSelections = useDebateStore((s) => s.clearSelections);
   const selectFigure = useDebateStore((s) => s.selectFigure);
@@ -83,11 +84,17 @@ export default function FiguresPage() {
   }, [figures.length, fetchFigures]);
 
   useEffect(() => {
-    clearSelections();
-    setHighlightedFigureId(null);
-    setHighlightedTopicId(null);
+    const isSameOpponentNewTopic = selectedFigure && !selectedTopic && !currentDebate;
+    if (isSameOpponentNewTopic) {
+      setHighlightedFigureId(null);
+      setHighlightedTopicId(null);
+    } else {
+      clearSelections();
+      setHighlightedFigureId(null);
+      setHighlightedTopicId(null);
+    }
     setSelectionsInitialized(true);
-  }, [clearSelections]);
+  }, [clearSelections, selectedFigure, selectedTopic, currentDebate]);
 
   useEffect(() => {
     if (activeSelectedFigure) {
@@ -130,8 +137,50 @@ export default function FiguresPage() {
     }
   };
 
+  const hasIncompleteDebate = currentDebate?.status === "active";
+  const incompleteDebateFigure = hasIncompleteDebate
+    ? figures.find((f) => f.id === currentDebate!.figure)
+    : null;
+  const figureDisplayName = incompleteDebateFigure?.name ?? 
+    (currentDebate?.figure ? String(currentDebate.figure).charAt(0).toUpperCase() + String(currentDebate.figure).slice(1) : "");
+
   return (
-    <div className="min-h-screen bg-background text-foreground font-display noise-bg">
+    <div className="min-h-screen bg-background text-foreground font-display noise-bg relative">
+      {hasIncompleteDebate && (
+        <aside
+          className="fixed top-4 right-4 z-30 w-64 sm:w-72 arena-enter"
+          aria-label="Incomplete debate"
+        >
+          <Link href="/debate">
+            <Card className="arena-panel border-accent/40 hover:border-accent/70 transition-colors cursor-pointer overflow-hidden group">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+                    <Swords size={18} className="text-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                      Incomplete debate
+                    </p>
+                    <p className="font-semibold text-sm truncate" title={figureDisplayName}>
+                      {figureDisplayName}
+                    </p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                      {currentDebate!.topic}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2 tabular-nums">
+                      Round {currentDebate!.current_turn}/{currentDebate!.max_turns}
+                    </p>
+                    <p className="text-xs text-accent font-medium mt-2 group-hover:underline">
+                      Resume →
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </aside>
+      )}
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-4">
@@ -180,6 +229,11 @@ export default function FiguresPage() {
           ))}
         </div>
 
+        {highlightedFigureId && (
+          <p className="text-center text-xs text-muted-foreground mb-4 animate-fade-up">
+            Click again to select
+          </p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
           {filteredFigures.slice(0, visibleCount).map((figure) => {
             const isSelected = activeSelectedFigure?.id === figure.id;
@@ -279,9 +333,10 @@ export default function FiguresPage() {
               variant="outline"
               size="lg"
               onClick={() => setVisibleCount((c) => c + 4)}
-              className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto"
+              className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto gap-2"
             >
               <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
+              <span className="uppercase tracking-wider font-medium">Load more</span>
             </Button>
           </div>
         )}
@@ -298,7 +353,11 @@ export default function FiguresPage() {
               </h3>
               <p className="text-sm text-muted-foreground">What ground will you fight on?</p>
             </div>
-            
+            {highlightedTopicId && (
+              <p className="text-center text-xs text-muted-foreground mb-4 animate-fade-up">
+                Click again to select
+              </p>
+            )}
             <div className="grid sm:grid-cols-2 gap-3 mb-10">
               {activeSelectedFigure.topics.map((topic) => {
                 const isTopicSelected = activeSelectedTopic?.id === topic.id;
@@ -379,6 +438,7 @@ export default function FiguresPage() {
                         <Button
                           variant={debateMode === "structured" ? "default" : "outline"}
                           onClick={() => setDebateMode("structured")}
+                          title="Fixed number of turns. Good for focused practice."
                           className={`flex-1 btn-press ${debateMode === "structured" ? "bg-foreground text-background" : ""}`}
                         >
                           {debateMode === "structured" ? "✓" : ""} STRUCTURED
@@ -386,11 +446,15 @@ export default function FiguresPage() {
                         <Button
                           variant={debateMode === "freeform" ? "default" : "outline"}
                           onClick={() => setDebateMode("freeform")}
+                          title="Open-ended. Continue until you end the debate."
                           className={`flex-1 btn-press ${debateMode === "freeform" ? "bg-foreground text-background" : ""}`}
                         >
                           {debateMode === "freeform" ? "✓" : ""} FREEFORM
                         </Button>
                       </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {debateMode === "structured" ? "Turn-limited debate with clear rounds." : "Open-ended debate—end when you choose."}
+                      </p>
                     </div>
                     
                     {debateMode === "structured" && (
@@ -404,8 +468,10 @@ export default function FiguresPage() {
                           max={6}
                           value={maxTurns}
                           onChange={(e) => setMaxTurns(parseInt(e.target.value))}
+                          title={`${maxTurns} exchange${maxTurns !== 1 ? "s" : ""} total`}
                           className="w-full accent-foreground"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">Number of back-and-forth exchanges.</p>
                       </div>
                     )}
                     <div className="sm:col-span-2">
@@ -414,6 +480,7 @@ export default function FiguresPage() {
                         variant={scholarMode ? "default" : "outline"}
                         onClick={() => setScholarMode(!scholarMode)}
                         size="sm"
+                        title="Show key passages before you respond so you can cite them."
                         className={scholarMode ? "bg-foreground text-background" : ""}
                       >
                         {scholarMode ? "✓ " : ""}Show sources before each reply

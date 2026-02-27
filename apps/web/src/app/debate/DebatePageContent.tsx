@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
 
 /** Coerce score value to integer 1-10. Prevents string concatenation in total. */
@@ -54,7 +55,9 @@ export default function DebatePageContent() {
   const submitArgument = useDebateStore((s) => s.submitArgument);
   const endDebate = useDebateStore((s) => s.endDebate);
   const reset = useDebateStore((s) => s.reset);
+  const clearForNewTopic = useDebateStore((s) => s.clearForNewTopic);
   const clearStaleDebateIfMismatch = useDebateStore((s) => s.clearStaleDebateIfMismatch);
+  const router = useRouter();
   const learningSummary = useDebateStore((s) => s.learningSummary);
   const topicPrimer = useDebateStore((s) => s.topicPrimer);
   const topicPrimerKey = useDebateStore((s) => s.topicPrimerKey);
@@ -157,6 +160,12 @@ export default function DebatePageContent() {
   const handleNewDebate = () => {
     reset();
     setArgument("");
+  };
+
+  const handleSameOpponentNewTopic = () => {
+    clearForNewTopic();
+    setArgument("");
+    router.push("/figures");
   };
 
   // ── No figure/topic selected ──────────────────────────────────────────────
@@ -810,16 +819,20 @@ export default function DebatePageContent() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link href="/figures">
-                  <Button className="bg-foreground text-background hover:bg-foreground/90 btn-press font-bold">
-                    NEW DEBATE →
+                  <Button
+                    onClick={handleNewDebate}
+                    className="bg-foreground text-background hover:bg-foreground/90 btn-press font-bold"
+                  >
+                    CHOOSE NEW OPPONENT →
                   </Button>
                 </Link>
                 <Button
                   variant="outline"
-                  onClick={handleNewDebate}
+                  onClick={handleSameOpponentNewTopic}
                   className="border-foreground/30 text-foreground hover:bg-secondary/40 btn-press"
+                  title="Same opponent, different topic"
                 >
-                  DIFFERENT TOPIC
+                  SAME OPPONENT, NEW TOPIC
                 </Button>
               </div>
             </div>
