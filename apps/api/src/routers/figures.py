@@ -38,6 +38,28 @@ async def get_figure(figure_id: str) -> JSONResponse:
         raise HTTPException(status_code=404, detail=f"Figure '{figure_id}' not found")
 
 
+@router.get("/{figure_id}/sources")
+async def get_figure_sources(figure_id: str) -> JSONResponse:
+    """List the loaded full-text sources for a figure (chapters, sections, etc.)."""
+    try:
+        Figure(figure_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"Figure '{figure_id}' not found")
+
+    if os.environ.get("REPL_ID"):
+        sources = retrieval_service.list_loaded_sources(figure_id)
+    else:
+        sources = await asyncio.to_thread(
+            retrieval_service.list_loaded_sources, figure_id
+        )
+    return JSONResponse(
+        content={"sources": sources},
+        headers={
+            "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        },
+    )
+
+
 @router.get("/{figure_id}/topics/{topic_id}/preview")
 async def get_topic_preview(figure_id: str, topic_id: str) -> Dict:
     """Preview key passages for a topic before starting a debate."""

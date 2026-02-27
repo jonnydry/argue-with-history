@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Precompute embeddings for all figures. Run from repo root with: python scripts/precompute_embeddings.py"""
+"""Precompute embeddings for all figures. Run from repo root with:
+
+  ./apps/api/venv/bin/python scripts/precompute_embeddings.py
+
+(or activate the api venv first, then: python scripts/precompute_embeddings.py)
+
+Requires OPENAI_API_KEY in apps/api/.env
+"""
 import json
 import os
 import sys

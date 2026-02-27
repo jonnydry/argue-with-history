@@ -3,24 +3,28 @@
     "1": {
       "part": "I",
       "text": ":    PREJUDICES OF PHILOSOPHERS",
-      "themes": []
+      "themes": [],
+      "work": "Beyond Good and Evil"
     },
     "2": {
       "part": "II",
       "text": ":   THE FREE SPIRIT",
       "themes": [
         "freedom"
-      ]
+      ],
+      "work": "Beyond Good and Evil"
     },
     "3": {
       "part": "III",
       "text": ":  THE RELIGIOUS MOOD",
-      "themes": []
+      "themes": [],
+      "work": "Beyond Good and Evil"
     },
     "4": {
       "part": "IV",
       "text": ":   APOPHTHEGMS AND INTERLUDES",
-      "themes": []
+      "themes": [],
+      "work": "Beyond Good and Evil"
     },
     "5": {
       "part": "V",
@@ -28,24 +32,28 @@
       "themes": [
         "virtue",
         "nature"
-      ]
+      ],
+      "work": "Beyond Good and Evil"
     },
     "6": {
       "part": "VI",
       "text": ":   WE SCHOLARS",
-      "themes": []
+      "themes": [],
+      "work": "Beyond Good and Evil"
     },
     "7": {
       "part": "VII",
       "text": ":  OUR VIRTUES",
       "themes": [
         "virtue"
-      ]
+      ],
+      "work": "Beyond Good and Evil"
     },
     "8": {
       "part": "VIII",
       "text": ": PEOPLES AND COUNTRIES",
-      "themes": []
+      "themes": [],
+      "work": "Beyond Good and Evil"
     },
     "9": {
       "part": "IX",
@@ -54,18 +62,44 @@
         "freedom",
         "power",
         "truth"
-      ]
+      ],
+      "work": "Beyond Good and Evil"
+    },
+    "genealogy_1": {
+      "part": "1",
+      "text": "",
+      "themes": [],
+      "work": "Genealogy of Morals"
+    },
+    "genealogy_2": {
+      "part": "2",
+      "text": "",
+      "themes": [],
+      "work": "Genealogy of Morals"
+    },
+    "genealogy_3": {
+      "part": "3",
+      "text": "PEOPLES AND COUNTRIES. Translated by J. M. Kennedy\n\nPREFACE.\n\n1.\n\nWe are unknown, we knowers, ourselves to ourselves: this has its own\ngood reason. We have never searched for ourselves--how should it then\ncome to pass, that we should ever _find_ ourselves? Rightly has it been\nsaid: \"Where your treasure is, there will your heart be also.\" _Our_\ntreasure is there, where stand the hives of our knowledge. It is to\nthose hives that we are always striving; as born creatures of flight,\nand as the honey-gatherers of the spirit, we care really in our hearts\nonly for one thing--to bring something \"home to the hive!\"\n\nAs far as the rest of life with its so-called \"experiences\" is\nconcerned, which of us has even sufficient serious interest? or\nsufficient time? In our dealings with such points of life, we are, I\nfear, never properly to the point; to be precise, our heart is not\nthere, and certainly not our ear. Rather like one who, delighting\nin a divine distraction, or sunken in the seas of his own soul, in\nwhose ear the clock has just thundered with all its force its twelve\nstrokes of noon, suddenly wakes up, and asks himself, \"What has in\npoint of fact just struck?\" so do we at times rub afterwards, as it\nwere, our puzzled ears, and ask in complete astonishment and complete\nembarrassment, \"Through what have we in point of fact just lived?\"\nfurther, \"Who are we in point of fact?\" and count, _after they have\nstruck_, as I have explained, all the twelve throbbing beats of the\nclock of our experience, of our life, of our being--ah!--and count\nwrong in the endeavour. Of necessity we remain strangers to ourselves,\nwe understand ourselves not, in ourselves we are bound to be mistaken,\nfor of us holds good to all eternity the motto, \"Each one is the\nfarthest away from himself\"--as far as ourselves are concerned we are\nnot \"knowers.\"\n\n2.\n\nMy thoughts concerning the _genealogy_ of our moral prejudices--for\nthey constitute the issue in this polemic--have their first, bald,\nand provisional expression in that collection of aphorisms entitled\n_Human, all-too-Human, a Book for Free Minds_, the writing of which\nwas begun in Sorrento, during a winter which allowed me to gaze over\nthe broad and dangerous territory through which my mind had up to that\ntime wandered. This took place in the winter of 1876-77; the thoughts\nthemselves are older. They were in their substance already the same\nthoughts which I take up again in the following treatises:--we hope\nthat they have derived benefit ",
+      "themes": [
+        "freedom",
+        "power",
+        "virtue"
+      ],
+      "work": "Genealogy of Morals"
     }
   },
   "topic_mapping": {
     "morality": [
-      "1",
-      "2",
       "3",
       "4",
-      "5",
+      "genealogy_3",
       "6",
-      "7"
+      "2",
+      "1",
+      "genealogy_1",
+      "genealogy_2",
+      "7",
+      "5"
     ],
     "truth": [
       "1",
@@ -82,14 +116,16 @@
       "9"
     ],
     "master": [
-      "1",
+      "genealogy_1",
+      "9",
       "2",
-      "9"
+      "1"
     ],
     "slave": [
-      "1",
+      "genealogy_1",
+      "9",
       "2",
-      "9"
+      "1"
     ],
     "will": [
       "1",
@@ -104,16 +140,20 @@
       "5"
     ],
     "values": [
-      "1",
+      "genealogy_1",
+      "genealogy_3",
+      "genealogy_2",
+      "6",
+      "9",
       "2",
       "5",
-      "6",
-      "9"
+      "1"
     ],
     "religion": [
-      "1",
+      "genealogy_3",
+      "3",
       "2",
-      "3"
+      "1"
     ],
     "knowledge": [
       "1",
@@ -133,6 +173,16 @@
     "affirmation": [
       "2",
       "11"
+    ],
+    "guilt": [
+      "genealogy_2"
+    ],
+    "conscience": [
+      "genealogy_3",
+      "genealogy_2"
+    ],
+    "ascetic": [
+      "genealogy_3"
     ]
   }
 }

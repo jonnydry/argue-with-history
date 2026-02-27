@@ -7,7 +7,8 @@
         "death",
         "power",
         "nature"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "2": {
       "chapter": "II",
@@ -16,7 +17,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "3": {
       "chapter": "III",
@@ -25,7 +27,8 @@
         "freedom",
         "power",
         "reason"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "4": {
       "chapter": "IV",
@@ -34,7 +37,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "5": {
       "chapter": "V",
@@ -43,7 +47,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "6": {
       "chapter": "VI",
@@ -52,7 +57,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "7": {
       "chapter": "VII",
@@ -61,7 +67,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "8": {
       "chapter": "VIII",
@@ -70,7 +77,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "9": {
       "chapter": "IX",
@@ -79,7 +87,8 @@
         "freedom",
         "power",
         "reason"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "10": {
       "chapter": "X",
@@ -88,7 +97,8 @@
         "death",
         "power",
         "nature"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "11": {
       "chapter": "XI",
@@ -97,7 +107,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "12": {
       "chapter": "XII",
@@ -106,7 +117,8 @@
         "death",
         "power",
         "truth"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "13": {
       "chapter": "XIII",
@@ -115,7 +127,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "14": {
       "chapter": "XIV",
@@ -124,7 +137,8 @@
         "freedom",
         "power",
         "virtue"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "15": {
       "chapter": "XV",
@@ -133,7 +147,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "16": {
       "chapter": "XVI",
@@ -142,7 +157,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "17": {
       "chapter": "XVII",
@@ -151,7 +167,8 @@
         "freedom",
         "power",
         "nature"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "18": {
       "chapter": "XVIII",
@@ -160,7 +177,8 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
     },
     "19": {
       "chapter": "XIX",
@@ -169,7 +187,38 @@
         "death",
         "freedom",
         "power"
-      ]
+      ],
+      "work": "Second Treatise of Government"
+    },
+    "essay_XXI": {
+      "chapter": "XXI",
+      "text": "OF POWER.\n\n1. This Idea how got.\n\nThe mind being every day informed, by the senses, of the alteration of\nthose simple ideas it observes in things without; and taking notice how\none comes to an end, and ceases to be, and another begins to exist\nwhich was not before; reflecting also on what passes within itself, and\nobserving a constant change of its ideas, sometimes by the impression\nof outward objects on the senses, and sometimes by the determination of\nits own choice; and concluding from what it has so constantly observed\nto have been, that the like changes will for the future be made in the\nsame things, by like agents, and by the like ways,\u2014considers in one\nthing the possibility of having any of its simple ideas changed, and in\nanother the possibility of making that change; and so comes by that\nidea which we call POWER. Thus we say, Fire has a power to melt gold,\ni. e. to destroy the consistency of its insensible parts, and\nconsequently its hardness, and make it fluid; and gold has a power to\nbe melted; that the sun has a power to blanch wax, and wax a power to\nbe blanched by the sun, whereby the yellowness is destroyed, and\nwhiteness made to exist in its room. In which, and the like cases, the\npower we consider is in reference to the change of perceivable ideas.\nFor we cannot observe any alteration to be made in, or operation upon\nanything, but by the observable change of its sensible ideas; nor\nconceive any alteration to be made, but by conceiving a change of some\nof its ideas.\n\n2. Power, active and passive.\n\nPower thus considered is two-fold, viz. as able to make, or able to\nreceive any change. The one may be called ACTIVE, and the other PASSIVE\npower. Whether matter be not wholly destitute of active power, as its\nauthor, God, is truly above all passive power; and whether the\nintermediate state of created spirits be not that alone which is\ncapable of both active and passive power, may be worth consideration. I\nshall not now enter into that inquiry, my present business being not to\nsearch into the original of power, but how we come by the IDEA of it.\nBut since active powers make so great a part of our complex ideas of\nnatural substances, (as we shall see hereafter,) and I mention them as\nsuch, according to common apprehension; yet they being not, perhaps, so\ntruly ACTIVE powers as our hasty thoughts are apt to represent them, I\njudge it not amiss, by this intimation, to direct our minds to the\nconsideration of God and spirits, for the clearest idea of ",
+      "themes": [
+        "death",
+        "freedom",
+        "power"
+      ],
+      "work": "Essay Concerning Human Understanding"
+    },
+    "essay_XXII": {
+      "chapter": "XXII",
+      "text": "OF MIXED MODES.\n\n1. Mixed Modes, what.\n\nHaving treated of SIMPLE MODES in the foregoing chapters, and given\nseveral instances of some of the most considerable of them, to show\nwhat they are, and how we come by them; we are now in the next place to\nconsider those we call MIXED MODES; such are the complex ideas we mark\nby the names OBLIGATION, DRUNKENNESS, a LIE, &c.; which consisting of\nseveral combinations of simple ideas of DIFFERENT kinds, I have called\nmixed modes, to distinguish them from the more simple modes, which\nconsist only of simple ideas of the SAME kind. These mixed modes, being\nalso such combinations of simple ideas as are not looked upon to be\ncharacteristical marks of any real beings that have a steady existence,\nbut scattered and independent ideas put together by the mind, are\nthereby distinguished from the complex ideas of substances.\n\n2. Made by the Mind.\n\nThat the mind, in respect of its simple ideas, is wholly passive, and\nreceives them all from the existence and operations of things, such as\nsensation or reflection offers them, without being able to MAKE any one\nidea, experience shows us. But if we attentively consider these ideas I\ncall mixed modes, we are now speaking of, we shall find their origin\nquite different. The mind often exercises an ACTIVE power in making\nthese several combinations. For, it being once furnished with simple\nideas, it can put them together in several compositions, and so make\nvariety of complex ideas, without examining whether they exist so\ntogether in nature. And hence I think it is that these ideas are called\nNOTIONS: as they had their original, and constant existence, more in\nthe thoughts of men, than in the reality of things; and to form such\nideas, it sufficed that the mind put the parts of them together, and\nthat they were consistent in the understanding without considering\nwhether they had any real being: though I do not deny but several of\nthem might be taken from observation, and the existence of several\nsimple ideas so combined, as they are put together in the\nunderstanding. For the man who first framed the idea of HYPOCRISY,\nmight have either taken it at first from the observation of one who\nmade show of good qualities which he had not; or else have framed that\nidea in his mind without having any such pattern to fashion it by. For\nit is evident that, in the beginning of languages and societies of men,\nseveral of those complex ideas, which were consequent to the\nconstitutions established amongst th",
+      "themes": [
+        "death",
+        "freedom",
+        "power"
+      ],
+      "work": "Essay Concerning Human Understanding"
+    },
+    "essay_XXIII": {
+      "chapter": "XXIII",
+      "text": "OF OUR COMPLEX IDEAS OF SUBSTANCES.\n\nThe mind being, as I have declared, furnished with a great number of\nthe simple ideas, conveyed in by the senses as they are found in\nexterior things, or by reflection on its own operations, takes notice\nalso that a certain number of these simple ideas go constantly\ntogether; which being presumed to belong to one thing, and words being\nsuited to common apprehensions, and made use of for quick dispatch are\ncalled, so united in one subject, by one name; which, by inadvertency,\nwe are apt afterward to talk of and consider as one simple idea, which\nindeed is a complication of many ideas together: because, as I have\nsaid, not imagining how these simple ideas CAN subsist by themselves,\nwe accustom ourselves to suppose some SUBSTRATUM wherein they do\nsubsist, and from which they do result, which therefore we call\nSUBSTANCE.\n\n2. Our obscure Idea of Substance in general.\n\nSo that if any one will examine himself concerning his notion of pure\nsubstance in general, he will find he has no other idea of it at all,\nbut only a supposition of he knows not what SUPPORT of such qualities\nwhich are capable of producing simple ideas in us; which qualities are\ncommonly called accidents. If any one should be asked, what is the\nsubject wherein colour or weight inheres, he would have nothing to say,\nbut the solid extended parts; and if he were demanded, what is it that\nsolidity and extension adhere in, he would not be in a much better case\nthan the Indian before mentioned who, saying that the world was\nsupported by a great elephant, was asked what the elephant rested on;\nto which his answer was\u2014a great tortoise: but being again pressed to\nknow what gave support to the broad-backed tortoise, replied\u2014SOMETHING,\nHE KNEW NOT WHAT. And thus here, as in all other cases where we use\nwords without having clear and distinct ideas, we talk like children:\nwho, being questioned what such a thing is, which they know not,\nreadily give this satisfactory answer, that it is SOMETHING: which in\ntruth signifies no more, when so used, either by children or men, but\nthat they know not what; and that the thing they pretend to know, and\ntalk of, is what they have no distinct idea of at all, and so are\nperfectly ignorant of it, and in the dark. The idea then we have, to\nwhich we give the GENERAL name substance, being nothing but the\nsupposed, but unknown, support of those qualities we find existing,\nwhich we imagine cannot subsist SINE RE SUBSTANTE, without something ",
+      "themes": [
+        "death",
+        "freedom",
+        "power"
+      ],
+      "work": "Essay Concerning Human Understanding"
     }
   },
   "topic_mapping": {
@@ -235,37 +284,40 @@
       "15"
     ],
     "freedom": [
-      "1",
-      "2",
       "3",
       "4",
-      "5",
       "6",
+      "2",
+      "15",
+      "1",
+      "11",
       "7",
       "8",
       "9",
-      "11",
-      "15"
+      "5",
+      "essay_XXI"
     ],
     "power": [
-      "1",
-      "2",
-      "3",
       "4",
+      "10",
+      "12",
+      "2",
+      "1",
+      "11",
       "5",
+      "essay_XXI",
+      "essay_XXII",
+      "3",
+      "18",
       "6",
+      "15",
+      "17",
+      "14",
       "7",
       "8",
       "9",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
       "16",
-      "17",
-      "18"
+      "13"
     ],
     "nature": [
       "1",
@@ -282,6 +334,16 @@
       "4",
       "5",
       "6"
+    ],
+    "will": [
+      "essay_XXI"
+    ],
+    "idea": [
+      "essay_XXII",
+      "essay_XXIII"
+    ],
+    "substance": [
+      "essay_XXIII"
     ]
   }
 }

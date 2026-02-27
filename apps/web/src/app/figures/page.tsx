@@ -21,6 +21,7 @@ import {
   filterFiguresByEra,
   type EraCategory,
 } from "@/lib/figures";
+import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
@@ -304,6 +305,17 @@ export default function FiguresPage() {
                         </span>
                       ))}
                     </div>
+                    <FigureLoadedTexts
+                      figureId={figure.id}
+                      variant={
+                        isSelected
+                          ? "selected"
+                          : isHighlighted
+                            ? "highlighted"
+                            : "default"
+                      }
+                      className="mt-3"
+                    />
                   </div>
 
                   <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${

@@ -62,29 +62,23 @@ def process_epictetus():
     return {"sections": sections, "topic_mapping": topic_mapping}
 
 
-def process_mill():
+def _process_on_liberty():
     """Process On Liberty - 5 chapters."""
     with open(DATA_DIR / "mill" / "on_liberty.txt") as f:
         text = clean_text(f.read())
-
-    # Find the actual chapter content - skip table of contents
-    # The real chapters start after "ON LIBERTY" heading
     main_text_start = text.find("ON LIBERTY.")
     if main_text_start > 0:
         text = text[main_text_start:]
-
     chapters = {}
-    # Mill uses "CHAPTER I." with title on next line
     pattern = r"CHAPTER\s*([IVX]+)\.\s*\n([A-Z\s]+)\.\s*\n(.*?)(?=CHAPTER\s*[IVX]+|$)"
     matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
-
     for i, (num, title, content) in enumerate(matches[:5], 1):
         chapters[str(i)] = {
             "chapter": num,
             "text": content.strip()[:2500],
             "themes": extract_themes(content),
+            "work": "On Liberty",
         }
-
     topic_mapping = {
         "liberty": ["1", "2", "3", "4", "5"],
         "freedom": ["1", "2", "3"],
@@ -99,7 +93,47 @@ def process_mill():
         "rights": ["1", "4", "5"],
         "conscience": ["2", "4"],
     }
+    return {"chapters": chapters, "topic_mapping": topic_mapping}
 
+
+def _process_utilitarianism():
+    """Process Utilitarianism - 5 chapters."""
+    path = DATA_DIR / "mill" / "utilitarianism.txt"
+    if not path.exists():
+        return {"chapters": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    main_text_start = text.find("UTILITARIANISM.")
+    if main_text_start > 0:
+        text = text[main_text_start:]
+    chapters = {}
+    pattern = r"CHAPTER\s*([IVX]+)\.\s*\n([A-Z\s\.]+)\s*\n(.*?)(?=CHAPTER\s*[IVX]+|$)"
+    matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
+    for i, (num, title, content) in enumerate(matches[:5], 1):
+        chapters[str(i)] = {
+            "chapter": num,
+            "text": content.strip()[:2500],
+            "themes": extract_themes(content),
+            "work": "Utilitarianism",
+        }
+    topic_mapping = {
+        "utility": ["1", "2", "3", "4", "5"],
+        "happiness": ["1", "2", "3", "4"],
+        "morality": ["1", "2", "3", "4", "5"],
+        "justice": ["5"],
+        "pleasure": ["2"],
+        "right": ["1", "2", "3", "4", "5"],
+    }
+    return {"chapters": chapters, "topic_mapping": topic_mapping}
+
+
+def process_mill():
+    """Process On Liberty + Utilitarianism - merged index."""
+    ol = _process_on_liberty()
+    util = _process_utilitarianism()
+    util_prefixed = _prefix_sections(util["chapters"], "utilitarianism", "Utilitarianism")
+    chapters = {**ol["chapters"], **util_prefixed}
+    topic_mapping = _merge_topic_mappings(ol["topic_mapping"], util["topic_mapping"], "utilitarianism")
     return {"chapters": chapters, "topic_mapping": topic_mapping}
 
 
@@ -161,70 +195,65 @@ def process_aurelius():
     return {"books": books, "topic_mapping": topic_mapping}
 
 
+def _process_essay_human_understanding():
+    """Process Essay Concerning Human Understanding - excerpt (Book II Ch. XXI-XXIII: Power, Mixed Modes, Substances)."""
+    path = DATA_DIR / "locke" / "essay_human_understanding.txt"
+    if not path.exists():
+        return {"chapters": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    chapters = {}
+    # Match CHAPTER XXI. / CHAPTER XXII. / CHAPTER XXIII.
+    pattern = r"CHAPTER\s+(XXI|XXII|XXIII)\.\s*(.*?)(?=CHAPTER\s+(?:XXI|XXII|XXIII|XXIV|XXX)\.|$)"
+    matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
+    for num, content in matches:
+        num_upper = num.upper()
+        chapters[num_upper] = {
+            "chapter": num,
+            "text": content.strip()[:2500],
+            "themes": extract_themes(content),
+            "work": "Essay Concerning Human Understanding",
+        }
+    topic_mapping = {
+        "freedom": ["XXI"],
+        "power": ["XXI", "XXII"],
+        "will": ["XXI"],
+        "idea": ["XXII", "XXIII"],
+        "substance": ["XXIII"],
+    }
+    return {"chapters": chapters, "topic_mapping": topic_mapping}
+
+
 def process_locke():
-    """Process Second Treatise - 19 chapters."""
+    """Process Second Treatise + Essay excerpt - merged index."""
     with open(DATA_DIR / "locke" / "second_treatise.txt") as f:
         text = clean_text(f.read())
-
     chapters = {}
-    # Locke uses "CHAPTER. I." format
     pattern = r"CHAPTER\.?\s*([IVX]+)\.?\s*\n(.*?)(?=CHAPTER\.?\s*[IVX]+|$)"
     matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
-
     for i, (num, content) in enumerate(matches[:19], 1):
         chapters[str(i)] = {
             "chapter": num,
             "text": content.strip()[:2500],
             "themes": extract_themes(content),
+            "work": "Second Treatise of Government",
         }
-
     topic_mapping = {
         "rights": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
         "property": ["5", "6", "7", "8", "9"],
-        "government": [
-            "1",
-            "2",
-            "3",
-            "4",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-            "19",
-        ],
+        "government": ["1", "2", "3", "4", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"],
         "consent": ["4", "6", "7", "8", "9", "11", "15"],
         "revolution": ["1", "2", "3", "19"],
         "law": ["2", "3", "4", "6", "7", "11", "12", "13", "14", "15"],
         "freedom": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "15"],
-        "power": [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-        ],
+        "power": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18"],
         "nature": ["1", "2", "3", "4", "5", "6"],
         "equality": ["1", "2", "3", "4", "5", "6"],
     }
-
+    essay = _process_essay_human_understanding()
+    essay_prefixed = _prefix_sections(essay["chapters"], "essay", "Essay Concerning Human Understanding")
+    chapters = {**chapters, **essay_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, essay["topic_mapping"], "essay")
     return {"chapters": chapters, "topic_mapping": topic_mapping}
 
 
@@ -263,23 +292,52 @@ def process_rousseau():
     return {"books": books, "topic_mapping": topic_mapping}
 
 
+def _process_genealogy_morals():
+    """Process Genealogy of Morals - 3 essays."""
+    path = DATA_DIR / "nietzsche" / "genealogy_morals.txt"
+    if not path.exists():
+        return {"parts": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    parts = {}
+    # First essay starts after "FIRST ESSAY. "GOOD AND EVIL," "GOOD AND BAD"."
+    essay_pattern = r"(?:FIRST|SECOND|THIRD)\s+ESSAY\.\s*[^\n]+\.?\s*\n(.*?)(?=(?:FIRST|SECOND|THIRD)\s+ESSAY\.|$)"
+    matches = re.findall(essay_pattern, text, re.DOTALL | re.IGNORECASE)
+    titles = ["Good and Evil, Good and Bad", "Guilt, Bad Conscience", "Ascetic Ideals"]
+    for i, content in enumerate(matches[:3], 1):
+        parts[str(i)] = {
+            "part": str(i),
+            "text": content.strip()[:2500],
+            "themes": extract_themes(content),
+            "work": "Genealogy of Morals",
+        }
+    topic_mapping = {
+        "morality": ["1", "2", "3"],
+        "guilt": ["2"],
+        "conscience": ["2", "3"],
+        "ascetic": ["3"],
+        "master": ["1"],
+        "slave": ["1"],
+        "values": ["1", "2", "3"],
+        "religion": ["3"],
+    }
+    return {"parts": parts, "topic_mapping": topic_mapping}
+
+
 def process_nietzsche():
-    """Process Beyond Good & Evil - 9 chapters."""
+    """Process Beyond Good & Evil + Genealogy of Morals - merged index."""
     with open(DATA_DIR / "nietzsche" / "beyond_good_evil.txt") as f:
         text = clean_text(f.read())
-
     parts = {}
-    # Nietzsche uses "CHAPTER I", "CHAPTER II" etc.
     pattern = r"CHAPTER\s*([IVX]+)\.?\s*\n?(.*?)(?=CHAPTER\s*[IVX]+|$)"
     matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
-
     for i, (num, content) in enumerate(matches[:9], 1):
         parts[str(i)] = {
             "part": num,
             "text": content.strip()[:2500],
             "themes": extract_themes(content),
+            "work": "Beyond Good and Evil",
         }
-
     topic_mapping = {
         "morality": ["1", "2", "3", "4", "5", "6", "7"],
         "truth": ["1", "2"],
@@ -294,8 +352,121 @@ def process_nietzsche():
         "life": ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
         "affirmation": ["2", "11"],
     }
-
+    genealogy = _process_genealogy_morals()
+    gen_prefixed = _prefix_sections(genealogy["parts"], "genealogy", "Genealogy of Morals")
+    parts = {**parts, **gen_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, genealogy["topic_mapping"], "genealogy")
     return {"parts": parts, "topic_mapping": topic_mapping}
+
+
+def _process_civil_disobedience():
+    """Process Civil Disobedience - split into ~7 sections by paragraphs."""
+    with open(DATA_DIR / "thoreau" / "civil_disobedience.txt") as f:
+        text = clean_text(f.read())
+    paragraphs = re.split(r"\n\s*\n", text)
+    # Group paragraphs into ~7 sections of ~1500-2000 chars
+    sections = {}
+    current = []
+    current_len = 0
+    section_num = 1
+    target = 1500
+    for p in paragraphs:
+        p = p.strip()
+        if not p or len(p) < 20:
+            continue
+        current.append(p)
+        current_len += len(p)
+        if current_len >= target and section_num <= 7:
+            combined = "\n\n".join(current)
+            sections[str(section_num)] = {
+                "section": f"Section {section_num}",
+                "text": combined[:2000],
+                "themes": extract_themes(combined),
+                "work": "Civil Disobedience",
+            }
+            section_num += 1
+            current = []
+            current_len = 0
+    if current and section_num <= 7:
+        combined = "\n\n".join(current)
+        sections[str(section_num)] = {
+            "section": f"Section {section_num}",
+            "text": combined[:2000],
+            "themes": extract_themes(combined),
+            "work": "Civil Disobedience",
+        }
+    topic_mapping = {
+        "government": ["1", "2", "3", "4", "5", "6", "7"],
+        "conscience": ["1", "2", "3", "4", "5", "6"],
+        "law": ["1", "2", "3", "4", "5"],
+        "freedom": ["1", "2", "3", "4", "5"],
+        "morality": ["1", "2", "3", "4", "5", "6"],
+    }
+    return {"sections": sections, "topic_mapping": topic_mapping}
+
+
+def _process_walden():
+    """Process Walden - extract chapters (Economy, Where I Lived, Reading, Sounds, etc.)."""
+    path = DATA_DIR / "thoreau" / "walden.txt"
+    if not path.exists():
+        return {"sections": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    # "ON THE DUTY" appears in TOC; the actual Civil Disobedience starts much later (after Walden)
+    walden_end = text.find("ON THE DUTY OF CIVIL DISOBEDIENCE", 100_000)
+    if walden_end > 0:
+        text = text[:walden_end]
+    # Skip table of contents - find "Economy" followed by "When I wrote" (actual chapter start)
+    economy_marker = "Economy\n\nWhen I wrote"
+    main_start = text.find(economy_marker)
+    if main_start >= 0:
+        text = text[main_start:]
+    chapter_titles = [
+        "Economy", "Where I Lived, and What I Lived For", "Reading", "Sounds",
+        "Solitude", "Visitors", "The Bean-Field", "The Village",
+    ]
+    sections = {}
+    for i, title in enumerate(chapter_titles, 1):
+        start = text.find("\n" + title + "\n")
+        if start < 0:
+            start = text.find(title + "\n")
+        if start < 0:
+            continue
+        start += len(title) + 1  # Include newline
+        next_start = len(text)
+        for other in chapter_titles:
+            if other == title:
+                continue
+            pos = text.find("\n" + other + "\n", start)
+            if pos < 0:
+                pos = text.find(other + "\n", start)
+            if 0 <= pos < next_start:
+                next_start = pos
+        content = text[start:next_start].strip()[:2000]
+        if len(content) > 100:
+            sections[str(i)] = {
+                "section": title,
+                "text": content,
+                "themes": extract_themes(content),
+                "work": "Walden",
+            }
+    topic_mapping = {
+        "nature": list(sections.keys()),
+        "simplicity": ["1", "2"],
+        "solitude": ["5"],
+        "freedom": ["1", "2"],
+    }
+    return {"sections": sections, "topic_mapping": topic_mapping}
+
+
+def process_thoreau():
+    """Process Civil Disobedience + Walden - merged index."""
+    cd = _process_civil_disobedience()
+    walden = _process_walden()
+    walden_prefixed = _prefix_sections(walden["sections"], "walden", "Walden")
+    sections = {**cd["sections"], **walden_prefixed}
+    topic_mapping = _merge_topic_mappings(cd["topic_mapping"], walden["topic_mapping"], "walden")
+    return {"sections": sections, "topic_mapping": topic_mapping}
 
 
 def process_hobbes():
@@ -365,6 +536,24 @@ def process_hobbes():
     return {"parts": parts, "topic_mapping": topic_mapping}
 
 
+def _prefix_sections(sections_dict, prefix, work_name, _section_key=None):
+    """Prefix section IDs and add work field."""
+    result = {}
+    for i, (sid, data) in enumerate(sections_dict.items(), 1):
+        new_id = f"{prefix}_{sid}"
+        result[new_id] = {**data, "work": work_name}
+    return result
+
+
+def _merge_topic_mappings(map1, map2, prefix):
+    """Merge two topic_mappings; map2's IDs get prefixed."""
+    merged = dict(map1)
+    for kw, ids in map2.items():
+        prefixed = [f"{prefix}_{i}" for i in ids]
+        merged[kw] = list(set(merged.get(kw, [])) | set(prefixed))
+    return merged
+
+
 def extract_themes(text):
     """Simple keyword-based theme extraction."""
     text_lower = text.lower()
@@ -399,6 +588,7 @@ def main():
         "rousseau": process_rousseau,
         "nietzsche": process_nietzsche,
         "hobbes": process_hobbes,
+        "thoreau": process_thoreau,
     }
 
     for name, process_fn in figures.items():

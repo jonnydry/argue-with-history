@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
 import { SplashScreen } from "@/components/splash-screen";
 import type { FigureInfo } from "@/lib/types";
+import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
 function useInView(threshold = 0.2) {
   const ref = useRef<HTMLDivElement>(null);
@@ -59,42 +60,41 @@ function FigureSkeleton() {
 
 function FigureCard({ figure }: { figure: FigureInfo }) {
   return (
-    <Link href="/figures" className="block">
-      <Card 
-        className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] cursor-pointer group overflow-hidden"
-      >
-        <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-3xl shrink-0">
-            {figure.name.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <h3 className="font-bold text-lg tracking-tight truncate">
-                {figure.name}
-              </h3>
-              <span className="text-xs text-muted-foreground uppercase tracking-wider shrink-0">
-                {figure.era.split('(')[0].trim()}
-              </span>
+    <Card className="bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30 transition-all duration-300 hover:scale-[1.02] overflow-hidden group">
+      <CardContent className="p-6">
+        <Link href="/figures" className="block">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center text-background font-blackletter text-3xl shrink-0">
+              {figure.name.charAt(0)}
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
-              {figure.description}
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {figure.traits.slice(0, 2).map((trait) => (
-                <span 
-                  key={trait} 
-                  className="px-3 py-1 bg-foreground/10 text-xs rounded-full text-foreground/80"
-                >
-                  {trait}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <h3 className="font-bold text-lg tracking-tight truncate">
+                  {figure.name}
+                </h3>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider shrink-0">
+                  {figure.era.split("(")[0].trim()}
                 </span>
-              ))}
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+                {figure.description}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {figure.traits.slice(0, 2).map((trait) => (
+                  <span
+                    key={trait}
+                    className="px-3 py-1 bg-foreground/10 text-xs rounded-full text-foreground/80"
+                  >
+                    {trait}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
+        <FigureLoadedTexts figureId={figure.id} className="mt-3" />
       </CardContent>
     </Card>
-    </Link>
   );
 }
 

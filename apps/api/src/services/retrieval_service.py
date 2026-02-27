@@ -266,6 +266,65 @@ class RetrievalService:
             return ""
         return text[:max_len] + ("..." if len(text) > max_len else "")
 
+    def _get_source_type(self, figure: str) -> str:
+        """Return the unit type (Chapter, Section, etc.) for a figure's sources."""
+        return {
+            "epictetus": "Section", "mill": "Chapter", "aurelius": "Book",
+            "locke": "Chapter", "rousseau": "Book", "nietzsche": "Part", "hobbes": "Part",
+            "plato": "Book", "aristotle": "Book", "hume": "Section",
+            "kant": "Section", "wollstonecraft": "Chapter", "marx": "Part", "thoreau": "Section",
+            "seneca": "Letter", "cicero": "Book", "lucretius": "Book",
+            "descartes": "Meditation", "spinoza": "Part", "leibniz": "Section",
+            "voltaire": "Chapter", "paine": "Section", "burke": "Section",
+            "douglass": "Chapter", "emerson": "Essay", "dubois": "Chapter",
+            "darwin": "Chapter", "james": "Lecture", "tocqueville": "Chapter",
+            "russell": "Chapter",
+        }.get(figure, "Section")
+
+    def list_loaded_sources(self, figure: str) -> list[dict]:
+        """Return list of loaded sources for a figure: [{id, title, type}]."""
+        source_type = self._get_source_type(figure)
+        if figure == "machiavelli":
+            index = self._load_json("machiavelli", "chapter_index.json")
+            texts = self._load_json("machiavelli", "the_prince.json")
+            if not index or not texts:
+                return []
+            result = []
+            for ch_id, ch_info in index.get("chapters", {}).items():
+                if texts.get("chapters", {}).get(ch_id, {}).get("text"):
+                    item = {"id": ch_id, "title": ch_info.get("title", ch_id), "type": "Chapter"}
+                    if ch_info.get("work"):
+                        item["work"] = ch_info["work"]
+                    result.append(item)
+            return result
+        elif figure == "socrates":
+            index = self._load_json("socrates", "dialogue_index.json")
+            texts = self._load_json("socrates", "dialogues.json")
+            if not index or not texts:
+                return []
+            result = []
+            for dial_id, dial_info in index.get("dialogues", {}).items():
+                if texts.get(dial_id, {}).get("text"):
+                    item = {"id": dial_id, "title": dial_info.get("title", dial_id), "type": "Dialogue"}
+                    if dial_info.get("work"):
+                        item["work"] = dial_info["work"]
+                    result.append(item)
+            return result
+        else:
+            index = self._load_json(figure, "index.json")
+            if not index:
+                return []
+            secs = index.get("sections") or index.get("chapters") or index.get("books") or index.get("parts") or {}
+            result = []
+            for sid, data in secs.items():
+                if data.get("text"):
+                    title = data.get("section") or data.get("chapter") or data.get("book") or data.get("part") or sid
+                    item = {"id": sid, "title": str(title), "type": source_type}
+                    if data.get("work"):
+                        item["work"] = data["work"]
+                    result.append(item)
+            return result
+
     def _load_embeddings(self, figure: str) -> Optional[dict]:
         emb_path = self.data_path / figure / "embeddings.json"
         if not emb_path.exists():

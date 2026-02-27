@@ -29,6 +29,10 @@ export const api = {
   figures: {
     list: () => fetchAPI<FigureInfo[]>("/figures"),
     get: (id: string) => fetchAPI<FigureInfo>(`/figures/${id}`),
+    getSources: (id: string) =>
+      fetchAPI<{ sources: Array<{ id: string; title: string; type: string; work?: string }> }>(
+        `/figures/${id}/sources`
+      ),
     getTopics: (id: string) => fetchAPI<DebateTopic[]>(`/figures/${id}/topics`),
     getTopicPreview: (figureId: string, topicId: string) =>
       fetchAPI<{ passages: Array<{ source_id: string; title: string; text_excerpt: string }>; sources: string[] }>(
