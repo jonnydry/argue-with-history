@@ -90,16 +90,16 @@
   },
   "topic_mapping": {
     "morality": [
-      "3",
-      "4",
-      "genealogy_3",
-      "6",
-      "2",
-      "1",
-      "genealogy_1",
       "genealogy_2",
+      "genealogy_3",
+      "5",
+      "3",
+      "6",
+      "genealogy_1",
+      "1",
       "7",
-      "5"
+      "2",
+      "4"
     ],
     "truth": [
       "1",
@@ -117,15 +117,15 @@
     ],
     "master": [
       "genealogy_1",
+      "1",
       "9",
-      "2",
-      "1"
+      "2"
     ],
     "slave": [
       "genealogy_1",
+      "1",
       "9",
-      "2",
-      "1"
+      "2"
     ],
     "will": [
       "1",
@@ -141,19 +141,19 @@
     ],
     "values": [
       "genealogy_1",
-      "genealogy_3",
-      "genealogy_2",
-      "6",
       "9",
+      "1",
+      "genealogy_2",
+      "genealogy_3",
       "2",
       "5",
-      "1"
+      "6"
     ],
     "religion": [
+      "1",
       "genealogy_3",
       "3",
-      "2",
-      "1"
+      "2"
     ],
     "knowledge": [
       "1",
@@ -178,8 +178,8 @@
       "genealogy_2"
     ],
     "conscience": [
-      "genealogy_3",
-      "genealogy_2"
+      "genealogy_2",
+      "genealogy_3"
     ],
     "ascetic": [
       "genealogy_3"

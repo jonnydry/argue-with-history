@@ -6,7 +6,8 @@
       "themes": [
         "nature",
         "society"
-      ]
+      ],
+      "work": "Social Contract"
     },
     "2": {
       "book": "II",
@@ -15,7 +16,8 @@
         "death",
         "power",
         "law"
-      ]
+      ],
+      "work": "Social Contract"
     },
     "3": {
       "book": "III",
@@ -23,7 +25,8 @@
       "themes": [
         "death",
         "law"
-      ]
+      ],
+      "work": "Social Contract"
     },
     "4": {
       "book": "IV",
@@ -32,14 +35,37 @@
         "power",
         "truth",
         "law"
-      ]
+      ],
+      "work": "Social Contract"
+    },
+    "inequality_1": {
+      "part": "1",
+      "text": "However important it may be, in order to form a proper judgment of the\nnatural state of man, to consider him from his origin, and to examine\nhim, as it were, in the first embryo of the species; I shall not\nattempt to trace his organization through its successive approaches to\nperfection: I shall not stop to examine in the animal system what he\nmight have been in the beginning, to become at last what he actually\nis; I shall not inquire whether, as Aristotle thinks, his neglected\nnails were no better at first than crooked talons; whether his whole\nbody was not, bear-like, thick covered with rough hair; and whether,\nwalking upon all-fours, his eyes, directed to the earth, and confined\nto a horizon of a few paces extent, did not at once point out the\nnature and limits of his ideas. I could only form vague, and almost\nimaginary, conjectures on this subject. Comparative anatomy has not as\nyet been sufficiently improved; neither have the observations of\nnatural philosophy been sufficiently ascertained, to establish upon\nsuch foundations the basis of a solid system. For this reason, without\nhaving recourse to the supernatural informations with which we have\nbeen favoured on this head, or paying any attention to the changes,\nthat must have happened in the conformation of the interior and\nexterior parts of man's body, in proportion as he applied his members\nto new purposes, and took to new aliments, I shall suppose his\nconformation to have always been, what we now behold it; that he\nalways walked on two feet, made the same use of his hands that we do\nof ours, extended his looks over the whole face of nature, and\nmeasured with his eyes the vast extent of the heavens.\n\nIf I strip this being, thus constituted, of all the supernatural gifts\nwhich he may have received, and of all the artificial faculties, which\nwe could not have acquired but by slow degrees; if I consider him, in\na word, such as he must have issued from the hands of nature; I see an\nanimal less strong than some, and less active than others, but, upon\nthe whole, the most advantageously organized of any; I see him\nsatisfying the calls of hunger under the first oak, and those of\nthirst at the first rivulet; I see him laying himself down to sleep at\nthe foot of the same tree that afforded him his meal; and behold, this\ndone, all his wants are completely supplied.\n\nThe earth left to its own natural fertility and covered with immense\nwoods, that no hatchet ever disfigured, offers at every step food and\nshelter to every species of animals. Men, dispersed among them,\nobserve and imitate their industry, and thus rise to the instinct of\nbeasts; with this advantage, that, whereas every species of beasts is\nconfined to one peculiar instinct, man, who perhaps has not any that\nparticularly belongs to him, appropriates to himself those of all\nother animals, and lives equally upon most of the different aliments,\nwhich they only divide among themselves; a circumstance which\nqualifies him to find his subsistence",
+      "themes": [
+        "death",
+        "freedom",
+        "power"
+      ],
+      "work": "Discourse on the Origin of Inequality"
+    },
+    "inequality_2": {
+      "part": "2",
+      "text": "The first man, who, after enclosing a piece of ground, took it into\nhis head to say, \"This is mine,\" and found people simple enough to\nbelieve him, was the true founder of civil society. How many crimes,\nhow many wars, how many murders, how many misfortunes and horrors,\nwould that man have saved the human species, who pulling up the stakes\nor filling up the ditches should have cried to his fellows: Be sure\nnot to listen to this imposter; you are lost, if you forget that the\nfruits of the earth belong equally to us all, and the earth itself to\nnobody! But it is highly probable that things were now come to such a\npass, that they could not continue much longer in the same way; for as\nthis idea of property depends on several prior ideas which could only\nspring up gradually one after another, it was not formed all at once\nin the human mind: men must have made great progress; they must have\nacquired a great stock of industry and knowledge, and transmitted and\nincreased it from age to age before they could arrive at this last\nterm of the state of nature. Let us therefore take up things a little\nhigher, and collect into one point of view, and in their most natural\norder, this slow succession of events and mental improvements.\n\nThe first sentiment of man was that of his existence, his first care\nthat of preserving it. The productions of the earth yielded him all\nthe assistance he required; instinct prompted him to make use of them.\nAmong the various appetites, which made him at different times\nexperience different modes of existence, there was one that excited\nhim to perpetuate his species; and this blind propensity, quite void\nof anything like pure love or affection, produced nothing but an act\nthat was merely animal. The present heat once allayed, the sexes took\nno further notice of each other, and even the child ceased to have any\ntie in his mother, the moment he ceased to want her assistance.\n\nSuch was the condition of infant man; such was the life of an animal\nconfined at first to pure sensations, and so far from harbouring any\nthought of forcing her gifts from nature, that he scarcely availed\nhimself of those which she offered to him of her own accord. But\ndifficulties soon arose, and there was a necessity for learning how to\nsurmount them: the height of some trees, which prevented his reaching\ntheir fruits; the competition of other animals equally fond of the\nsame fruits; the fierceness of many that even aimed at his life; these\nwere so many circumstances, which obliged him to apply to bodily\nexercise. There was a necessity for becoming active, swift-footed, and\nsturdy in battle. The natural arms, which are stones and the branches\nof trees, soon offered themselves to his assistance. He learned to\nsurmount the obstacles of nature, to contend in case of necessity with\nother animals, to dispute his subsistence even with other men, or\nindemnify himself for the loss of whatever he found himself obliged to\npart with to the strongest.\n\nIn proportion as th",
+      "themes": [
+        "death",
+        "freedom",
+        "power"
+      ],
+      "work": "Discourse on the Origin of Inequality"
     }
   },
   "topic_mapping": {
     "freedom": [
       "1",
-      "2",
       "3",
+      "inequality_1",
+      "2",
+      "inequality_2",
       "4"
     ],
     "chains": [
@@ -53,10 +79,14 @@
     ],
     "society": [
       "1",
+      "inequality_2",
+      "inequality_1",
       "2"
     ],
     "nature": [
       "1",
+      "inequality_2",
+      "inequality_1",
       "2"
     ],
     "democracy": [
@@ -86,7 +116,9 @@
       "3"
     ],
     "inequality": [
-      "1"
+      "1",
+      "inequality_2",
+      "inequality_1"
     ],
     "contract": [
       "1",
@@ -97,6 +129,9 @@
       "2",
       "3",
       "4"
+    ],
+    "property": [
+      "inequality_2"
     ]
   }
 }

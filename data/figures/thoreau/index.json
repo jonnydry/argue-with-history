@@ -167,13 +167,13 @@
       "5"
     ],
     "freedom": [
-      "3",
+      "1",
       "4",
       "walden_2",
-      "walden_1",
-      "2",
       "5",
-      "1"
+      "2",
+      "walden_1",
+      "3"
     ],
     "morality": [
       "1",
@@ -184,18 +184,18 @@
       "6"
     ],
     "nature": [
-      "walden_2",
-      "walden_5",
-      "walden_3",
       "walden_6",
-      "walden_8",
-      "walden_4",
+      "walden_5",
       "walden_1",
-      "walden_7"
+      "walden_3",
+      "walden_7",
+      "walden_8",
+      "walden_2",
+      "walden_4"
     ],
     "simplicity": [
-      "walden_2",
-      "walden_1"
+      "walden_1",
+      "walden_2"
     ],
     "solitude": [
       "walden_5"

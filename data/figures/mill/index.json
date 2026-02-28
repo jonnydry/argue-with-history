@@ -133,13 +133,13 @@
       "9"
     ],
     "utility": [
-      "4",
-      "utilitarianism_3",
-      "utilitarianism_2",
-      "utilitarianism_1",
-      "utilitarianism_5",
       "1",
-      "utilitarianism_4"
+      "utilitarianism_2",
+      "utilitarianism_4",
+      "utilitarianism_1",
+      "utilitarianism_3",
+      "4",
+      "utilitarianism_5"
     ],
     "rights": [
       "1",
@@ -151,17 +151,17 @@
       "4"
     ],
     "happiness": [
-      "utilitarianism_3",
-      "utilitarianism_2",
       "utilitarianism_1",
-      "utilitarianism_4"
+      "utilitarianism_3",
+      "utilitarianism_4",
+      "utilitarianism_2"
     ],
     "morality": [
-      "utilitarianism_3",
       "utilitarianism_2",
+      "utilitarianism_4",
       "utilitarianism_1",
-      "utilitarianism_5",
-      "utilitarianism_4"
+      "utilitarianism_3",
+      "utilitarianism_5"
     ],
     "justice": [
       "utilitarianism_5"
@@ -170,11 +170,11 @@
       "utilitarianism_2"
     ],
     "right": [
-      "utilitarianism_3",
       "utilitarianism_2",
+      "utilitarianism_4",
       "utilitarianism_1",
-      "utilitarianism_5",
-      "utilitarianism_4"
+      "utilitarianism_3",
+      "utilitarianism_5"
     ]
   }
 }

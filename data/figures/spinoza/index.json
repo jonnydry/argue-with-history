@@ -8,7 +8,8 @@
         "nature",
         "God",
         "individual"
-      ]
+      ],
+      "work": "Ethics"
     },
     "2": {
       "section": "PART III.",
@@ -17,14 +18,16 @@
         "nature",
         "government",
         "individual"
-      ]
+      ],
+      "work": "Ethics"
     },
     "3": {
       "section": "PART IV:",
       "text": "Of Human Bondage, or the Strength of the Emotions\n\n\nPREFACE\n\n\n\nHuman infirmity in moderating and checking the emotions I\nname bondage: for, when a man is a prey to his emotions, he is\nnot his own master, but lies at the mercy of fortune: so much\nso, that he is often compelled, while seeing that which is better\nfor him, to follow that which is worse.  Why this is so, and what\nis good or evil in the emotions, I propose to show in this part\nof my treatise.  But, before I begin, it would be well to make a\nfew prefatory observations on perfection and imperfection, good\nand evil.\n\nWhen a man has purposed to make a given thing, and has\nbrought it to perfection, his work will be pronounced perfect,\nnot only by himself, but by everyone who rightly knows, or thinks\nthat he knows, the intention and aim of its author.  For\ninstance, suppose anyone sees a work (which I assume to be not\nyet completed), and knows that the aim of the author of that work\nis to build a house, he will call the work imperfect; he will,\non the other hand, call it perfect, as soon as he sees that it is\ncarried through to the end, which its author had purposed for it.\nBut if a man sees a work, the like whereof he has never seen\nbefore, and if he knows not the intention of the artificer, he\nplainly cannot know, whether that work be perfect or imperfect.\nSuch seems to be the primary meaning of these terms.\n\nBut, after men began to form general ideas, to think out\ntypes of houses, buildings, towers, &c., and to prefer certain\ntypes to others, it came about, that each man called perfect that\nwhich he saw agree with the general idea he had formed of the\nthing in question, and called imperfect that which he saw agree\nless with his own preconceived type, even though it had evidently\nbeen completed in accordance with the idea of its artificer.\nThis seems to be the only reason for calling natural phenomena,\nwhich, indeed, are not made with human hands, perfect or\nimperfect: for men are wont to form general ideas of things\nnatural, no less than of things artificial, and such ideas they\nhold as types, believing that Nature (who they think does nothing\nwithout an object) has them in view, and has set them as types\nbefore herself.  Therefore, when they behold something in Nature,\nwhich does not wholly conform to the preconceived type which they\nhave formed of the thing in question, they say that Nature has\nfallen short or has blundered, and has left her work incomplete.\nThus we see that men are wont to style natural phenomena perfect\nor imperfect rather from their own prejudices, than from true\nknowledge of what they pronounce upon.\n\nNow we showed in the Appendix to Part I., that Nature does\nnot work with an end in view.  For the eternal and infinite\nBeing, which we call God or Nature, acts by the same necessity as\nthat whereby it exists.  For we have shown, that by the same\nnecessity of its nature, whereby it exists, it likewise works (I.\nxvi.).  The reason or cause why God or Nature exists, and t",
       "themes": [
         "philosophy"
-      ]
+      ],
+      "work": "Ethics"
     },
     "4": {
       "section": "PART V:",
@@ -34,7 +37,108 @@
         "reason",
         "morality",
         "power"
-      ]
+      ],
+      "work": "Ethics"
+    },
+    "theologico_poli_1": {
+      "section": "Part 1",
+      "text": "I.  By that which is self--caused, I mean that of which the\nessence involves existence, or that of which the nature is only\nconceivable as existent.\n\nII.  A thing is called finite after its kind, when it can be\nlimited by another thing of the same nature; for instance, a\nbody is called finite because we always conceive another greater\nbody.  So, also, a thought is limited by another thought, but a\nbody is not limited by thought, nor a thought by body.\n\nIII.  By substance, I mean that which is in itself, and is\nconceived through itself: in other words, that of which a\nconception can be formed independently of any other conception.\n\nIV.  By attribute, I mean that which the intellect perceives as\nconstituting the essence of substance.\n\nV.  By mode, I mean the modifications[1] of substance, or that\nwhich exists in, and is conceived through, something other than\nitself.\n\nVI.  By God, I mean a being absolutely infinite--that is, a\nsubstance consisting in infinite attributes, of which each\nexpresses eternal and infinite essentiality.\n\nExplanation--I say absolutely infinite, not infinite after its\nkind: for, of a thing infinite only after its kind, infinite\nattributes may be denied; but that which is absolutely infinite,\ncontains in its essence whatever expresses reality, and involves\nno negation.\n\nVII.  That thing is called free, which exists solely by the\nnecessity of its own nature, and of which the action is\ndetermined by itself alone.  On the other hand, that thing is\nnecessary, or rather constrained, which is determined by\nsomething external to itself to a fixed and definite method of\nexistence or action.\n\nVIII.  By eternity, I mean existence itself, in so far as it is\nconceived necessarily to follow solely from the definition of\nthat which is eternal.\n\nExplanation--Existence of this kind is conceived as an eternal\ntruth, like the essence of a thing, and, therefore, cannot be\nexplained by means of continuance or time, though continuance may\nbe conceived without a beginning or end.\n\nIII.  From a given definite cause an effect necessarily follows;\nand, on the other hand, if no definite cause be granted, it is\nimpossible that an effect can follow.\n\nV.  Things which have nothing in common cannot be understood, the\none by means of the other; the conception of one does not\ninvolve the conception of the other.\n\nProof.--Also evident from Def. iii.  For each must exist in\nitself, and be conceived through itself; in other words, the\nconception of one does not imply th",
+      "themes": [
+        "freedom",
+        "nature"
+      ],
+      "work": "Theologico-Political Treatise"
+    },
+    "theologico_poli_2": {
+      "section": "Part 2",
+      "text": "Note.--This proposition is also evident from the fact, that we\nare able to conceive an infinite thinking being.  For, in\nproportion as a thinking being is conceived as thinking more\nthoughts, so is it conceived as containing more reality or\nperfection.  Therefore a being, which can think an infinite\nnumber of things in an infinite number of ways, is, necessarily,\nin respect of thinking, infinite.  As, therefore, from the\nconsideration of thought alone, we conceive an infinite being,\nthought is necessarily (Pt. i., Deff. iv. and vi.) one of the\ninfinite attributes of God, as we were desirous of showing.\n\nPROP. III.  In God there is necessarily the idea not only of his\nessence, but also of all things which necessarily follow from his\nessence.\n\nProof.--God (by the first Prop. of this Part) can think an\ninfinite number of things in infinite ways, or (what is the same\nthing, by Prop. xvi., Part i.) can form the idea of his essence,\nand of all things which necessarily follow therefrom.  Now all\nthat is in the power of God necessarily is (Pt. i., Prop. xxxv.).\nTherefore, such an idea as we are considering necessarily is, and\nin God alone.  Q.E.D.  (Part i., Prop. xv.)\n\nNote.--The multitude understand by the power of God the free\nwill of God, and the right over all things that exist, which\nlatter are accordingly generally considered as contingent.  For\nit is said that God has the power to destroy all things, and to\nreduce them to nothing.  Further, the power of God is very often\nlikened to the power of kings.  But this doctrine we have refuted\n(Pt. i., Prop. xxxii., Corolls. i. and ii.), and we have shown\n(Part i., Prop. xvi.) that God acts by the same necessity, as\nthat by which he understands himself; in other words, as it\nfollows from the necessity of the divine nature (as all admit),\nthat God understands himself, so also does it follow by the same\nnecessity, that God performs infinite acts in infinite ways.  We\nfurther showed (Part i., Prop. xxxiv.), that God's power is\nidentical with God's essence in action; therefore it is as\nimpossible for us to conceive God as not acting, as to conceive\nhim as non--existent.  If we might pursue the subject further, I\ncould point out, that the power which is commonly attributed to\nGod is not only human (as showing that God is conceived by the\nmultitude as a man, or in the likeness of a man), but involves a\nnegation of power.  However, I am unwilling to go over the same\nground so often.  I would only beg the reader again and",
+      "themes": [
+        "freedom",
+        "power",
+        "nature"
+      ],
+      "work": "Theologico-Political Treatise"
+    },
+    "theologico_poli_3": {
+      "section": "Part 3",
+      "text": "Proof.--Will and understanding are nothing beyond the\nindividual volitions and ideas (II. xlviii. and note).  But a\nparticular volition and a particular idea are one and the same\n(by the foregoing Prop.); therefore, will and understanding are\none and the same.  Q.E.D.\n\nNote.--We have thus removed the cause which is commonly\nassigned for error.  For we have shown above, that falsity\nconsists solely in the privation of knowledge involved in ideas\nwhich are fragmentary and confused.  Wherefore, a false idea,\ninasmuch as it is false, does not involve certainty.  When we\nsay, then, that a man acquiesces in what is false, and that he\nhas no doubts on the subject, we do not say that he is certain,\nbut only that he does not doubt, or that he acquiesces in what is\nfalse, inasmuch as there are no reasons, which should cause his\nimagination to waver (see II. xliv. note).  Thus, although the\nman be assumed to acquiesce in what is false, we shall never say\nthat he is certain.  For by certainty we mean something positive\n(II. xliii. and note), not merely the absence of doubt.\n\nHowever, in order that the foregoing proposition may be fully\nexplained, I will draw attention to a few additional points, and\nI will furthermore answer the objections which may be advanced\nagainst our doctrine.  Lastly, in order to remove every scruple,\nI have thought it worth while to point out some of the\nadvantages, which follow therefrom.  I say \"some,\" for they will\nbe better appreciated from what we shall set forth in the fifth\npart.\n\nI begin, then, with the first point, and warn my readers to\nmake an accurate distinction between an idea, or conception of\nthe mind, and the images of things which we imagine.  It is\nfurther necessary that they should distinguish between idea and\nwords, whereby we signify things.  These three--namely, images,\nwords, and ideas--are by many persons either entirely confused\ntogether, or not distinguished with sufficient accuracy or care,\nand hence people are generally in ignorance, how absolutely\nnecessary is a knowledge of this doctrine of the will, both for\nphilosophic purposes and for the wise ordering of life.  Those\nwho think that ideas consist in images which are formed in us by\ncontact with external bodies, persuade themselves that the ideas\nof those things, whereof we can form no mental picture, are not\nideas, but only figments, which we invent by the free decree of\nour will; they thus regard ideas as though they were inanimate\npictures on a panel, and, f",
+      "themes": [
+        "freedom",
+        "reason"
+      ],
+      "work": "Theologico-Political Treatise"
+    },
+    "theologico_poli_4": {
+      "section": "Part 4",
+      "text": "Note.--If he believes that he has given just cause for the\nlove, he will take pride therein (III. xxx. and note); this is\nwhat most often happens (III. xxv.), and we said that its\ncontrary took place whenever a man conceives himself to be hated\nby another.  (See note to preceding proposition.)  This\nreciprocal love, and consequently the desire of benefiting him\nwho loves us (III. xxxix.), and who endeavours to benefit us, is\ncalled gratitude or thankfulness.  It thus appears that men are\nmuch more prone to take vengeance than to return benefits.\n\nCorollary.--He who imagines that he is loved by one whom he\nhates, will be a prey to conflicting hatred and love.  This is\nproved in the same way as the first corollary of the preceding\nproposition.\n\nNote.--If hatred be the prevailing emotion, he will endeavour\nto injure him who loves him; this emotion is called cruelty,\nespecially if the victim be believed to have given no ordinary\ncause for hatred.\n\nPROP. XLII.  He who has conferred a benefit on anyone from\nmotives of love or honour will feel pain, if he sees that the\nbenefit is received without gratitude.\n\nProof.--When a man loves something similar to himself, he\nendeavours, as far as he can, to bring it about that he should be\nloved thereby in return (III. xxxiii.).  Therefore he who has\nconferred a benefit confers it in obedience to the desire, which\nhe feels of being loved in return; that is (III. xxxiv.) from\nthe hope of honour or (III. xxx. note) pleasure; hence he will\nendeavour, as far as he can, to conceive this cause of honour, or\nto regard it as actually existing.  But, by the hypothesis, he\nconceives something else, which excludes the existence of the\nsaid cause of honour: wherefore he will thereat feel pain (III.\nxix.).  Q.E.D.\n\nPROP. XLIII.  Hatred is increased by being reciprocated, and can\non the other hand be destroyed by love.\n\nProof.--He who conceives, that an object of his hatred hates\nhim in return, will thereupon feel a new hatred, while the former\nhatred (by hypothesis) still remains (III. xl.).  But if, on the\nother hand, he conceives that the object of hate loves him, he\nwill to this extent (III. xxxviii.) regard himself with pleasure,\nand (III. xxix.) will endeavour to please the cause of his\nemotion.  In other words, he will endeavour not to hate him (III.\nxli.), and not to affect him painfully; this endeavour (III.\nxxxvii.) will be greater or less in proportion to the emotion\nfrom which it arises.  Therefore, if it be greater than tha",
+      "themes": [],
+      "work": "Theologico-Political Treatise"
+    },
+    "theologico_poli_5": {
+      "section": "Part 5",
+      "text": "PROP. XI.  An emotion towards that which we conceive as necessary\nis, when other conditions are equal, more intense than an emotion\ntowards that which possible, or contingent, or non--necessary.\n\nProof.--In so far as we conceive a thing to be necessary, we,\nto that extent, affirm its existence; on the other hand we deny\na thing's existence, in so far as we conceive it not to be\nnecessary (I. xxxiii. note. i.); wherefore (IV. ix.) an emotion\ntowards that which is necessary is, other conditions being equal,\nmore intense than an emotion that which is non--necessary.  Q.E.D.\n\nPROP. XII.  An emotion towards a thing, which we know not to\nexist at the present time, and which we conceive as possible, is\nmore intense, other conditions being equal, than an emotion\ntowards a thing contingent.\n\nProof.--In so far as we conceive a thing as contingent, we are\naffected by the conception of some further thing, which would\nassert the existence of the former (IV. Def. iii.); but, on the\nother hand, we (by hypothesis) conceive certain things, which\nexclude its present existence.  But, in so far as we conceive a\nthing to be possible in the future, we there by conceive things\nwhich assert its existence (IV. iv.), that is (III. xviii.),\nthings which promote hope or fear: wherefore an emotion towards\nsomething possible is more vehement.  Q.E.D.\n\nCorollary.--An emotion towards a thing, which we know not to\nexist in the present, and which we conceive as contingent, is far\nfainter, than if we conceive the thing to be present with us.\n\nProof.--Emotion towards a thing, which we conceive to exist,\nis more intense than it would be, if we conceived the thing as\nfuture (IV. ix. Coroll.), and is much more vehement, than if the\nfuture time be conceived as far distant from the present (IV.\nx.).  Therefore an emotion towards a thing, whose period of\nexistence we conceive to be far distant from the present, is far\nfainter, than if we conceive the thing as present; it is,\nnevertheless, more intense, than if we conceived the thing as\ncontingent, wherefore an emotion towards a thing, which we regard\nas contingent, will be far fainter, than if we conceived the\nthing to be present with us.  Q.E.D.\n\nPROP. XIII.  Emotion towards a thing contingent, which we know\nnot to exist in the present, is, other conditions being equal,\nfainter than an emotion towards a thing past.\n\nProof.--In so far as we conceive a thing as contingent, we are\nnot affected by the image of any other thing, which asserts the\nexist",
+      "themes": [],
+      "work": "Theologico-Political Treatise"
+    },
+    "theologico_poli_6": {
+      "section": "Part 6",
+      "text": "Note.--I say, as far as he can.  For though men be ignorant,\nyet are they men, and in cases of necessity could afford us human\naid, the most excellent of all things: therefore it is often\nnecessary to accept favours from them, and consequently to repay\nsuch favours in kind; we must, therefore, exercise caution in\ndeclining favours, lest we should have the appearance of\ndespising those who bestow them, or of being, from avaricious\nmotives, unwilling to requite them, and so give ground for\noffence by the very fact of striving to avoid it.  Thus, in\ndeclining favours, we must look to the requirements of utility\nand courtesy.\n\nProof.--Only free men are thoroughly useful one to another,\nand associated among themselves by the closest necessity of\nfriendship (IV. xxxv., and Coroll. i.), only such men endeavour,\nwith mutual zeal of love, to confer benefits on each other (IV.\nxxxvii.), and, therefore, only they are thoroughly grateful one\nto another.  Q.E.D.\n\nNote.--The goodwill, which men who are led by blind desire\nhave for one another, is generally a bargaining or enticement,\nrather than pure goodwill.  Moreover, ingratitude is not an\nemotion.  Yet it is base, inasmuch as it generally shows, that a\nman is affected by excessive hatred, anger, pride, avarice, &c.\nHe who, by reason of his folly, knows not how to return benefits,\nis not ungrateful, much less he who is not gained over by the\ngifts of a courtesan to serve her lust, or by a thief to conceal\nhis thefts, or by any similar persons.  Contrariwise, such an one\nshows a constant mind, inasmuch as he cannot by any gifts be\ncorrupted, to his own or the general hurt.\n\nProof.--If it be asked: What should a man's conduct be in a\ncase where he could by breaking faith free himself from the\ndanger of present death? Would not his plan of self--preservation\ncompletely persuade him to deceive? This may be answered by\npointing out that, if reason persuaded him to act thus, it would\npersuade all men to act in a similar manner, in which case reason\nwould persuade men not to agree in good faith to unite their\nforces, or to have laws in common, that is, not to have any\ngeneral laws, which is absurd.\n\nPROP. LXXIII.  The man, who is guided by reason, is more free in\na State, where he lives under a general system of law, than in\nsolitude, where he is independent.\n\nProof.--The man, who is guided by reason, does not obey\nthrough fear (IV. lxiii.): but, in so far as he endeavours to\npreserve his being according to the dictates of ",
+      "themes": [
+        "freedom",
+        "power",
+        "reason"
+      ],
+      "work": "Theologico-Political Treatise"
     }
+  },
+  "topic_mapping": {
+    "freedom": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ],
+    "power": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ],
+    "nature": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ],
+    "reason": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ],
+    "law": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ],
+    "society": [
+      "theologico_poli_5",
+      "theologico_poli_4",
+      "theologico_poli_6",
+      "theologico_poli_3",
+      "theologico_poli_2",
+      "theologico_poli_1"
+    ]
   }
 }

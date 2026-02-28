@@ -24,24 +24,65 @@ def clean_text(text):
     return text.strip()
 
 
+def _process_discourses():
+    """Process Discourses - selection from Epictetus Discourses (before Encheiridion)."""
+    path = DATA_DIR / "epictetus" / "discourses.txt"
+    if not path.exists():
+        return {"sections": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    # Stop at Encheiridion (use rfind - it appears in ToC and again at actual section)
+    enchiridion_start = text.rfind("THE ENCHEIRIDION, OR MANUAL.")
+    if enchiridion_start > 0:
+        text = text[:enchiridion_start]
+    # Split on discourse titles: newline + ALL CAPS line ending with .— or .-
+    # Use explicit em-dash (U+2014) - raw \u escapes can fail in some envs
+    emdash = "\u2014"
+    parts = re.split(
+        rf"\n([A-Z][A-Z \.,\'\-]{{25,}}\.[{emdash}\u2013\-])\s*",
+        text,
+    )
+    sections = {}
+    for i in range(2, len(parts), 2):  # Even indices 2,4,6... are content (parts[1]=title1, parts[2]=content1)
+        if i >= len(parts):
+            break
+        title = parts[i - 1]
+        content = parts[i].strip()[:2000]
+        # Skip if title looks like header (e.g. "A SELECTION FROM...")
+        if "SELECTION" in title or "DISCOURSES OF EPICTETUS" in title:
+            continue
+        if len(content) > 150:
+            idx = str(len(sections) + 1)
+            sections[idx] = {
+                "section": title.replace(".—", "").replace(".−", "").strip()[:60],
+                "text": content,
+                "themes": extract_themes(content),
+                "work": "Discourses",
+            }
+            if len(sections) >= 20:
+                break
+    topic_mapping = {
+        "control": list(sections.keys()),
+        "virtue": list(sections.keys()),
+        "reason": list(sections.keys()),
+    }
+    return {"sections": sections, "topic_mapping": topic_mapping}
+
+
 def process_epictetus():
-    """Process Enchiridion - 52 short sections."""
+    """Process Enchiridion + Discourses - merged index."""
     with open(DATA_DIR / "epictetus" / "enchiridion.txt") as f:
         text = clean_text(f.read())
-
-    # Find sections (Roman numerals)
     sections = {}
     pattern = r"\n\s*([IVXLCDM]+)\s*\n(.*?)(?=\n\s*[IVXLCDM]+\s*\n|\Z)"
-
     matches = re.findall(pattern, text, re.DOTALL)
     for i, (num, content) in enumerate(matches[:52], 1):
         sections[str(i)] = {
             "section": num,
             "text": content.strip()[:1500],
             "themes": extract_themes(content),
+            "work": "Enchiridion",
         }
-
-    # Topic mapping
     topic_mapping = {
         "control": ["1", "2", "5", "6", "8"],
         "externals": ["1", "2"],
@@ -58,7 +99,10 @@ def process_epictetus():
         "happiness": ["2", "17"],
         "reason": ["5", "30"],
     }
-
+    discourses = _process_discourses()
+    disc_prefixed = _prefix_sections(discourses["sections"], "discourses", "Discourses")
+    sections = {**sections, **disc_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, discourses["topic_mapping"], "discourses")
     return {"sections": sections, "topic_mapping": topic_mapping}
 
 
@@ -137,12 +181,40 @@ def process_mill():
     return {"chapters": chapters, "topic_mapping": topic_mapping}
 
 
+def _process_meditations_chrystal():
+    """Process Meditations (Chrystal/Foulis translation) - 12 books. Gutenberg 55317."""
+    path = DATA_DIR / "aurelius" / "meditations_chrystal.txt"
+    if not path.exists():
+        return {"books": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    books = {}
+    book_titles = [f"BOOK {r}." for r in ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]]
+    splits = []
+    last_pos = 0
+    for title in book_titles:
+        pos = text.find(title)
+        if pos > 0:
+            if last_pos > 0:
+                splits.append(text[last_pos:pos])
+            last_pos = pos + len(title)
+    if last_pos > 0:
+        splits.append(text[last_pos:])
+    for i, content in enumerate(splits[:12], 1):
+        books[str(i)] = {
+            "book": str(i),
+            "text": content.strip()[:2500],
+            "themes": extract_themes(content),
+            "work": "Meditations (Chrystal Translation)",
+        }
+    topic_mapping = {k: list(books.keys()) for k in ["virtue", "reason", "stoic", "nature"]}
+    return {"books": books, "topic_mapping": topic_mapping}
+
+
 def process_aurelius():
-    """Process Meditations - 12 books."""
+    """Process Meditations + Meditations (Chrystal) - merged index."""
     with open(DATA_DIR / "aurelius" / "meditations.txt") as f:
         text = clean_text(f.read())
-
-    # Find "THE FIRST BOOK", "THE SECOND BOOK" etc. in the actual content
     books = {}
     book_titles = [
         "THE FIRST BOOK",
@@ -158,7 +230,6 @@ def process_aurelius():
         "THE ELEVENTH BOOK",
         "THE TWELFTH BOOK",
     ]
-
     splits = []
     last_pos = 0
     for title in book_titles:
@@ -167,17 +238,15 @@ def process_aurelius():
             if last_pos > 0:
                 splits.append(text[last_pos:pos])
             last_pos = pos + len(title)
-    # Add the last segment
     if last_pos > 0:
         splits.append(text[last_pos:])
-
     for i, content in enumerate(splits[:12], 1):
         books[str(i)] = {
             "book": str(i),
             "text": content.strip()[:2500],
             "themes": extract_themes(content),
+            "work": "Meditations",
         }
-
     topic_mapping = {
         "death": ["1", "2", "3", "4", "7", "9", "11"],
         "duty": ["2", "3", "4", "5", "6", "7"],
@@ -191,7 +260,10 @@ def process_aurelius():
         "impermanence": ["2", "3", "4", "5", "6", "7", "9", "10", "11"],
         "stoic": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
     }
-
+    chrystal = _process_meditations_chrystal()
+    chrystal_prefixed = _prefix_sections(chrystal["books"], "chrystal", "Meditations (Chrystal Translation)")
+    books = {**books, **chrystal_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, chrystal["topic_mapping"], "chrystal")
     return {"books": books, "topic_mapping": topic_mapping}
 
 
@@ -257,22 +329,61 @@ def process_locke():
     return {"chapters": chapters, "topic_mapping": topic_mapping}
 
 
+def _process_discourse_inequality():
+    """Process Discourse on the Origin of Inequality - 2 parts."""
+    path = DATA_DIR / "rousseau" / "discourse_inequality.txt"
+    if not path.exists():
+        return {"parts": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    # Split on "DISCOURSE FIRST PART" and "SECOND PART"
+    part1_start = text.find("DISCOURSE FIRST PART")
+    part2_start = text.find("SECOND PART")
+    if part1_start < 0 or part2_start < 0:
+        return {"parts": {}, "topic_mapping": {}}
+    part1 = text[part1_start + len("DISCOURSE FIRST PART") : part2_start].strip()
+    part2 = text[part2_start + len("SECOND PART") :].strip()
+    # Trim Gutenberg footer from part2 if present
+    if "*** END OF THE PROJECT" in part2:
+        part2 = part2[: part2.find("*** END OF THE PROJECT")].strip()
+    parts = {
+        "1": {
+            "part": "1",
+            "text": part1[:3000],
+            "themes": extract_themes(part1),
+            "work": "Discourse on the Origin of Inequality",
+        },
+        "2": {
+            "part": "2",
+            "text": part2[:3000],
+            "themes": extract_themes(part2),
+            "work": "Discourse on the Origin of Inequality",
+        },
+    }
+    topic_mapping = {
+        "nature": ["1", "2"],
+        "inequality": ["1", "2"],
+        "society": ["1", "2"],
+        "freedom": ["1", "2"],
+        "property": ["2"],
+    }
+    return {"parts": parts, "topic_mapping": topic_mapping}
+
+
 def process_rousseau():
-    """Process Social Contract - 4 books."""
+    """Process Social Contract + Discourse on Inequality - merged index."""
     with open(DATA_DIR / "rousseau" / "social_contract.txt") as f:
         text = clean_text(f.read())
-
     books = {}
     pattern = r"BOOK\s*([IV]+)\.?\s*\n(.*?)(?=BOOK\s*[IV]+|$)"
     matches = re.findall(pattern, text, re.DOTALL | re.IGNORECASE)
-
     for i, (num, content) in enumerate(matches[:4], 1):
         books[str(i)] = {
             "book": num,
             "text": content.strip()[:3000],
             "themes": extract_themes(content),
+            "work": "Social Contract",
         }
-
     topic_mapping = {
         "freedom": ["1", "2", "3", "4"],
         "chains": ["1"],
@@ -288,7 +399,10 @@ def process_rousseau():
         "contract": ["1", "2"],
         "will": ["1", "2", "3", "4"],
     }
-
+    inequality = _process_discourse_inequality()
+    ineq_prefixed = _prefix_sections(inequality["parts"], "inequality", "Discourse on the Origin of Inequality")
+    books = {**books, **ineq_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, inequality["topic_mapping"], "inequality")
     return {"books": books, "topic_mapping": topic_mapping}
 
 
@@ -469,70 +583,101 @@ def process_thoreau():
     return {"sections": sections, "topic_mapping": topic_mapping}
 
 
+def _process_de_cive():
+    """Process De Cive (Philosophical Rudiments) - excerpt. Gutenberg 73906."""
+    path = DATA_DIR / "hobbes" / "de_cive.txt"
+    if not path.exists():
+        return {"chapters": {}, "topic_mapping": {}}
+    with open(path) as f:
+        text = clean_text(f.read())
+    # Skip index - main text starts around CHAPTER I.
+    chapter_pattern = r"CHAPTER\s+([IVX]+)\.?\s*(.*?)(?=CHAPTER\s+[IVX]+|$)"
+    matches = re.findall(chapter_pattern, text, re.DOTALL | re.IGNORECASE)
+    chapters = {}
+    roman_to_num = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10, "XI": 11, "XII": 12, "XIII": 13, "XIV": 14, "XV": 15, "XVI": 16, "XVII": 17, "XVIII": 18}
+    for num_rom, content in matches[:10]:  # First 10 chapters (Liberty + part of Dominion)
+        num = roman_to_num.get(num_rom.upper(), len(chapters) + 1)
+        content = content.strip()[:2500]
+        if len(content) > 200:
+            chapters[str(num)] = {
+                "chapter": num_rom,
+                "text": content,
+                "themes": extract_themes(content),
+                "work": "De Cive (Philosophical Rudiments)",
+            }
+    topic_mapping = {
+        "power": list(chapters.keys()),
+        "nature": list(chapters.keys()),
+        "government": list(chapters.keys()),
+        "law": list(chapters.keys()),
+    }
+    return {"chapters": chapters, "topic_mapping": topic_mapping}
+
+
 def process_hobbes():
-    """Process Leviathan - 4 parts with chapters."""
+    """Process Leviathan + De Cive - merged index."""
     with open(DATA_DIR / "hobbes" / "leviathan.txt") as f:
         text = clean_text(f.read())
-
-    # Leviathan is complex - let's extract sections by part
-    chapters = {}
-
-    # Part I: Of Man
     part1 = re.search(
         r"PART I.*?OF MAN(.*?)(?=PART II|$)", text, re.DOTALL | re.IGNORECASE
     )
-    # Part II: Of Commonwealth
     part2 = re.search(
         r"PART II.*?OF COMMONWEALTH(.*?)(?=PART III|$)", text, re.DOTALL | re.IGNORECASE
     )
-    # Part III: Of a Christian Commonwealth
     part3 = re.search(
         r"PART III.*?OF A CHRISTIAN COMMONWEALTH(.*?)(?=PART IV|$)",
         text,
         re.DOTALL | re.IGNORECASE,
     )
-    # Part IV: Of the Kingdom of Darkness
     part4 = re.search(
         r"PART IV.*?OF THE KINGDOM OF DARKNESS(.*?)$", text, re.DOTALL | re.IGNORECASE
     )
-
-    # Simplified: just map keywords to parts
     parts = {
         "1": {
+            "part": "1",
             "text": part1.group(1)[:3000] if part1 else "",
             "themes": ["man", "nature", "reason", "passions"],
+            "work": "Leviathan",
         },
         "2": {
+            "part": "2",
             "text": part2.group(1)[:3000] if part2 else "",
             "themes": ["commonwealth", "sovereign", "laws"],
+            "work": "Leviathan",
         },
         "3": {
+            "part": "3",
             "text": part3.group(1)[:3000] if part3 else "",
             "themes": ["christian", "religion", "church"],
+            "work": "Leviathan",
         },
         "4": {
+            "part": "4",
             "text": part4.group(1)[:3000] if part4 else "",
             "themes": ["darkness", "superstition"],
+            "work": "Leviathan",
         },
     }
-
     topic_mapping = {
         "power": ["1", "2", "3", "4"],
         "sovereign": ["2", "3", "4"],
         "authority": ["2", "3"],
-        "fear": ["1", "2", "13", "17"],
-        "nature": ["1", "2", "13"],
-        "war": ["1", "2", "13"],
-        "freedom": ["1", "2", "17", "18", "20", "21"],
+        "fear": ["1", "2"],
+        "nature": ["1", "2"],
+        "war": ["1", "2"],
+        "freedom": ["1", "2"],
         "law": ["2", "3", "4"],
         "rights": ["1", "2"],
-        "contract": ["2", "13", "14", "15", "17"],
-        "commonwealth": ["2", "13", "14", "15", "16", "17", "18"],
-        "government": ["2", "13", "14", "15", "16", "17", "18", "19", "20", "21"],
+        "contract": ["2"],
+        "commonwealth": ["2"],
+        "government": ["2"],
         "church": ["3", "4"],
         "religion": ["3", "4"],
     }
-
+    de_cive = _process_de_cive()
+    dc_prefixed = _prefix_sections(de_cive["chapters"], "de_cive", "De Cive (Philosophical Rudiments)")
+    parts = {**parts, **dc_prefixed}
+    topic_mapping = _merge_topic_mappings(topic_mapping, de_cive["topic_mapping"], "de_cive")
     return {"parts": parts, "topic_mapping": topic_mapping}
 
 

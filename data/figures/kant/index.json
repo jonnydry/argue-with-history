@@ -8,7 +8,8 @@
         "morality",
         "knowledge",
         "nature"
-      ]
+      ],
+      "work": "Groundwork"
     },
     "2": {
       "section": "OF MORALITY TO THE PHILOSOPHICAL",
@@ -17,7 +18,8 @@
         "morality",
         "nature",
         "courage"
-      ]
+      ],
+      "work": "Groundwork"
     },
     "3": {
       "section": "TO THE METAPHYSIC OF MORALS",
@@ -26,7 +28,8 @@
         "justice",
         "reason",
         "morality"
-      ]
+      ],
+      "work": "Groundwork"
     },
     "4": {
       "section": "CRITIQUE OF PURE PRACTICAL REASON",
@@ -36,7 +39,50 @@
         "freedom",
         "reason",
         "property"
-      ]
+      ],
+      "work": "Groundwork"
+    },
+    "critique_pure_r_1": {
+      "section": "BOOK I",
+      "text": ". Analytic of Conceptions. \u00a7 2\n\n Chapter I. Of the Transcendental Clue to the Discovery of all Pure\n Conceptions of the Understanding\n\n Introductory \u00a7 3\n\n Section I. Of the Logical Use of the Understanding in General. \u00a7 4\n\n Section II. Of the Logical Function of the Understanding in\n Judgements. \u00a7 5\n\n Section III. Of the Pure Conceptions of the Understanding, or\n Categories. \u00a7 6\n\n Chapter II. Of the Deduction of the Pure Conception of the\n Understanding\n\n Section I. Of the Principles of a Transcendental Deduction in general\n \u00a7 9\n\n Transition to the Transcendental Deduction of the Categories. \u00a7 10\n\n Section II Transcendental Deduction of the pure Conceptions of the\n Understanding.\n\n Of the Possibility of a Conjunction of the manifold representations\n given by Sense. \u00a7 11.\n\n Of the Originally Synthetical Unity of Apperception. \u00a7 12\n\n The Principle of the Synthetical Unity of Apperception is the highest\n Principle of all exercise of the Understanding. \u00a7 13\n\n What Objective Unity of Self-consciousness is. \u00a7 14\n\n The Logical Form of all Judgements consists in the Objective Unity of\n Apperception of the Conceptions contained therein. \u00a7 15\n\n All Sensuous Intuitions are subject to the Categories, as Conditions\n under which alone the manifold Content of them can be united in one\n Consciousness. \u00a7 16\n\n Observation. \u00a7 17\n\n In Cognition, its Application to Objects of Experience is the only\n legitimate use of the Category. \u00a7 18\n\n Of the Application of the Categories to Objects of the Senses in\n general. \u00a7 20\n\n Transcendental Deduction of the universally possible employment in\n experience of the Pure Conceptions of the Understanding. \u00a7 22\n\n Result of this Deduction of the Conceptions of the Understanding. \u00a7 23",
+      "themes": [
+        "reason"
+      ],
+      "work": "Critique of Pure Reason"
+    },
+    "critique_pure_r_2": {
+      "section": "BOOK X",
+      "text": ". Analytic of Principles\n\n INTRODUCTION. Of the Transcendental Faculty of judgement in General.\n\n TRANSCENDENTAL DOCTRINE OF THE FACULTY OF JUDGEMENT OR, ANALYTIC OF\n PRINCIPLES.\n\n Chapter I. Of the Schematism at of the Pure Conceptions of the\n Understanding.\n\n Chapter II. System of all Principles of the Pure Understanding.\n\n Section I. Of the Supreme Principle of all Analytical Judgements.\n\n Section II. Of the Supreme Principle of all Synthetical Judgements.\n\n Section III. Systematic Representation of all Synthetical Principles\n of the Pure Understanding.\n\n Chapter III Of the Ground of the Division of all Objects into\n Phenomena and Noumena.\n\n APPENDIX.\n\n SECOND DIVISION\u2014TRANSCENDENTAL LOGIC\n\n TRANSCENDENTAL DIALECTIC. INTRODUCTION.\n\n I. Of Transcendental Illusory Appearance.\n\n II. Of Pure Reason as the Seat of Transcendental Illusory Appearance.\n\n TRANSCENDENTAL DIALECTIC\u2014BOOK I\u2014OF THE CONCEPTIONS OF PURE REASON.\n\n Section I\u2014Of Ideas in General.\n\n Section II. Of Transcendental Ideas.\n\n Section III. System of Transcendental Ideas.\n\n TRANSCENDENTAL DIALECTIC\u2014BOOK II\u2014OF THE DIALECTICAL PROCEDURE OF PURE\n REASON.\n\n Chapter I. Of the Paralogisms of Pure Reason.\n\n Chapter II. The Antinomy of Pure Reason.\n\n Section I. System of Cosmological Ideas.\n\n Section II. Antithetic of Pure Reason.\n\n Section III. Of the Interest of Reason in these Self-contradictions.\n\n Section IV. Of the necessity imposed upon Pure Reason of presenting a\n Solution of its Transcendental Problems.\n\n Section V. Sceptical Exposition of the Cosmological Problems presented\n in the four Transcendental Ideas.\n\n Section VI. Transcendental Idealism as the Key to the Solution of Pure\n Cosmological Dialectic.\n\n Section VII. Critical Solution of the Cosmological Problem.\n\n Section VIII. Regulative Principle of Pure Reason in relation to the\n Cosmological Ideas.\n\n Section IX. Of the Empirical Use of the Regulative Principle of Reason\n with regard to the Cosmological Ideas.\n\n I. Solution of the Cosmological Idea of the Totality of the\n Composition of Phenomena in the Universe.\n\n II. Solution of the Cosmological Idea of the Totality of the Division\n of a Whole given in Intuition.\n\n III. Solution of the Cosmological Idea of the Totality of the\n Deduction of Cosmical Events from their Causes.\n\n IV. Solution of the Cosmological Idea of the Totality of the\n Dependence of Phenomenal Existences.\n\n Chapter III. The Ideal of Pure Reason.\n\n Section I. Of the Ideal in General.\n\n Section II. Of the Transcendental ",
+      "themes": [
+        "reason"
+      ],
+      "work": "Critique of Pure Reason"
     }
+  },
+  "topic_mapping": {
+    "freedom": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ],
+    "power": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ],
+    "nature": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ],
+    "reason": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ],
+    "law": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ],
+    "society": [
+      "critique_pure_r_2",
+      "critique_pure_r_1"
+    ]
   }
 }
