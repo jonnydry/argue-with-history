@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Swords } from "lucide-react";
+import { Swords, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -39,6 +39,7 @@ export default function FiguresPage() {
   const setMaxTurns = useDebateStore((s) => s.setMaxTurns);
   const scholarMode = useDebateStore((s) => s.scholarMode);
   const setScholarMode = useDebateStore((s) => s.setScholarMode);
+  const reset = useDebateStore((s) => s.reset);
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
@@ -152,14 +153,21 @@ export default function FiguresPage() {
           className="fixed top-4 right-4 z-30 w-64 sm:w-72 arena-enter"
           aria-label="Incomplete debate"
         >
-          <Link href="/debate">
-            <Card className="arena-panel border-accent/40 hover:border-accent/70 transition-colors cursor-pointer overflow-hidden group">
-              <CardContent className="p-4">
+          <Card className="arena-panel border-accent/40 overflow-hidden relative">
+            <button
+              onClick={() => reset()}
+              aria-label="Dismiss and delete debate"
+              className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors z-10"
+            >
+              <X size={14} />
+            </button>
+            <Link href="/debate">
+              <CardContent className="p-4 hover:bg-accent/5 transition-colors cursor-pointer group">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
                     <Swords size={18} className="text-accent" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 pr-4">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
                       Incomplete debate
                     </p>
@@ -178,8 +186,8 @@ export default function FiguresPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          </Link>
+            </Link>
+          </Card>
         </aside>
       )}
       <header className="border-b border-border">
