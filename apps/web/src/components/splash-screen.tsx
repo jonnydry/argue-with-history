@@ -12,7 +12,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     setFading(true);
     timeoutRef.current = setTimeout(() => {
       try {
-        sessionStorage.setItem("splash_seen", "true");
+        localStorage.setItem("splash_seen", "true");
       } catch {}
       onComplete();
     }, 600);

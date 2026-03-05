@@ -149,7 +149,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchFigures();
-    if (typeof window !== "undefined" && !sessionStorage.getItem("splash_seen")) {
+    if (typeof window !== "undefined" && !localStorage.getItem("splash_seen")) {
       setShowSplash(true);
     }
   }, [fetchFigures]);
