@@ -86,15 +86,17 @@ export default function FiguresPage() {
   }, [figures.length, fetchFigures]);
 
   useEffect(() => {
-    const isSameOpponentNewTopic = selectedFigure && !selectedTopic && !currentDebate;
-    if (isSameOpponentNewTopic) {
-      setHighlightedFigureId(null);
-      setHighlightedTopicId(null);
-    } else {
+    const isSameOpponentNewTopic =
+      selectedFigure && !selectedTopic && !currentDebate;
+    const hasFreshSelection =
+      selectedFigure && selectedTopic && !currentDebate;
+
+    if (!isSameOpponentNewTopic && !hasFreshSelection) {
       clearSelections();
-      setHighlightedFigureId(null);
-      setHighlightedTopicId(null);
     }
+
+    setHighlightedFigureId(null);
+    setHighlightedTopicId(null);
     setSelectionsInitialized(true);
   }, [clearSelections, selectedFigure, selectedTopic, currentDebate]);
 
