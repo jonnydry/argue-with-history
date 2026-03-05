@@ -89,6 +89,7 @@ export interface DebateState {
   turns: DebateTurn[];
   created_at: number;
   status: "active" | "completed";
+  opening_statement?: string | null;
 }
 
 export interface StartDebateRequest {

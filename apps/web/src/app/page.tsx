@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
-import { SplashScreen } from "@/components/splash-screen";
 import type { FigureInfo } from "@/lib/types";
 import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
@@ -145,13 +144,8 @@ export default function Home() {
   const step3 = useInView(0.3);
   const stepRefs = [step1, step2, step3];
 
-  const [showSplash, setShowSplash] = useState(false);
-
   useEffect(() => {
-    fetchFigures();
-    if (typeof window !== "undefined" && !localStorage.getItem("splash_seen")) {
-      setShowSplash(true);
-    }
+    void fetchFigures();
   }, [fetchFigures]);
 
   const scrollFigures =
@@ -159,8 +153,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
-      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
-
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -183,20 +175,10 @@ export default function Home() {
       </header>
 
       <main>
-        <div className="relative w-full h-[220px] sm:h-[320px] md:h-[400px] overflow-hidden bg-black">
-          <video
-            src="/splash.mp4"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background pointer-events-none" />
-        </div>
-
-        <section className="container mx-auto px-4 sm:px-6 py-3 sm:py-8 md:py-10">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_38%)] pointer-events-none" />
+          <div className="container relative mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+            <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-8 lg:gap-12 items-center">
             <div className="max-w-2xl">
               <h2 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-6 sm:mb-8">
                 DON&apos;T READ
@@ -209,30 +191,62 @@ export default function Home() {
                 Not a spectator sport. Combat the world&apos;s most infamous philosophers and thinkers in your own words. Your arguments will be judged. Increase your understanding, challenge your assumptions, enter the arena.
                 <Swords size={20} className="inline-block ml-2 text-foreground/50 align-middle" />
               </p>
-              <Link href="/figures">
-                <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
-                  CHOOSE YOUR OPPONENT →
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Link href="/figures">
+                  <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
+                    CHOOSE YOUR OPPONENT
+                  </Button>
+                </Link>
+                <Link href="/figures">
+                  <Button size="lg" variant="outline" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto btn-press w-full sm:w-auto">
+                    BROWSE FIGURES
+                  </Button>
+                </Link>
+              </div>
             </div>
 
-            <div className="relative h-[300px] sm:h-[500px] overflow-hidden lg:h-[600px] hidden sm:block">
-              <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none"></div>
-              
-              {isLoading && figures.length === 0 ? (
-                <div className="space-y-3 px-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <FigureSkeleton key={i} />
-                  ))}
+              <div className="space-y-4">
+                <Card className="arena-panel border-foreground/10">
+                  <CardContent className="p-6 sm:p-7">
+                    <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-3">
+                      WHAT MAKES IT DIFFERENT
+                    </p>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <p className="text-2xl font-bold tracking-tight">30+</p>
+                        <p className="text-sm text-muted-foreground">historical opponents</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tracking-tight">Source-grounded</p>
+                        <p className="text-sm text-muted-foreground">responses and feedback</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tracking-tight">Round scoring</p>
+                        <p className="text-sm text-muted-foreground">logic, rhetoric, rebuttal</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="relative h-[300px] sm:h-[420px] overflow-hidden hidden sm:block">
+                  <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none"></div>
+
+                  {isLoading && figures.length === 0 ? (
+                    <div className="space-y-3 px-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <FigureSkeleton key={i} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-3 animate-scroll-vertical px-4">
+                      {scrollFigures.map((figure, index) => (
+                        <FigureCard key={`${figure.id}-${index}`} figure={figure} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="space-y-3 animate-scroll-vertical px-4">
-                  {scrollFigures.map((figure, index) => (
-                    <FigureCard key={`${figure.id}-${index}`} figure={figure} />
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </section>

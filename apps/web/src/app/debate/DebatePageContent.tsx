@@ -39,6 +39,7 @@ import { useDebateStore } from "@/stores/debate-store";
 export default function DebatePageContent() {
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
   const selectedTopic = useDebateStore((s) => s.selectedTopic);
+  const currentDebateId = useDebateStore((s) => s.currentDebateId);
   const currentDebate = useDebateStore((s) => s.currentDebate);
   const openingStatement = useDebateStore((s) => s.openingStatement);
   const openingKeyClaims = useDebateStore((s) => s.openingKeyClaims);
@@ -48,6 +49,7 @@ export default function DebatePageContent() {
   const fetchFigures = useDebateStore((s) => s.fetchFigures);
   const prefetchTopicPrimer = useDebateStore((s) => s.prefetchTopicPrimer);
   const hydrateSelectionsFromDebate = useDebateStore((s) => s.hydrateSelectionsFromDebate);
+  const restoreDebateIfNeeded = useDebateStore((s) => s.restoreDebateIfNeeded);
   const structuredInput = useDebateStore((s) => s.structuredInput);
   const setStructuredInput = useDebateStore((s) => s.setStructuredInput);
   const scholarMode = useDebateStore((s) => s.scholarMode);
@@ -69,7 +71,7 @@ export default function DebatePageContent() {
   const previousTurnCountRef = useRef(0);
   const previousLatestTurnScoredRef = useRef(false);
   const SCROLL_PIN_THRESHOLD_PX = 40;
-  const currentDebateId = currentDebate?.id ?? null;
+  const activeDebateId = currentDebate?.id ?? currentDebateId ?? null;
   const turnCount = currentDebate?.turns.length ?? 0;
   const latestTurnHasScore = Boolean(currentDebate?.turns[turnCount - 1]?.scores);
 
@@ -83,6 +85,10 @@ export default function DebatePageContent() {
     topicPrimer && topicPrimerKey && selectedFigure && selectedTopic && topicPrimerKey === `${selectedFigure.id}:${selectedTopic.id}`
       ? topicPrimer
       : null;
+
+  useEffect(() => {
+    void restoreDebateIfNeeded();
+  }, [restoreDebateIfNeeded]);
 
   useEffect(() => {
     clearStaleDebateIfMismatch();
@@ -124,10 +130,10 @@ export default function DebatePageContent() {
     return () => {
       viewport.removeEventListener("scroll", updatePinnedState);
     };
-  }, [currentDebateId, SCROLL_PIN_THRESHOLD_PX]);
+  }, [activeDebateId, SCROLL_PIN_THRESHOLD_PX]);
 
   useEffect(() => {
-    if (!currentDebateId) return;
+    if (!activeDebateId) return;
 
     const appendedTurn = turnCount > previousTurnCountRef.current;
     const scoreJustArrived =
@@ -141,7 +147,7 @@ export default function DebatePageContent() {
 
     previousTurnCountRef.current = turnCount;
     previousLatestTurnScoredRef.current = latestTurnHasScore;
-  }, [currentDebateId, turnCount, latestTurnHasScore, openingStatement]);
+  }, [activeDebateId, turnCount, latestTurnHasScore, openingStatement]);
 
   const handleStartDebate = async () => {
     await startDebate();
@@ -169,7 +175,7 @@ export default function DebatePageContent() {
   };
 
   // ── No figure/topic selected ──────────────────────────────────────────────
-  if (currentDebate && (!selectedFigure || !selectedTopic)) {
+  if ((currentDebate || currentDebateId) && (!selectedFigure || !selectedTopic)) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
         <Card className="max-w-md w-full arena-panel">
@@ -226,7 +232,7 @@ export default function DebatePageContent() {
 
         <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
           <div className="max-w-xl mx-auto arena-enter">
-            <p className="war-label mb-4">// ENTERING THE ARENA</p>
+            <p className="war-label mb-4"><span aria-hidden="true">&sol;&sol; </span>ENTERING THE ARENA</p>
             <h2 className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter leading-[0.85] mb-4">
               {selectedFigure.name.split(' ').map((word, i) => (
                 <span key={i}>
@@ -248,7 +254,7 @@ export default function DebatePageContent() {
 
             <div className="mb-6 space-y-4">
               <div>
-                <p className="war-label mb-2">// TOPIC OF CONTENTION</p>
+                <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>TOPIC OF CONTENTION</p>
                 <p className="text-xl sm:text-2xl font-bold tracking-tight">{selectedTopic.title}</p>
               </div>
             </div>

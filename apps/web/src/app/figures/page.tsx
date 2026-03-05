@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Swords, X } from "lucide-react";
@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { useDebateStore } from "@/stores/debate-store";
 import { api } from "@/lib/api";
-import { getFigureDebateCount } from "@/lib/progression";
+import {
+  getProgressionSnapshot,
+  subscribeToProgression,
+  type ProgressionData,
+} from "@/lib/progression";
 import type { DebateTopic, FigureInfo } from "@/lib/types";
 import {
   ERA_CATEGORIES,
@@ -23,11 +27,19 @@ import {
 } from "@/lib/figures";
 import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
+type PreviewPassage = {
+  source_id: string;
+  title: string;
+  text_excerpt: string;
+};
+
+const emptyProgression: ProgressionData = { byFigure: {}, byFigureTopic: {} };
+
 export default function FiguresPage() {
   const figures = useDebateStore((s) => s.figures);
   const currentDebate = useDebateStore((s) => s.currentDebate);
   const fetchFigures = useDebateStore((s) => s.fetchFigures);
-  const clearSelections = useDebateStore((s) => s.clearSelections);
+  const restoreDebateIfNeeded = useDebateStore((s) => s.restoreDebateIfNeeded);
   const selectFigure = useDebateStore((s) => s.selectFigure);
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
   const selectTopic = useDebateStore((s) => s.selectTopic);
@@ -39,29 +51,41 @@ export default function FiguresPage() {
   const setMaxTurns = useDebateStore((s) => s.setMaxTurns);
   const scholarMode = useDebateStore((s) => s.scholarMode);
   const setScholarMode = useDebateStore((s) => s.setScholarMode);
-  const reset = useDebateStore((s) => s.reset);
+  const deleteCurrentDebate = useDebateStore((s) => s.deleteCurrentDebate);
+  const isLoading = useDebateStore((s) => s.isLoading);
 
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewPassages, setPreviewPassages] = useState<Array<{ source_id: string; title: string; text_excerpt: string }>>([]);
+  const [previewPassages, setPreviewPassages] = useState<PreviewPassage[]>([]);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(4);
+  const [visibleCount, setVisibleCount] = useState(6);
   const [selectedEra, setSelectedEra] = useState<EraCategory>("All");
-  const [highlightedFigureId, setHighlightedFigureId] = useState<string | null>(null);
-  const [highlightedTopicId, setHighlightedTopicId] = useState<string | null>(null);
-  const [selectionsInitialized, setSelectionsInitialized] = useState(false);
-  const activeSelectedFigure = selectionsInitialized ? selectedFigure : null;
-  const activeSelectedTopic = selectionsInitialized ? selectedTopic : null;
-  const selectedFigureId = activeSelectedFigure?.id;
-  const selectedTopicId = activeSelectedTopic?.id;
-
-  const filteredFigures = filterFiguresByEra(figures, selectedEra);
-
-  useEffect(() => {
-    setVisibleCount(4);
-  }, [selectedEra]);
+  const progression = useSyncExternalStore(
+    subscribeToProgression,
+    getProgressionSnapshot,
+    () => emptyProgression
+  );
 
   const topicSectionRef = useRef<HTMLDivElement>(null);
   const settingsSectionRef = useRef<HTMLDivElement>(null);
+
+  const activeSelectedFigure = selectedFigure;
+  const activeSelectedTopic = selectedTopic;
+  const filteredFigures = filterFiguresByEra(figures, selectedEra);
+
+  useEffect(() => {
+    void fetchFigures();
+    void restoreDebateIfNeeded();
+  }, [fetchFigures, restoreDebateIfNeeded]);
+
+  useEffect(() => {
+    if (activeSelectedFigure && activeSelectedTopic) {
+      void prefetchTopicPrimer();
+    }
+  }, [activeSelectedFigure, activeSelectedTopic, prefetchTopicPrimer]);
+
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [selectedEra]);
 
   const fetchPreview = async () => {
     if (!activeSelectedFigure || !activeSelectedTopic) return;
@@ -79,74 +103,34 @@ export default function FiguresPage() {
     }
   };
 
-  useEffect(() => {
-    if (figures.length === 0) {
-      fetchFigures();
-    }
-  }, [figures.length, fetchFigures]);
-
-  useEffect(() => {
-    const isSameOpponentNewTopic =
-      selectedFigure && !selectedTopic && !currentDebate;
-    const hasFreshSelection =
-      selectedFigure && selectedTopic && !currentDebate;
-
-    if (!isSameOpponentNewTopic && !hasFreshSelection) {
-      clearSelections();
-    }
-
-    setHighlightedFigureId(null);
-    setHighlightedTopicId(null);
-    setSelectionsInitialized(true);
-  }, [clearSelections, selectedFigure, selectedTopic, currentDebate]);
-
-  useEffect(() => {
-    if (activeSelectedFigure) {
-      topicSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [activeSelectedFigure]);
-
-  useEffect(() => {
-    if (activeSelectedFigure && activeSelectedTopic) {
-      settingsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [activeSelectedFigure, activeSelectedTopic]);
-
-  useEffect(() => {
-    if (selectedFigureId && selectedTopicId) {
-      void prefetchTopicPrimer();
-    }
-  }, [selectedFigureId, selectedTopicId, prefetchTopicPrimer]);
-
-  const handleFigureClick = (figure: FigureInfo) => {
-    if (activeSelectedFigure?.id === figure.id) return;
-    if (highlightedFigureId === figure.id) {
-      setHighlightedFigureId(null);
-      setHighlightedTopicId(null);
-      selectFigure(figure);
-    } else {
-      setHighlightedFigureId(figure.id);
-      setHighlightedTopicId(null);
-    }
+  const scrollToTopics = () => {
+    topicSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleTopicClick = (topic: DebateTopic) => {
-    if (!activeSelectedFigure) return;
+  const scrollToSettings = () => {
+    settingsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleFigureSelect = (figure: FigureInfo) => {
+    if (activeSelectedFigure?.id === figure.id) return;
+    selectFigure(figure);
+  };
+
+  const handleTopicSelect = (topic: DebateTopic) => {
     if (activeSelectedTopic?.id === topic.id) return;
-    if (highlightedTopicId === topic.id) {
-      setHighlightedTopicId(null);
-      selectTopic(topic);
-    } else {
-      setHighlightedTopicId(topic.id);
-    }
+    selectTopic(topic);
   };
 
   const hasIncompleteDebate = currentDebate?.status === "active";
   const incompleteDebateFigure = hasIncompleteDebate
-    ? figures.find((f) => f.id === currentDebate!.figure)
+    ? figures.find((figure) => figure.id === currentDebate.figure)
     : null;
-  const figureDisplayName = incompleteDebateFigure?.name ?? 
-    (currentDebate?.figure ? String(currentDebate.figure).charAt(0).toUpperCase() + String(currentDebate.figure).slice(1) : "");
+  const figureDisplayName =
+    incompleteDebateFigure?.name ??
+    (currentDebate?.figure
+      ? String(currentDebate.figure).charAt(0).toUpperCase() +
+        String(currentDebate.figure).slice(1)
+      : "");
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg relative">
@@ -157,8 +141,9 @@ export default function FiguresPage() {
         >
           <Card className="arena-panel border-accent/40 overflow-hidden relative">
             <button
-              onClick={() => reset()}
-              aria-label="Dismiss and delete debate"
+              type="button"
+              onClick={() => void deleteCurrentDebate()}
+              aria-label="Delete saved debate"
               className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 transition-colors z-10"
             >
               <X size={14} />
@@ -171,19 +156,19 @@ export default function FiguresPage() {
                   </div>
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                      Incomplete debate
+                      Saved debate
                     </p>
                     <p className="font-semibold text-sm truncate" title={figureDisplayName}>
                       {figureDisplayName}
                     </p>
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                      {currentDebate!.topic}
+                      {currentDebate.topic}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 tabular-nums">
-                      Round {currentDebate!.current_turn}/{currentDebate!.max_turns}
+                      Round {currentDebate.current_turn}/{currentDebate.max_turns}
                     </p>
                     <p className="text-xs text-accent font-medium mt-2 group-hover:underline">
-                      Resume →
+                      Resume
                     </p>
                   </div>
                 </div>
@@ -192,6 +177,7 @@ export default function FiguresPage() {
           </Card>
         </aside>
       )}
+
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-4">
@@ -210,14 +196,14 @@ export default function FiguresPage() {
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-12 arena-enter">
-          <p className="war-label mb-3">// SELECT YOUR ADVERSARY</p>
+          <p className="war-label mb-3"><span aria-hidden="true">&sol;&sol; </span>SELECT YOUR ADVERSARY</p>
           <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3 sm:mb-4">
             CHOOSE YOUR
             <br />
             <span className="headline-emphasis">OPPONENT</span>
           </h2>
-          <p className="text-muted-foreground text-sm sm:text-lg max-w-md">
-            Each has centuries of wisdom. You have your wits. Select wisely.
+          <p className="text-muted-foreground text-sm sm:text-lg max-w-lg">
+            Single-click to select an opponent, then continue when you are ready. Browsing should feel exploratory, not jumpy.
           </p>
           <div className="arena-divider mt-6">
             <Swords size={16} className="text-muted-foreground/40" />
@@ -228,6 +214,7 @@ export default function FiguresPage() {
           {ERA_CATEGORIES.map((era) => (
             <button
               key={era}
+              type="button"
               onClick={() => setSelectedEra(era)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedEra === era
@@ -240,112 +227,104 @@ export default function FiguresPage() {
           ))}
         </div>
 
-        {highlightedFigureId && (
-          <p className="text-center text-xs text-muted-foreground mb-4 animate-fade-up">
-            Click again to select
-          </p>
-        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
           {filteredFigures.slice(0, visibleCount).map((figure) => {
             const isSelected = activeSelectedFigure?.id === figure.id;
-            const isHighlighted = highlightedFigureId === figure.id;
+            const debateCount = progression.byFigure[figure.id] ?? 0;
+
             return (
-            <Card
-              key={figure.id}
-              onClick={() => handleFigureClick(figure)}
-              className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] group overflow-hidden rounded-xl shadow-lg hover:shadow-xl arena-texture ${
-                isSelected
-                  ? "bg-foreground text-background border-foreground shadow-lg arena-pulse"
-                  : isHighlighted
-                  ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50 shadow-lg"
-                  : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
-              }`}
-            >
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-start gap-4 sm:gap-5">
-                  <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-blackletter font-bold text-lg sm:text-xl shrink-0 ${
-                    isSelected
-                      ? "bg-background text-foreground"
-                      : isHighlighted
-                      ? "bg-foreground/20 text-foreground"
-                      : "bg-foreground text-background"
-                  }`}>
-                    {figure.name.charAt(0)}
-                  </div>
+              <Card
+                key={figure.id}
+                className={`overflow-hidden rounded-xl shadow-lg hover:shadow-xl arena-texture transition-all duration-300 ${
+                  isSelected
+                    ? "bg-foreground text-background border-foreground shadow-lg"
+                    : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleFigureSelect(figure)}
+                  aria-pressed={isSelected}
+                  className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  <CardContent className="p-5 sm:p-6">
+                    <div className="flex items-start gap-4 sm:gap-5">
+                      <div
+                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-blackletter font-bold text-lg sm:text-xl shrink-0 ${
+                          isSelected
+                            ? "bg-background text-foreground"
+                            : "bg-foreground text-background"
+                        }`}
+                      >
+                        {figure.name.charAt(0)}
+                      </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-bold text-base sm:text-lg tracking-tight truncate">
-                        {figure.name}
-                      </h3>
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-bold text-base sm:text-lg tracking-tight truncate">
+                            {figure.name}
+                          </h3>
+                        </div>
 
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className={`text-xs sm:text-sm ${
-                        isSelected ? "text-background/70" : isHighlighted ? "text-foreground/80" : "text-muted-foreground"
-                      }`}>
-                        {figure.era}
-                      </p>
-                      {getFigureDebateCount(figure.id) > 0 && (
-                        <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-foreground/20 text-foreground/90">
-                          {getFigureDebateCount(figure.id)} debate{getFigureDebateCount(figure.id) !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </div>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <p
+                            className={`text-xs sm:text-sm ${
+                              isSelected ? "text-background/70" : "text-muted-foreground"
+                            }`}
+                          >
+                            {figure.era}
+                          </p>
+                          {debateCount > 0 && (
+                            <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-foreground/20 text-foreground/90">
+                              {debateCount} debate{debateCount !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
 
-                    <p className={`text-sm line-clamp-3 mb-4 leading-relaxed ${
-                      isSelected ? "text-background/80" : isHighlighted ? "text-foreground/90" : "text-muted-foreground"
-                    }`}>
-                      {figure.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {figure.traits.slice(0, 4).map((trait) => (
-                        <span
-                          key={trait}
-                          className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-full ${
-                            isSelected
-                              ? "bg-background/20 text-background"
-                              : isHighlighted
-                              ? "bg-foreground/20 text-foreground"
-                              : "bg-foreground/10 text-foreground/80"
+                        <p
+                          className={`text-sm line-clamp-3 mb-4 leading-relaxed ${
+                            isSelected ? "text-background/80" : "text-muted-foreground"
                           }`}
                         >
-                          {trait}
-                        </span>
-                      ))}
-                    </div>
-                    <FigureLoadedTexts
-                      figureId={figure.id}
-                      variant={
-                        isSelected
-                          ? "selected"
-                          : isHighlighted
-                            ? "highlighted"
-                            : "default"
-                      }
-                      className="mt-3"
-                    />
-                  </div>
+                          {figure.description}
+                        </p>
 
-                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
-                    isSelected
-                      ? "border-background bg-background"
-                      : isHighlighted
-                      ? "border-foreground/60"
-                      : "border-foreground/30"
-                  }`}>
-                    {isSelected && (
-                      <span className="text-foreground text-xs">✓</span>
-                    )}
-                    {isHighlighted && !isSelected && (
-                      <span className="text-foreground/60 text-xs">·</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
+                        <div className="flex flex-wrap gap-2">
+                          {figure.traits.slice(0, 4).map((trait) => (
+                            <span
+                              key={trait}
+                              className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-full ${
+                                isSelected
+                                  ? "bg-background/20 text-background"
+                                  : "bg-foreground/10 text-foreground/80"
+                              }`}
+                            >
+                              {trait}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
+                          isSelected
+                            ? "border-background bg-background"
+                            : "border-foreground/30"
+                        }`}
+                      >
+                        {isSelected && <span className="text-foreground text-xs">✓</span>}
+                      </div>
+                    </div>
+                  </CardContent>
+                </button>
+                <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
+                  <FigureLoadedTexts
+                    figureId={figure.id}
+                    variant={isSelected ? "selected" : "default"}
+                  />
+                </CardContent>
+              </Card>
+            );
           })}
         </div>
 
@@ -354,7 +333,7 @@ export default function FiguresPage() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setVisibleCount((c) => c + 4)}
+              onClick={() => setVisibleCount((count) => count + 6)}
               className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto gap-2"
             >
               <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
@@ -364,93 +343,176 @@ export default function FiguresPage() {
         )}
 
         {activeSelectedFigure && (
-          <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter">
+          <Card className="max-w-5xl mx-auto mb-8 arena-panel border-accent/20">
+            <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                  Opponent Selected
+                </p>
+                <p className="text-lg font-semibold">{activeSelectedFigure.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  Browse topics below, or jump there when you are ready.
+                </p>
+              </div>
+              <Button onClick={scrollToTopics} className="btn-press sm:min-w-48">
+                Continue to topics
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeSelectedFigure && (
+          <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
               <div className="arena-divider">
                 <Swords size={14} className="text-muted-foreground/40" />
               </div>
-              <p className="war-label mb-2">// CHOOSE YOUR BATTLEFIELD</p>
+              <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>CHOOSE YOUR BATTLEFIELD</p>
               <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
                 SELECT A TOPIC
               </h3>
-              <p className="text-sm text-muted-foreground">What ground will you fight on?</p>
-            </div>
-            {highlightedTopicId && (
-              <p className="text-center text-xs text-muted-foreground mb-4 animate-fade-up">
-                Click again to select
+              <p className="text-sm text-muted-foreground">
+                Single-click selects a topic. We only move the page when you ask us to.
               </p>
-            )}
-            <div className="grid sm:grid-cols-2 gap-3 mb-10">
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3 mb-8">
               {activeSelectedFigure.topics.map((topic) => {
                 const isTopicSelected = activeSelectedTopic?.id === topic.id;
-                const isTopicHighlighted = highlightedTopicId === topic.id;
+
                 return (
-                <Card
-                  key={topic.id}
-                  onClick={() => handleTopicClick(topic)}
-                  className={`cursor-pointer transition-all duration-300 hover:scale-[1.02] overflow-hidden ${
-                    isTopicSelected
-                      ? "bg-foreground text-background border-foreground"
-                      : isTopicHighlighted
-                      ? "bg-secondary/70 backdrop-blur-sm border-2 border-foreground/50"
-                      : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
-                  }`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-blackletter text-xs font-bold shrink-0 ${
-                        isTopicSelected
-                          ? "bg-background text-foreground"
-                          : isTopicHighlighted
-                          ? "bg-foreground/20 text-foreground"
-                          : "bg-foreground/10 text-foreground"
-                      }`}>
-                        {activeSelectedFigure.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm mb-1">
-                          {topic.title}
-                        </h4>
-                        {topic.description && (
-                          <p className={`text-xs line-clamp-2 ${isTopicSelected ? "text-background/70" : isTopicHighlighted ? "text-foreground/90" : "text-muted-foreground"}`}>
-                            {topic.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                        isTopicSelected
-                          ? "border-background bg-background"
-                          : isTopicHighlighted
-                          ? "border-foreground/60"
-                          : "border-foreground/30"
-                      }`}>
-                        {isTopicSelected && (
-                          <span className="text-foreground text-xs">✓</span>
-                        )}
-                        {isTopicHighlighted && !isTopicSelected && (
-                          <span className="text-foreground/60 text-xs">·</span>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
+                  <Card
+                    key={topic.id}
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isTopicSelected
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleTopicSelect(topic)}
+                      aria-pressed={isTopicSelected}
+                      className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center font-blackletter text-xs font-bold shrink-0 ${
+                              isTopicSelected
+                                ? "bg-background text-foreground"
+                                : "bg-foreground/10 text-foreground"
+                            }`}
+                          >
+                            {activeSelectedFigure.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm mb-1">{topic.title}</h4>
+                            {topic.description && (
+                              <p
+                                className={`text-xs line-clamp-2 ${
+                                  isTopicSelected
+                                    ? "text-background/70"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {topic.description}
+                              </p>
+                            )}
+                          </div>
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                              isTopicSelected
+                                ? "border-background bg-background"
+                                : "border-foreground/30"
+                            }`}
+                          >
+                            {isTopicSelected && (
+                              <span className="text-foreground text-xs">✓</span>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </button>
+                  </Card>
+                );
               })}
             </div>
           </div>
         )}
 
         {activeSelectedFigure && activeSelectedTopic && (
-          <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter">
+          <Card className="max-w-3xl mx-auto mb-8 arena-panel border-accent/20">
+            <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                  Topic Selected
+                </p>
+                <p className="text-lg font-semibold">{activeSelectedTopic.title}</p>
+                <p className="text-sm text-muted-foreground">
+                  Preview the source material or keep moving into debate settings.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Dialog
+                  open={previewOpen}
+                  onOpenChange={(open) => {
+                    setPreviewOpen(open);
+                    if (open) void fetchPreview();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="btn-press">
+                      Preview sources
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Key passages for this topic</DialogTitle>
+                    </DialogHeader>
+                    {previewLoading ? (
+                      <p className="text-muted-foreground">Loading...</p>
+                    ) : previewPassages.length > 0 ? (
+                      <div className="space-y-4 mt-4">
+                        {previewPassages.map((passage) => (
+                          <Card key={`${passage.source_id}-${passage.title}`} className="arena-panel">
+                            <CardContent className="p-4">
+                              <p className="text-xs font-medium text-muted-foreground mb-2">
+                                {passage.title}
+                              </p>
+                              <p className="text-sm whitespace-pre-wrap">
+                                {passage.text_excerpt}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        No passages available for this topic.
+                      </p>
+                    )}
+                  </DialogContent>
+                </Dialog>
+                <Button onClick={scrollToSettings} className="btn-press">
+                  Continue to settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeSelectedFigure && activeSelectedTopic && (
+          <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
               <div className="arena-divider">
                 <Swords size={14} className="text-muted-foreground/40" />
               </div>
-              <p className="war-label mb-2">// CONFIGURE YOUR BATTLE</p>
+              <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>CONFIGURE YOUR BATTLE</p>
               <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-6">
                 SETTINGS
               </h3>
-              
+
               <Card className="arena-panel">
                 <CardContent className="p-6">
                   <div className="grid sm:grid-cols-2 gap-8">
@@ -461,24 +523,32 @@ export default function FiguresPage() {
                           variant={debateMode === "structured" ? "default" : "outline"}
                           onClick={() => setDebateMode("structured")}
                           title="Fixed number of turns. Good for focused practice."
-                          className={`flex-1 btn-press ${debateMode === "structured" ? "bg-foreground text-background" : ""}`}
+                          className={`flex-1 btn-press ${
+                            debateMode === "structured" ? "bg-foreground text-background" : ""
+                          }`}
                         >
-                          {debateMode === "structured" ? "✓" : ""} STRUCTURED
+                          {debateMode === "structured" ? "✓ " : ""}
+                          STRUCTURED
                         </Button>
                         <Button
                           variant={debateMode === "freeform" ? "default" : "outline"}
                           onClick={() => setDebateMode("freeform")}
                           title="Open-ended. Continue until you end the debate."
-                          className={`flex-1 btn-press ${debateMode === "freeform" ? "bg-foreground text-background" : ""}`}
+                          className={`flex-1 btn-press ${
+                            debateMode === "freeform" ? "bg-foreground text-background" : ""
+                          }`}
                         >
-                          {debateMode === "freeform" ? "✓" : ""} FREEFORM
+                          {debateMode === "freeform" ? "✓ " : ""}
+                          FREEFORM
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        {debateMode === "structured" ? "Turn-limited debate with clear rounds." : "Open-ended debate—end when you choose."}
+                        {debateMode === "structured"
+                          ? "Turn-limited debate with clear rounds."
+                          : "Open-ended debate. End when you choose."}
                       </p>
                     </div>
-                    
+
                     {debateMode === "structured" && (
                       <div>
                         <label className="block text-sm font-medium mb-3">
@@ -489,13 +559,16 @@ export default function FiguresPage() {
                           min={2}
                           max={6}
                           value={maxTurns}
-                          onChange={(e) => setMaxTurns(parseInt(e.target.value))}
+                          onChange={(event) => setMaxTurns(parseInt(event.target.value, 10))}
                           title={`${maxTurns} exchange${maxTurns !== 1 ? "s" : ""} total`}
                           className="w-full accent-foreground"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Number of back-and-forth exchanges.</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Number of back-and-forth exchanges.
+                        </p>
                       </div>
                     )}
+
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-medium mb-2">SCHOLAR MODE</label>
                       <Button
@@ -505,7 +578,8 @@ export default function FiguresPage() {
                         title="Show key passages before you respond so you can cite them."
                         className={scholarMode ? "bg-foreground text-background" : ""}
                       >
-                        {scholarMode ? "✓ " : ""}Show sources before each reply
+                        {scholarMode ? "✓ " : ""}
+                        Show sources before each reply
                       </Button>
                       <p className="text-xs text-muted-foreground mt-1">
                         Sources appear prominently above the input so you can engage with the texts.
@@ -517,9 +591,19 @@ export default function FiguresPage() {
             </div>
 
             <div className="text-center flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              <Dialog open={previewOpen} onOpenChange={(open) => { setPreviewOpen(open); if (open) fetchPreview(); }}>
+              <Dialog
+                open={previewOpen}
+                onOpenChange={(open) => {
+                  setPreviewOpen(open);
+                  if (open) void fetchPreview();
+                }}
+              >
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="lg" className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto"
+                  >
                     PREVIEW SOURCES
                   </Button>
                 </DialogTrigger>
@@ -531,23 +615,32 @@ export default function FiguresPage() {
                     <p className="text-muted-foreground">Loading...</p>
                   ) : previewPassages.length > 0 ? (
                     <div className="space-y-4 mt-4">
-                      {previewPassages.map((p, i) => (
-                        <Card key={i} className="arena-panel">
+                      {previewPassages.map((passage) => (
+                        <Card key={`${passage.source_id}-${passage.title}-settings`} className="arena-panel">
                           <CardContent className="p-4">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">{p.title}</p>
-                            <p className="text-sm whitespace-pre-wrap">{p.text_excerpt}</p>
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                              {passage.title}
+                            </p>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {passage.text_excerpt}
+                            </p>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No passages available for this topic.</p>
+                    <p className="text-muted-foreground">
+                      No passages available for this topic.
+                    </p>
                   )}
                 </DialogContent>
               </Dialog>
               <Link href="/debate" className="w-full sm:w-auto">
-                <Button size="lg" className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
-                  START DEBATE →
+                <Button
+                  size="lg"
+                  className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto"
+                >
+                  {isLoading ? "PREPARING..." : "START DEBATE"}
                 </Button>
               </Link>
             </div>

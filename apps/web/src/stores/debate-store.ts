@@ -44,8 +44,11 @@ function createDebouncedStorage(
 
 interface DebateStore {
   figures: FigureInfo[];
+  selectedFigureId: string | null;
   selectedFigure: FigureInfo | null;
+  selectedTopicId: string | null;
   selectedTopic: DebateTopic | null;
+  currentDebateId: string | null;
   currentDebate: DebateState | null;
   openingStatement: string | null;
   openingKeyClaims: string[];
@@ -62,9 +65,11 @@ interface DebateStore {
   error: string | null;
   figuresLastFetched: number | null;
 
+  bootstrapFigures: (figures: FigureInfo[]) => void;
   fetchFigures: () => Promise<void>;
   prefetchTopicPrimer: () => Promise<void>;
   hydrateSelectionsFromDebate: () => void;
+  restoreDebateIfNeeded: () => Promise<void>;
   clearSelections: () => void;
   clearForNewTopic: () => void;
   selectFigure: (figure: FigureInfo) => void;
@@ -76,6 +81,7 @@ interface DebateStore {
   startDebate: () => Promise<boolean>;
   submitArgument: (argument: string) => Promise<void>;
   endDebate: () => Promise<void>;
+  deleteCurrentDebate: () => Promise<void>;
   reset: () => void;
   clearStaleDebateIfMismatch: () => void;
   clearError: () => void;
@@ -85,12 +91,35 @@ let fetchPromise: Promise<void> | null = null;
 let primerPromise: Promise<void> | null = null;
 let primerPromiseKey: string | null = null;
 
+function resolveSelections(
+  figures: FigureInfo[],
+  selectedFigureId: string | null,
+  selectedTopicId: string | null
+) {
+  const selectedFigure =
+    selectedFigureId ? figures.find((figure) => figure.id === selectedFigureId) ?? null : null;
+  const selectedTopic =
+    selectedFigure && selectedTopicId
+      ? selectedFigure.topics.find((topic) => topic.id === selectedTopicId) ?? null
+      : null;
+
+  return {
+    selectedFigure,
+    selectedTopic,
+    selectedFigureId: selectedFigure?.id ?? null,
+    selectedTopicId: selectedTopic?.id ?? null,
+  };
+}
+
 export const useDebateStore = create<DebateStore>()(
   persist(
     (set, get) => ({
       figures: [],
+      selectedFigureId: null,
       selectedFigure: null,
+      selectedTopicId: null,
       selectedTopic: null,
+      currentDebateId: null,
       currentDebate: null,
       openingStatement: null,
       openingKeyClaims: [],
@@ -106,6 +135,16 @@ export const useDebateStore = create<DebateStore>()(
       isLoading: false,
       error: null,
       figuresLastFetched: null,
+
+      bootstrapFigures: (figures) => {
+        if (figures.length === 0) return;
+        const { selectedFigureId, selectedTopicId } = get();
+        set({
+          figures,
+          figuresLastFetched: Date.now(),
+          ...resolveSelections(figures, selectedFigureId, selectedTopicId),
+        });
+      },
 
       fetchFigures: async () => {
         const { figures, figuresLastFetched } = get();
@@ -125,7 +164,13 @@ export const useDebateStore = create<DebateStore>()(
         
         fetchPromise = api.figures.list()
           .then((figures) => {
-            set({ figures, isLoading: false, figuresLastFetched: Date.now() });
+            const { selectedFigureId, selectedTopicId } = get();
+            set({
+              figures,
+              isLoading: false,
+              figuresLastFetched: Date.now(),
+              ...resolveSelections(figures, selectedFigureId, selectedTopicId),
+            });
           })
           .catch((error) => {
             set({ error: error.message, isLoading: false });
@@ -141,11 +186,14 @@ export const useDebateStore = create<DebateStore>()(
         const { currentDebate } = get();
         const figureChanged = currentDebate && currentDebate.figure !== figure.id;
         set({
+          selectedFigureId: figure.id,
           selectedFigure: figure,
+          selectedTopicId: null,
           selectedTopic: null,
           topicPrimer: null,
           topicPrimerKey: null,
           ...(figureChanged ? {
+            currentDebateId: null,
             currentDebate: null,
             openingStatement: null,
             openingKeyClaims: [],
@@ -162,8 +210,10 @@ export const useDebateStore = create<DebateStore>()(
           (currentDebate as { topic_id?: string }).topic_id !== topic.id &&
           currentDebate.topic !== topic.title;
         set({
+          selectedTopicId: topic.id,
           selectedTopic: topic,
           ...(topicChanged ? {
+            currentDebateId: null,
             currentDebate: null,
             openingStatement: null,
             openingKeyClaims: [],
@@ -189,12 +239,52 @@ export const useDebateStore = create<DebateStore>()(
         );
         if (!topic) return;
 
-        set({ selectedFigure: figure, selectedTopic: topic });
+        set({
+          selectedFigureId: figure.id,
+          selectedFigure: figure,
+          selectedTopicId: topic.id,
+          selectedTopic: topic,
+          currentDebateId: currentDebate.id,
+        });
+      },
+
+      restoreDebateIfNeeded: async () => {
+        const { currentDebate, currentDebateId } = get();
+        if (currentDebate || !currentDebateId) return;
+
+        set({ isLoading: true, error: null });
+        try {
+          const debate = await api.debate.get(currentDebateId);
+          set({
+            currentDebate: debate,
+            openingStatement: debate.opening_statement ?? null,
+            openingKeyClaims: [],
+            debateSources: [],
+            openingPassages: [],
+            learningSummary: null,
+            isLoading: false,
+          });
+          get().hydrateSelectionsFromDebate();
+        } catch (error) {
+          set({
+            currentDebateId: null,
+            currentDebate: null,
+            openingStatement: null,
+            openingKeyClaims: [],
+            debateSources: [],
+            openingPassages: [],
+            learningSummary: null,
+            error: (error as Error).message,
+            isLoading: false,
+          });
+        }
       },
 
       clearSelections: () => {
         set({
+          selectedFigureId: null,
           selectedFigure: null,
+          selectedTopicId: null,
           selectedTopic: null,
           topicPrimer: null,
           topicPrimerKey: null,
@@ -203,7 +293,9 @@ export const useDebateStore = create<DebateStore>()(
 
       clearForNewTopic: () => {
         set({
+          selectedTopicId: null,
           selectedTopic: null,
+          currentDebateId: null,
           currentDebate: null,
           openingStatement: null,
           openingKeyClaims: [],
@@ -278,6 +370,7 @@ export const useDebateStore = create<DebateStore>()(
             max_turns: maxTurns,
           });
           set({ 
+            currentDebateId: response.debate.id,
             currentDebate: response.debate, 
             openingStatement: response.opening_statement,
             openingKeyClaims: response.opening_key_claims ?? [],
@@ -306,10 +399,11 @@ export const useDebateStore = create<DebateStore>()(
             argument,
           });
           const debate = response.debate;
-        if (debate?.status === "completed" && debate.figure && debate.topic_id) {
-          recordDebateComplete(debate.figure, debate.topic_id);
-        }
-        set({
+          if (debate?.status === "completed" && debate.figure && debate.topic_id) {
+            recordDebateComplete(debate.figure, debate.topic_id);
+          }
+          set({
+            currentDebateId: debate.id,
             currentDebate: debate,
             learningSummary: response.learning_summary ?? null,
             isLoading: false,
@@ -330,16 +424,36 @@ export const useDebateStore = create<DebateStore>()(
             recordDebateComplete(debate.figure, debate.topic_id);
           }
           const learningSummary = "learning_summary" in res ? res.learning_summary : null;
-          set({ currentDebate: debate, learningSummary });
+          set({ currentDebateId: debate.id, currentDebate: debate, learningSummary });
         } catch (error) {
           set({ error: (error as Error).message });
         }
       },
 
+      deleteCurrentDebate: async () => {
+        const { currentDebate, currentDebateId } = get();
+        const debateId = currentDebate?.id ?? currentDebateId;
+        if (!debateId) {
+          get().reset();
+          return;
+        }
+
+        try {
+          await api.debate.delete(debateId);
+        } catch {
+          // Clear local state even if the debate was already removed server-side.
+        } finally {
+          get().reset();
+        }
+      },
+
       reset: () => {
         set({
+          selectedFigureId: null,
           selectedFigure: null,
+          selectedTopicId: null,
           selectedTopic: null,
+          currentDebateId: null,
           currentDebate: null,
           openingStatement: null,
           openingKeyClaims: [],
@@ -361,6 +475,7 @@ export const useDebateStore = create<DebateStore>()(
           currentDebate.topic === selectedTopic.title;
         if (!figureMatches || !topicMatches) {
           set({
+            currentDebateId: null,
             currentDebate: null,
             openingStatement: null,
             openingKeyClaims: [],
@@ -382,11 +497,9 @@ export const useDebateStore = create<DebateStore>()(
         )
       ),
       partialize: (state) => ({
-        figures: state.figures,
-        figuresLastFetched: state.figuresLastFetched,
-        selectedFigure: state.selectedFigure,
-        selectedTopic: state.selectedTopic,
-        currentDebate: state.currentDebate,
+        selectedFigureId: state.selectedFigureId,
+        selectedTopicId: state.selectedTopicId,
+        currentDebateId: state.currentDebateId,
         debateMode: state.debateMode,
         maxTurns: state.maxTurns,
         structuredInput: state.structuredInput,

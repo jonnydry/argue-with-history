@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, type MouseEvent } from "react";
 import { api } from "@/lib/api";
 
 type LoadedSource = { id: string; title: string; type: string; work?: string };
@@ -21,16 +21,26 @@ export function FigureLoadedTexts({
   const [sources, setSources] = useState<LoadedSource[] | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (expanded && sources === null && !loading) {
-      setLoading(true);
-      api.figures
-        .getSources(figureId)
-        .then((res) => setSources(res.sources))
-        .catch(() => setSources([]))
-        .finally(() => setLoading(false));
+  const handleToggle = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
+    const nextExpanded = !expanded;
+    setExpanded(nextExpanded);
+
+    if (!nextExpanded || sources !== null || loading) {
+      return;
     }
-  }, [expanded, figureId, sources, loading]);
+
+    setLoading(true);
+    try {
+      const response = await api.figures.getSources(figureId);
+      setSources(response.sources);
+    } catch {
+      setSources([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const textColor =
     variant === "selected"
@@ -49,10 +59,7 @@ export function FigureLoadedTexts({
     <div className={className}>
       <button
         type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setExpanded((prev) => !prev);
-        }}
+        onClick={(event) => void handleToggle(event)}
         className={`flex items-center gap-1 text-xs font-medium ${textColor} ${hoverColor} transition-colors`}
       >
         {expanded ? (

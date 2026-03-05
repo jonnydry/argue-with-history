@@ -1,28 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Crimson_Text, UnifrakturMaguntia } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const crimsonText = Crimson_Text({
-  variable: "--font-scholarly-face",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-});
-
-const unifrakturMaguntia = UnifrakturMaguntia({
-  variable: "--font-blackletter-face",
-  subsets: ["latin"],
-  weight: "400",
-});
 
 export const metadata: Metadata = {
   title: "Argue With History",
@@ -36,11 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${crimsonText.variable} ${unifrakturMaguntia.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
