@@ -25,8 +25,13 @@ function load(): ProgressionData {
   return { byFigure: {}, byFigureTopic: {} };
 }
 
+let cachedSnapshot: ProgressionData | null = null;
+
 export function getProgressionSnapshot(): ProgressionData {
-  return load();
+  if (cachedSnapshot === null) {
+    cachedSnapshot = load();
+  }
+  return cachedSnapshot;
 }
 
 export function subscribeToProgression(callback: () => void): () => void {
@@ -34,7 +39,10 @@ export function subscribeToProgression(callback: () => void): () => void {
     return () => {};
   }
 
-  const handleChange = () => callback();
+  const handleChange = () => {
+    cachedSnapshot = load();
+    callback();
+  };
   window.addEventListener(PROGRESSION_EVENT, handleChange);
   window.addEventListener("storage", handleChange);
 
@@ -47,6 +55,7 @@ export function subscribeToProgression(callback: () => void): () => void {
 function save(data: ProgressionData) {
   if (typeof window === "undefined") return;
   try {
+    cachedSnapshot = data;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     window.dispatchEvent(new Event(PROGRESSION_EVENT));
   } catch {
