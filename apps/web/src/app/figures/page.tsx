@@ -196,8 +196,8 @@ export default function FiguresPage() {
 
       <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8 sm:mb-12 arena-enter">
-          <p className="war-label mb-3"><span aria-hidden="true">&sol;&sol; </span>SELECT YOUR ADVERSARY</p>
-          <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tighter leading-[0.9] mb-3 sm:mb-4">
+          <p className="war-label mb-3">SELECT YOUR ADVERSARY</p>
+          <h2 className="editorial-display text-4xl sm:text-5xl md:text-7xl mb-3 sm:mb-4">
             CHOOSE YOUR
             <br />
             <span className="headline-emphasis">OPPONENT</span>
@@ -367,8 +367,8 @@ export default function FiguresPage() {
               <div className="arena-divider">
                 <Swords size={14} className="text-muted-foreground/40" />
               </div>
-              <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>CHOOSE YOUR BATTLEFIELD</p>
-              <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2">
+              <p className="war-label mb-2">CHOOSE YOUR BATTLEFIELD</p>
+              <h3 className="editorial-section-title text-2xl sm:text-3xl mb-2">
                 SELECT A TOPIC
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -508,8 +508,8 @@ export default function FiguresPage() {
               <div className="arena-divider">
                 <Swords size={14} className="text-muted-foreground/40" />
               </div>
-              <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>CONFIGURE YOUR BATTLE</p>
-              <h3 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-6">
+              <p className="war-label mb-2">CONFIGURE YOUR BATTLE</p>
+              <h3 className="editorial-section-title text-2xl sm:text-3xl mb-6">
                 SETTINGS
               </h3>
 

@@ -121,8 +121,24 @@
 }
 
 .font-display {
-  font-family: "Avenir Next Condensed", "Franklin Gothic Medium", "Arial Narrow", sans-serif;
-  letter-spacing: -0.02em;
+  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.editorial-display {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.editorial-section-title {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
 }
 
 .contrast-border {
@@ -145,8 +161,8 @@
 .headline-emphasis,
 .text-stroke,
 .text-stroke-heavy {
-  -webkit-text-stroke: 1.5px rgba(250, 250, 250, 0.35);
-  color: transparent;
+  color: var(--foreground);
+  text-shadow: 1px 1px 0 rgba(251, 191, 36, 0.18);
 }
 
 .hover-lift {
@@ -375,6 +391,13 @@
   letter-spacing: 0.25em;
   color: rgba(250, 250, 250, 0.4);
   font-weight: 700;
+}
+
+.war-label::before {
+  content: "//";
+  display: inline-block;
+  margin-right: 0.55em;
+  color: rgba(251, 191, 36, 0.65);
 }
 
 /* Ink bleed border accent */

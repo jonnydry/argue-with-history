@@ -180,7 +180,7 @@ export default function Home() {
           <div className="container relative mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
             <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] gap-8 lg:gap-12 items-center">
             <div className="max-w-2xl">
-              <h2 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] mb-6 sm:mb-8">
+              <h2 className="editorial-display text-4xl sm:text-6xl md:text-8xl mb-6 sm:mb-8">
                 DON&apos;T READ
                 <br />
                 <span className="headline-emphasis">HISTORY.</span>

@@ -197,7 +197,7 @@ export default function DebatePageContent() {
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
         <div className="max-w-md w-full text-center arena-enter">
           <Swords size={40} className="mx-auto mb-6 text-muted-foreground/30" />
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-3">NO OPPONENT<br/><span className="headline-emphasis">SELECTED</span></h2>
+          <h2 className="editorial-display text-3xl sm:text-4xl mb-3">NO OPPONENT<br/><span className="headline-emphasis">SELECTED</span></h2>
           <p className="text-muted-foreground mb-8 text-sm sm:text-base">
             Choose a figure and topic to enter the arena.
           </p>
@@ -232,8 +232,8 @@ export default function DebatePageContent() {
 
         <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
           <div className="max-w-xl mx-auto arena-enter">
-            <p className="war-label mb-4"><span aria-hidden="true">&sol;&sol; </span>ENTERING THE ARENA</p>
-            <h2 className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter leading-[0.85] mb-4">
+            <p className="war-label mb-4">ENTERING THE ARENA</p>
+            <h2 className="editorial-display text-5xl sm:text-7xl md:text-8xl mb-4">
               {selectedFigure.name.split(' ').map((word, i) => (
                 <span key={i}>
                   {i === selectedFigure.name.split(' ').length - 1 ? (
@@ -254,8 +254,8 @@ export default function DebatePageContent() {
 
             <div className="mb-6 space-y-4">
               <div>
-                <p className="war-label mb-2"><span aria-hidden="true">&sol;&sol; </span>TOPIC OF CONTENTION</p>
-                <p className="text-xl sm:text-2xl font-bold tracking-tight">{selectedTopic.title}</p>
+                <p className="war-label mb-2">TOPIC OF CONTENTION</p>
+                <p className="editorial-section-title text-xl sm:text-2xl">{selectedTopic.title}</p>
               </div>
             </div>
 
@@ -688,7 +688,7 @@ export default function DebatePageContent() {
               {currentDebate.turns.length === 0 && !openingStatement && (
                 <div className="py-20 text-center arena-enter">
                   <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
-                  <p className="text-4xl sm:text-5xl font-bold tracking-tighter mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
+                  <p className="editorial-display text-4xl sm:text-5xl mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
                   <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
                 </div>
               )}
