@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useDebateStore } from "@/stores/debate-store";
 import { api } from "@/lib/api";
@@ -101,6 +100,11 @@ export default function FiguresPage() {
     } finally {
       setPreviewLoading(false);
     }
+  };
+
+  const openPreviewDialog = async () => {
+    setPreviewOpen(true);
+    await fetchPreview();
   };
 
   const scrollToTopics = () => {
@@ -275,7 +279,13 @@ export default function FiguresPage() {
                             {figure.era}
                           </p>
                           {debateCount > 0 && (
-                            <span className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full bg-foreground/20 text-foreground/90">
+                            <span
+                              className={`text-[10px] sm:text-xs px-2.5 py-1 rounded-full ${
+                                isSelected
+                                  ? "bg-background/12 text-background border border-background/20"
+                                  : "bg-foreground/20 text-foreground/90"
+                              }`}
+                            >
                               {debateCount} debate{debateCount !== 1 ? "s" : ""}
                             </span>
                           )}
@@ -454,46 +464,9 @@ export default function FiguresPage() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Dialog
-                  open={previewOpen}
-                  onOpenChange={(open) => {
-                    setPreviewOpen(open);
-                    if (open) void fetchPreview();
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="btn-press">
-                      Preview sources
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Key passages for this topic</DialogTitle>
-                    </DialogHeader>
-                    {previewLoading ? (
-                      <p className="text-muted-foreground">Loading...</p>
-                    ) : previewPassages.length > 0 ? (
-                      <div className="space-y-4 mt-4">
-                        {previewPassages.map((passage) => (
-                          <Card key={`${passage.source_id}-${passage.title}`} className="arena-panel">
-                            <CardContent className="p-4">
-                              <p className="text-xs font-medium text-muted-foreground mb-2">
-                                {passage.title}
-                              </p>
-                              <p className="text-sm whitespace-pre-wrap">
-                                {passage.text_excerpt}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        No passages available for this topic.
-                      </p>
-                    )}
-                  </DialogContent>
-                </Dialog>
+                <Button variant="outline" className="btn-press" onClick={() => void openPreviewDialog()}>
+                  Preview sources
+                </Button>
                 <Button onClick={scrollToSettings} className="btn-press">
                   Continue to settings
                 </Button>
@@ -591,50 +564,14 @@ export default function FiguresPage() {
             </div>
 
             <div className="text-center flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              <Dialog
-                open={previewOpen}
-                onOpenChange={(open) => {
-                  setPreviewOpen(open);
-                  if (open) void fetchPreview();
-                }}
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto"
+                onClick={() => void openPreviewDialog()}
               >
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto"
-                  >
-                    PREVIEW SOURCES
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Key passages for this topic</DialogTitle>
-                  </DialogHeader>
-                  {previewLoading ? (
-                    <p className="text-muted-foreground">Loading...</p>
-                  ) : previewPassages.length > 0 ? (
-                    <div className="space-y-4 mt-4">
-                      {previewPassages.map((passage) => (
-                        <Card key={`${passage.source_id}-${passage.title}-settings`} className="arena-panel">
-                          <CardContent className="p-4">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">
-                              {passage.title}
-                            </p>
-                            <p className="text-sm whitespace-pre-wrap">
-                              {passage.text_excerpt}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">
-                      No passages available for this topic.
-                    </p>
-                  )}
-                </DialogContent>
-              </Dialog>
+                PREVIEW SOURCES
+              </Button>
               <Link href="/debate" className="w-full sm:w-auto">
                 <Button
                   size="lg"
@@ -645,6 +582,34 @@ export default function FiguresPage() {
               </Link>
             </div>
           </div>
+        )}
+
+        {activeSelectedFigure && activeSelectedTopic && (
+          <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Key passages for this topic</DialogTitle>
+              </DialogHeader>
+              {previewLoading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : previewPassages.length > 0 ? (
+                <div className="space-y-4 mt-4">
+                  {previewPassages.map((passage) => (
+                    <Card key={`${passage.source_id}-${passage.title}`} className="arena-panel">
+                      <CardContent className="p-4">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          {passage.title}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{passage.text_excerpt}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No passages available for this topic.</p>
+              )}
+            </DialogContent>
+          </Dialog>
         )}
       </main>
     </div>

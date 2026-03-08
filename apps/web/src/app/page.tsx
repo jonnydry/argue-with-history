@@ -5,9 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useDebateStore } from "@/stores/debate-store";
-import type { FigureInfo } from "@/lib/types";
-import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
 function useInView(threshold = 0.2) {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,83 +30,22 @@ function useInView(threshold = 0.2) {
   return { ref, isInView };
 }
 
-function FigureSkeleton() {
-  return (
-    <Card className="rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent overflow-hidden animate-pulse shadow-none">
-      <CardContent className="p-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-foreground/15 shrink-0"></div>
-          <div className="flex-1 min-w-0">
-            <div className="h-3 w-20 bg-foreground/10 rounded mb-3"></div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="h-5 w-28 bg-foreground/20 rounded"></div>
-              <div className="h-3 w-12 bg-foreground/10 rounded"></div>
-            </div>
-            <div className="h-3 w-full bg-foreground/10 rounded mb-1"></div>
-            <div className="h-3 w-3/4 bg-foreground/10 rounded mb-2"></div>
-            <div className="flex gap-1">
-              <div className="h-4 w-12 bg-foreground/10 rounded-full"></div>
-              <div className="h-4 w-16 bg-foreground/10 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function FigureCard({ figure }: { figure: FigureInfo }) {
-  return (
-    <Card className="rounded-none border-x-0 border-t-0 border-b border-border/60 bg-transparent shadow-none transition-colors duration-300 hover:bg-white/[0.03] overflow-hidden group">
-      <CardContent className="p-5 sm:p-6">
-        <Link href="/figures" className="block">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center text-xl font-blackletter shrink-0 transition-transform duration-300 group-hover:scale-105">
-              {figure.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                  Opponent in rotation
-                </p>
-                <span className="text-[11px] text-accent/75 uppercase tracking-[0.24em] shrink-0">
-                  {figure.era.split("(")[0].trim()}
-                </span>
-              </div>
-              <h3 className="editorial-section-title text-2xl tracking-normal truncate mb-2">
-                {figure.name}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
-                {figure.description}
-              </p>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-wrap gap-1.5">
-                  {figure.traits.slice(0, 2).map((trait) => (
-                    <span
-                      key={trait}
-                      className="px-2.5 py-1 border border-border/60 text-[11px] uppercase tracking-[0.16em] text-foreground/75"
-                    >
-                      {trait}
-                    </span>
-                  ))}
-                </div>
-                <span className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground group-hover:text-foreground transition-colors shrink-0">
-                  Enter -&gt;
-                </span>
-              </div>
-            </div>
-          </div>
-        </Link>
-        <FigureLoadedTexts figureId={figure.id} className="mt-4 pt-4 border-t border-border/40" variant="highlighted" />
-      </CardContent>
-    </Card>
-  );
-}
-
-const heroSignals = [
-  "source-grounded prompts",
-  "judged rebuttals",
-  "historical scoring",
+const briefingPoints = [
+  {
+    label: "Roster",
+    emphasis: "30+",
+    body: "Historical opponents across eras, schools, and temperaments.",
+  },
+  {
+    label: "Method",
+    emphasis: "Source-grounded",
+    body: "Responses and primers are anchored in the figure's actual arguments.",
+  },
+  {
+    label: "Verdict",
+    emphasis: "Round scoring",
+    body: "Each exchange is judged for logic, historical accuracy, rhetoric, and rebuttal.",
+  },
 ];
 
 const steps = [
@@ -151,20 +87,10 @@ const steps = [
 ];
 
 export default function Home() {
-  const figures = useDebateStore((s) => s.figures);
-  const fetchFigures = useDebateStore((s) => s.fetchFigures);
-  const isLoading = useDebateStore((s) => s.isLoading);
   const step1 = useInView(0.3);
   const step2 = useInView(0.3);
   const step3 = useInView(0.3);
   const stepRefs = [step1, step2, step3];
-
-  useEffect(() => {
-    void fetchFigures();
-  }, [fetchFigures]);
-
-  const scrollFigures =
-    figures.length > 0 ? [...figures.slice(0, 6), ...figures.slice(0, 6)] : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
@@ -192,25 +118,21 @@ export default function Home() {
       <main>
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_38%)] pointer-events-none" />
-          <div className="container relative mx-auto px-4 sm:px-6 py-10 sm:py-14 md:py-16">
-            <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)] gap-6 lg:gap-10 items-start">
+          <div className="container relative mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.82fr)] gap-8 lg:gap-12 items-start">
             <div className="max-w-2xl pt-1 sm:pt-2">
-              <h2 className="editorial-display text-4xl sm:text-6xl md:text-8xl mb-5 sm:mb-6">
+              <p className="war-label mb-4">Enter the arena</p>
+              <h2 className="editorial-display text-[clamp(3.75rem,9vw,7rem)] mb-6 leading-[0.92]">
                 DON&apos;T READ
                 <br />
                 <span className="headline-emphasis">HISTORY.</span>
                 <br />
-                <span className="underline-thick decoration-foreground">DEFEAT IT.</span>
+                <span className="underline-thick decoration-foreground">ARGUE BACK.</span>
               </h2>
-              <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-6 sm:mb-8 leading-relaxed">
+              <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-8 sm:mb-10 leading-relaxed">
                 Not a spectator sport. Combat the world&apos;s most infamous philosophers and thinkers in your own words. Your arguments will be judged. Increase your understanding, challenge your assumptions, enter the arena.
                 <Swords size={20} className="inline-block ml-2 text-foreground/50 align-middle" />
               </p>
-              <div className="flex flex-wrap gap-x-4 gap-y-2 mb-6 sm:mb-8 text-[11px] uppercase tracking-[0.24em] text-accent/80">
-                {heroSignals.map((signal) => (
-                  <span key={signal}>{signal}</span>
-                ))}
-              </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link href="/figures">
                   <Button size="lg" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto">
@@ -225,84 +147,35 @@ export default function Home() {
               </div>
             </div>
 
-              <div className="space-y-3 sm:space-y-4">
-                <Card className="arena-panel border-foreground/10 overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="border-b border-border/60 px-6 py-4 sm:px-7 sm:py-5 flex items-center justify-between gap-4 bg-white/[0.03]">
-                      <div>
-                        <p className="war-label mb-2">What makes it different</p>
-                        <p className="editorial-section-title text-2xl sm:text-3xl">Arena Briefing</p>
-                      </div>
-                      <div className="hidden sm:flex items-center gap-2 text-[11px] uppercase tracking-[0.28em] text-accent/80">
-                        <span className="h-px w-8 bg-accent/50" />
-                        Live analysis
-                      </div>
-                    </div>
-
-                    <div className="grid gap-0 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-                      <div className="border-b lg:border-b-0 lg:border-r border-border/60 px-6 py-6 sm:px-7 sm:py-7 bg-[linear-gradient(180deg,rgba(251,191,36,0.08),rgba(255,255,255,0.02))]">
-                        <p className="text-[11px] uppercase tracking-[0.28em] text-accent/80 mb-3">
-                          Not just chat
-                        </p>
-                        <p className="editorial-section-title text-3xl sm:text-4xl mb-4">
-                          Debate the record.
-                        </p>
-                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-sm">
-                          Each exchange is shaped by the figure&apos;s actual texts, then judged for reasoning, rebuttal, and command of the material.
-                        </p>
-                      </div>
-
-                      <div className="grid sm:grid-cols-3">
-                        <div className="px-6 py-6 sm:px-5 sm:py-7 border-b sm:border-b-0 sm:border-r border-border/60">
-                          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground mb-3">Roster</p>
-                          <p className="editorial-section-title text-4xl sm:text-5xl mb-2">30+</p>
-                          <p className="text-sm text-muted-foreground leading-relaxed">Historical opponents spanning schools, eras, and temperaments.</p>
-                        </div>
-                        <div className="px-6 py-6 sm:px-5 sm:py-7 border-b sm:border-b-0 sm:border-r border-border/60 bg-white/[0.02]">
-                          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground mb-3">Method</p>
-                          <p className="editorial-section-title text-2xl sm:text-3xl mb-2">Source-grounded</p>
-                          <p className="text-sm text-muted-foreground leading-relaxed">Responses and primers pull from the figure&apos;s own arguments, not generic roleplay.</p>
-                        </div>
-                        <div className="px-6 py-6 sm:px-5 sm:py-7">
-                          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground mb-3">Verdict</p>
-                          <p className="editorial-section-title text-2xl sm:text-3xl mb-2">Round scoring</p>
-                          <p className="text-sm text-muted-foreground leading-relaxed">Logic, historical accuracy, rhetoric, and rebuttal are scored after each clash.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <div className="relative hidden sm:block border border-border/60 bg-white/[0.02] overflow-hidden">
-                  <div className="border-b border-border/60 px-5 py-4 flex items-center justify-between gap-4 bg-white/[0.02]">
-                    <div>
-                      <p className="war-label mb-2">Rotating roster</p>
-                      <p className="editorial-section-title text-2xl">Enter the archive</p>
-                    </div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground text-right max-w-28">
-                      Live opponent queue
+              <Card className="arena-panel border-foreground/10 overflow-hidden lg:mt-2">
+                <CardContent className="p-0">
+                  <div className="px-6 py-5 sm:px-7 sm:py-6 border-b border-border/60 bg-white/[0.03]">
+                    <p className="war-label mb-2">What makes it different</p>
+                    <h3 className="editorial-section-title text-2xl sm:text-3xl mb-3">Arena Briefing</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg">
+                      Debate real positions instead of chatting with a costume. The app pushes you to engage the record and then judges how well you did.
                     </p>
                   </div>
-                  <div className="relative h-[380px] overflow-hidden">
-                    <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-background to-transparent z-10 pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none"></div>
 
-                    {isLoading && figures.length === 0 ? (
-                      <div>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <FigureSkeleton key={i} />
-                        ))}
+                  <div className="p-6 sm:p-7 grid gap-5">
+                    {briefingPoints.map((point) => (
+                      <div key={point.label} className="border-l-2 border-accent/45 pl-4 sm:pl-5">
+                        <div className="flex flex-col gap-1 mb-2">
+                          <p className="text-[11px] uppercase tracking-[0.24em] text-accent/80">
+                            {point.label}
+                          </p>
+                          <p className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+                            {point.emphasis}
+                          </p>
+                        </div>
+                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                          {point.body}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="animate-scroll-vertical">
-                        {scrollFigures.map((figure, index) => (
-                          <FigureCard key={`${figure.id}-${index}`} figure={figure} />
-                        ))}
-                      </div>
-                    )}
+                    ))}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

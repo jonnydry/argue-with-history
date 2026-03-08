@@ -4,10 +4,18 @@ import { DebateState, FigureInfo, DebateTopic, Figure, Passage } from "@/lib/typ
 import { api } from "@/lib/api";
 import { recordDebateComplete } from "@/lib/progression";
 
+type PersistStorage = {
+  getItem: (key: string) => string | null;
+  setItem: (key: string, value: string) => void;
+  removeItem: (key: string) => void;
+};
+
+const debouncedStorageCache = new WeakMap<Storage, PersistStorage>();
+
 function createDebouncedStorage(
   base: Storage | null,
   delayMs: number
-): { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void; removeItem: (k: string) => void } {
+): PersistStorage {
   if (!base) {
     return {
       getItem: () => null,
@@ -15,6 +23,12 @@ function createDebouncedStorage(
       removeItem: () => {},
     };
   }
+
+  const cached = debouncedStorageCache.get(base);
+  if (cached) {
+    return cached;
+  }
+
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let pending: { key: string; value: string } | null = null;
   const flush = () => {
@@ -24,7 +38,8 @@ function createDebouncedStorage(
     }
     timeout = null;
   };
-  return {
+
+  const debouncedStorage: PersistStorage = {
     getItem: (k) => base.getItem(k),
     setItem: (k, v) => {
       pending = { key: k, value: v };
@@ -40,6 +55,16 @@ function createDebouncedStorage(
       base.removeItem(k);
     },
   };
+
+  if (typeof window !== "undefined") {
+    const flushPendingWrites = () => flush();
+    window.addEventListener("pagehide", flushPendingWrites);
+    window.addEventListener("beforeunload", flushPendingWrites);
+  }
+
+  debouncedStorageCache.set(base, debouncedStorage);
+
+  return debouncedStorage;
 }
 
 interface DebateStore {

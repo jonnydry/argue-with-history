@@ -5,11 +5,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
 
-/** Coerce score value to integer 1-10. Prevents string concatenation in total. */
-function toScore(val: unknown): number {
+/** Coerce score value to integer and clamp to a safe range. */
+function toScore(
+  val: unknown,
+  options: { fallback?: number; min?: number; max?: number } = {}
+): number {
+  const { fallback = 5, min = 1, max = 10 } = options;
   const n = typeof val === "number" && !Number.isNaN(val) ? Math.round(val) : parseInt(String(val ?? ""), 10);
-  const num = !Number.isNaN(n) ? n : 5;
-  return Math.min(10, Math.max(1, num));
+  const num = !Number.isNaN(n) ? n : fallback;
+  return Math.min(max, Math.max(min, num));
+}
+
+function toOptionalScore(val: unknown): number {
+  return toScore(val, { fallback: 0, min: 0 });
+}
+
+function totalTurnScore(scores: {
+  logic_score: unknown;
+  historical_accuracy_score: unknown;
+  rhetoric_score: unknown;
+  rebuttal_score?: unknown;
+}): number {
+  return (
+    toScore(scores.logic_score) +
+    toScore(scores.historical_accuracy_score) +
+    toScore(scores.rhetoric_score) +
+    toOptionalScore(scores.rebuttal_score)
+  );
 }
 
 type ScoreTone = "high" | "medium" | "low";
@@ -309,23 +331,11 @@ export default function DebatePageContent() {
   const latestTurn = currentDebate.turns[currentDebate.turns.length - 1];
   const maxScore = 40;
   const latestTurnScore = latestTurn?.scores
-    ? [
-        latestTurn.scores.logic_score,
-        latestTurn.scores.historical_accuracy_score,
-        latestTurn.scores.rhetoric_score,
-        latestTurn.scores.rebuttal_score ?? 0,
-      ].reduce((sum, v) => sum + toScore(v), 0)
+    ? totalTurnScore(latestTurn.scores)
     : 0;
   const scoredTurnTotals = currentDebate.turns
     .filter((turn) => Boolean(turn.scores))
-    .map((turn) =>
-      [
-        turn.scores!.logic_score,
-        turn.scores!.historical_accuracy_score,
-        turn.scores!.rhetoric_score,
-        turn.scores!.rebuttal_score ?? 0,
-      ].reduce((sum, v) => sum + toScore(v), 0)
-    );
+    .map((turn) => totalTurnScore(turn.scores!));
   const aggregateScore =
     scoredTurnTotals.length > 0
       ? Math.round(scoredTurnTotals.reduce((sum, n) => sum + n, 0) / scoredTurnTotals.length)
@@ -337,12 +347,7 @@ export default function DebatePageContent() {
     if (!turn.scores) {
       return { turnNumber: turn.turn_number, score: null as number | null };
     }
-    const score = [
-      turn.scores.logic_score,
-      turn.scores.historical_accuracy_score,
-      turn.scores.rhetoric_score,
-      turn.scores.rebuttal_score ?? 0,
-    ].reduce((sum, v) => sum + toScore(v), 0);
+    const score = totalTurnScore(turn.scores);
     return { turnNumber: turn.turn_number, score };
   });
 
@@ -358,7 +363,7 @@ export default function DebatePageContent() {
     if (toScore(s.historical_accuracy_score) < 6) {
       tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
     }
-    if (toScore(s.rebuttal_score) < 6) {
+    if (toOptionalScore(s.rebuttal_score) < 6) {
       tips.push("Tip: Respond directly to a claim they made.");
     }
     if (toScore(s.logic_score) < 6) {
@@ -373,12 +378,7 @@ export default function DebatePageContent() {
   const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
   const latestScoredTurn = [...currentDebate.turns].reverse().find((turn) => Boolean(turn.scores));
   const latestScoredTurnTotal = latestScoredTurn?.scores
-    ? [
-        latestScoredTurn.scores.logic_score,
-        latestScoredTurn.scores.historical_accuracy_score,
-        latestScoredTurn.scores.rhetoric_score,
-        latestScoredTurn.scores.rebuttal_score ?? 0,
-      ].reduce((sum, v) => sum + toScore(v), 0)
+    ? totalTurnScore(latestScoredTurn.scores)
     : null;
   const latestScoreToneClass =
     latestScoredTurnTotal !== null
@@ -419,7 +419,7 @@ export default function DebatePageContent() {
     const logic = toScore(turn.scores.logic_score);
     const historical = toScore(turn.scores.historical_accuracy_score);
     const rhetoric = toScore(turn.scores.rhetoric_score);
-    const rebuttal = toScore(turn.scores.rebuttal_score);
+    const rebuttal = toOptionalScore(turn.scores.rebuttal_score);
     const turnTotal = logic + historical + rhetoric + rebuttal;
 
     const turnClaimChecks = "claim_checks" in turn.scores
@@ -852,7 +852,7 @@ export default function DebatePageContent() {
                       Latest score · Round {String(latestScoredTurn.turn_number).padStart(2, "0")}
                     </p>
                     <p className="text-xs sm:text-sm text-foreground/80">
-                      Logic {toScore(latestScoredTurn.scores.logic_score)} · Historical {toScore(latestScoredTurn.scores.historical_accuracy_score)} · Rhetoric {toScore(latestScoredTurn.scores.rhetoric_score)} · Rebuttal {toScore(latestScoredTurn.scores.rebuttal_score)}
+                      Logic {toScore(latestScoredTurn.scores.logic_score)} · Historical {toScore(latestScoredTurn.scores.historical_accuracy_score)} · Rhetoric {toScore(latestScoredTurn.scores.rhetoric_score)} · Rebuttal {toOptionalScore(latestScoredTurn.scores.rebuttal_score)}
                     </p>
                   </div>
                   <p className={`text-3xl font-bold tabular-nums shrink-0 ${latestScoreToneClass}`}>
