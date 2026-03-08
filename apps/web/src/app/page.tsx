@@ -256,8 +256,7 @@ export default function Home() {
           <div className="container mx-auto px-4 sm:px-6 py-10 sm:py-20">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8 sm:mb-12">
-                <p className="war-label mb-3">How it works</p>
-                <h3 className="editorial-section-title text-3xl sm:text-4xl md:text-5xl">Three rounds to the arena</h3>
+                <h3 className="editorial-section-title text-3xl sm:text-4xl md:text-5xl">How it works</h3>
               </div>
 
               <div className="space-y-8 sm:space-y-14">
