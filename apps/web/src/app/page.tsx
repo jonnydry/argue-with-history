@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useDebateStore } from "@/stores/debate-store";
 
 function useInView(threshold = 0.2) {
   const ref = useRef<HTMLDivElement>(null);
@@ -48,6 +49,20 @@ const briefingPoints = [
   },
 ];
 
+function FigurePreviewSkeleton() {
+  return (
+    <div className="rounded-lg border border-border/50 bg-white/[0.02] px-4 py-3 animate-pulse">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="h-4 w-28 rounded bg-foreground/15 mb-2" />
+          <div className="h-3 w-20 rounded bg-foreground/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const steps = [
   {
     num: "01",
@@ -87,10 +102,18 @@ const steps = [
 ];
 
 export default function Home() {
+  const figures = useDebateStore((s) => s.figures);
+  const fetchFigures = useDebateStore((s) => s.fetchFigures);
+  const isLoading = useDebateStore((s) => s.isLoading);
   const step1 = useInView(0.3);
   const step2 = useInView(0.3);
   const step3 = useInView(0.3);
   const stepRefs = [step1, step2, step3];
+  const featuredFigures = figures.slice(0, 3);
+
+  useEffect(() => {
+    void fetchFigures();
+  }, [fetchFigures]);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
@@ -127,7 +150,7 @@ export default function Home() {
                 <br />
                 <span className="headline-emphasis">HISTORY.</span>
                 <br />
-                <span className="underline-thick decoration-foreground">ARGUE BACK.</span>
+                <span className="underline-thick decoration-foreground">DEFEAT IT.</span>
               </h2>
               <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-8 sm:mb-10 leading-relaxed">
                 Not a spectator sport. Combat the world&apos;s most infamous philosophers and thinkers in your own words. Your arguments will be judged. Increase your understanding, challenge your assumptions, enter the arena.
@@ -173,6 +196,55 @@ export default function Home() {
                         </p>
                       </div>
                     ))}
+
+                    <div className="border-t border-border/60 pt-5 sm:pt-6">
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                          <p className="text-[11px] uppercase tracking-[0.24em] text-accent/80 mb-1">
+                            In the arena
+                          </p>
+                          <p className="text-sm sm:text-base text-muted-foreground">
+                            A few of the voices waiting inside.
+                          </p>
+                        </div>
+                        <Link href="/figures" className="text-[11px] uppercase tracking-[0.22em] text-foreground/75 hover:text-foreground">
+                          View all
+                        </Link>
+                      </div>
+
+                      <div className="grid gap-3">
+                        {isLoading && featuredFigures.length === 0 ? (
+                          Array.from({ length: 3 }).map((_, index) => <FigurePreviewSkeleton key={index} />)
+                        ) : (
+                          featuredFigures.map((figure) => (
+                            <Link
+                              key={figure.id}
+                              href="/figures"
+                              className="rounded-lg border border-border/50 bg-white/[0.02] px-4 py-3 transition-colors hover:bg-white/[0.04]"
+                            >
+                              <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center text-lg font-blackletter shrink-0">
+                                  {figure.name.charAt(0)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-baseline justify-between gap-3 mb-1">
+                                    <p className="text-lg font-semibold tracking-tight truncate text-foreground">
+                                      {figure.name}
+                                    </p>
+                                    <span className="hidden sm:block text-[11px] uppercase tracking-[0.22em] text-accent/75 shrink-0">
+                                      {figure.era.split("(")[0].trim()}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground line-clamp-1">
+                                    {figure.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
