@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 from pathlib import Path
 from typing import Optional
 
@@ -8,10 +9,40 @@ except ImportError:
     embedding_service = None
 
 
+class LRUCache:
+    """Simple LRU cache with max size to prevent unbounded memory growth."""
+
+    def __init__(self, max_size: int = 100):
+        self.max_size = max_size
+        self._data: OrderedDict = OrderedDict()
+
+    def get(self, key: str):
+        if key in self._data:
+            self._data.move_to_end(key)
+            return self._data[key]
+        return None
+
+    def set(self, key: str, value):
+        if key in self._data:
+            self._data.move_to_end(key)
+        self._data[key] = value
+        while len(self._data) > self.max_size:
+            self._data.popitem(last=False)
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._data
+
+    def __getitem__(self, key: str):
+        return self.get(key)
+
+    def __setitem__(self, key: str, value):
+        self.set(key, value)
+
+
 class RetrievalService:
     _instance = None
-    _shared_cache = {}
-    _shared_embedding_cache = {}
+    _shared_cache = LRUCache(100)
+    _shared_embedding_cache = LRUCache(50)
 
     def __new__(cls):
         if cls._instance is None:
@@ -45,7 +76,13 @@ class RetrievalService:
         texts = self._load_json("machiavelli", "the_prince.json")
 
         if not index or not texts:
-            return {"chapters": [], "formatted": "", "chapter_ids": [], "sources": [], "passages": []}
+            return {
+                "chapters": [],
+                "formatted": "",
+                "chapter_ids": [],
+                "sources": [],
+                "passages": [],
+            }
 
         topic_lower = (topic + " " + user_argument).lower()
         chapter_ids = set()
@@ -105,7 +142,13 @@ class RetrievalService:
         texts = self._load_json("socrates", "dialogues.json")
 
         if not index or not texts:
-            return {"dialogues": [], "formatted": "", "dialogue_ids": [], "sources": [], "passages": []}
+            return {
+                "dialogues": [],
+                "formatted": "",
+                "dialogue_ids": [],
+                "sources": [],
+                "passages": [],
+            }
 
         topic_lower = (topic + " " + user_argument).lower()
         dialogue_ids = set()
@@ -248,11 +291,13 @@ class RetrievalService:
                     f"=== {source_name.upper()} {title}: ===\n{text[:2000]}"
                 )
                 sources.append(f"{source_name.title()} {title}")
-                passages.append({
-                    "source_id": sid,
-                    "title": str(title),
-                    "text_excerpt": self._to_excerpt(text),
-                })
+                passages.append(
+                    {
+                        "source_id": sid,
+                        "title": str(title),
+                        "text_excerpt": self._to_excerpt(text),
+                    }
+                )
 
         return {
             "sources": sources,
@@ -269,15 +314,35 @@ class RetrievalService:
     def _get_source_type(self, figure: str) -> str:
         """Return the unit type (Chapter, Section, etc.) for a figure's sources."""
         return {
-            "epictetus": "Section", "mill": "Chapter", "aurelius": "Book",
-            "locke": "Chapter", "rousseau": "Book", "nietzsche": "Part", "hobbes": "Part",
-            "plato": "Book", "aristotle": "Book", "hume": "Section",
-            "kant": "Section", "wollstonecraft": "Chapter", "marx": "Part", "thoreau": "Section",
-            "seneca": "Letter", "cicero": "Book", "lucretius": "Book",
-            "descartes": "Meditation", "spinoza": "Part", "leibniz": "Section",
-            "voltaire": "Chapter", "paine": "Section", "burke": "Section",
-            "douglass": "Chapter", "emerson": "Essay", "dubois": "Chapter",
-            "darwin": "Chapter", "james": "Lecture", "tocqueville": "Chapter",
+            "epictetus": "Section",
+            "mill": "Chapter",
+            "aurelius": "Book",
+            "locke": "Chapter",
+            "rousseau": "Book",
+            "nietzsche": "Part",
+            "hobbes": "Part",
+            "plato": "Book",
+            "aristotle": "Book",
+            "hume": "Section",
+            "kant": "Section",
+            "wollstonecraft": "Chapter",
+            "marx": "Part",
+            "thoreau": "Section",
+            "seneca": "Letter",
+            "cicero": "Book",
+            "lucretius": "Book",
+            "descartes": "Meditation",
+            "spinoza": "Part",
+            "leibniz": "Section",
+            "voltaire": "Chapter",
+            "paine": "Section",
+            "burke": "Section",
+            "douglass": "Chapter",
+            "emerson": "Essay",
+            "dubois": "Chapter",
+            "darwin": "Chapter",
+            "james": "Lecture",
+            "tocqueville": "Chapter",
             "russell": "Chapter",
         }.get(figure, "Section")
 
@@ -292,7 +357,11 @@ class RetrievalService:
             result = []
             for ch_id, ch_info in index.get("chapters", {}).items():
                 if texts.get("chapters", {}).get(ch_id, {}).get("text"):
-                    item = {"id": ch_id, "title": ch_info.get("title", ch_id), "type": "Chapter"}
+                    item = {
+                        "id": ch_id,
+                        "title": ch_info.get("title", ch_id),
+                        "type": "Chapter",
+                    }
                     if ch_info.get("work"):
                         item["work"] = ch_info["work"]
                     result.append(item)
@@ -305,7 +374,11 @@ class RetrievalService:
             result = []
             for dial_id, dial_info in index.get("dialogues", {}).items():
                 if texts.get(dial_id, {}).get("text"):
-                    item = {"id": dial_id, "title": dial_info.get("title", dial_id), "type": "Dialogue"}
+                    item = {
+                        "id": dial_id,
+                        "title": dial_info.get("title", dial_id),
+                        "type": "Dialogue",
+                    }
                     if dial_info.get("work"):
                         item["work"] = dial_info["work"]
                     result.append(item)
@@ -314,11 +387,23 @@ class RetrievalService:
             index = self._load_json(figure, "index.json")
             if not index:
                 return []
-            secs = index.get("sections") or index.get("chapters") or index.get("books") or index.get("parts") or {}
+            secs = (
+                index.get("sections")
+                or index.get("chapters")
+                or index.get("books")
+                or index.get("parts")
+                or {}
+            )
             result = []
             for sid, data in secs.items():
                 if data.get("text"):
-                    title = data.get("section") or data.get("chapter") or data.get("book") or data.get("part") or sid
+                    title = (
+                        data.get("section")
+                        or data.get("chapter")
+                        or data.get("book")
+                        or data.get("part")
+                        or sid
+                    )
                     item = {"id": sid, "title": str(title), "type": source_type}
                     if data.get("work"):
                         item["work"] = data["work"]
@@ -342,7 +427,9 @@ class RetrievalService:
         self._embedding_cache[figure] = {"mtime": mtime, "data": embs}
         return embs
 
-    def _get_context_semantic(self, figure: str, topic: str, user_argument: str) -> dict | None:
+    def _get_context_semantic(
+        self, figure: str, topic: str, user_argument: str
+    ) -> dict | None:
         """Use embeddings when available. Returns None to fall back to keyword."""
         if not embedding_service or not embedding_service._client:
             return None
@@ -375,14 +462,30 @@ class RetrievalService:
                 ch_text = texts.get("chapters", {}).get(ch_id, {})
                 if ch_text:
                     text = ch_text.get("text", "")[:2000]
-                    chapters.append({"chapter": ch_id, "title": ch_info.get("title", ""), "text": text, "themes": ch_info.get("themes", [])})
-                    formatted_parts.append(f"=== CHAPTER {ch_id}: {ch_info.get('title', '')} ===\n{text}")
+                    chapters.append(
+                        {
+                            "chapter": ch_id,
+                            "title": ch_info.get("title", ""),
+                            "text": text,
+                            "themes": ch_info.get("themes", []),
+                        }
+                    )
+                    formatted_parts.append(
+                        f"=== CHAPTER {ch_id}: {ch_info.get('title', '')} ===\n{text}"
+                    )
             return {
                 "chapters": chapters,
                 "formatted": "\n\n".join(formatted_parts),
                 "chapter_ids": source_ids,
                 "sources": [f"Chapter {c}" for c in source_ids],
-                "passages": [{"source_id": c.get("chapter", ""), "title": c.get("title", ""), "text_excerpt": self._to_excerpt(c.get("text", ""))} for c in chapters],
+                "passages": [
+                    {
+                        "source_id": c.get("chapter", ""),
+                        "title": c.get("title", ""),
+                        "text_excerpt": self._to_excerpt(c.get("text", "")),
+                    }
+                    for c in chapters
+                ],
             }
         elif figure == "socrates":
             index = self._load_json("socrates", "dialogue_index.json")
@@ -394,14 +497,29 @@ class RetrievalService:
                 dial_text = texts.get(dial_id, {})
                 if dial_text:
                     text = dial_text.get("text", "")[:2000]
-                    dialogues.append({"id": dial_id, "title": dial_info.get("title", ""), "text": text})
-                    formatted_parts.append(f"=== {dial_info.get('title', '').upper()} ===\n{text}")
+                    dialogues.append(
+                        {
+                            "id": dial_id,
+                            "title": dial_info.get("title", ""),
+                            "text": text,
+                        }
+                    )
+                    formatted_parts.append(
+                        f"=== {dial_info.get('title', '').upper()} ===\n{text}"
+                    )
             return {
                 "dialogues": dialogues,
                 "formatted": "\n\n".join(formatted_parts),
                 "dialogue_ids": source_ids,
-                "sources": list(source_ids),
-                "passages": [{"source_id": d.get("id", ""), "title": d.get("title", ""), "text_excerpt": self._to_excerpt(d.get("text", ""))} for d in dialogues],
+                "sources": [f"Dialogue {d}" for d in source_ids],
+                "passages": [
+                    {
+                        "source_id": d.get("id", ""),
+                        "title": d.get("title", ""),
+                        "text_excerpt": self._to_excerpt(d.get("text", "")),
+                    }
+                    for d in dialogues
+                ],
             }
         else:
             return self._generic_build_from_ids(figure, source_ids)
@@ -410,17 +528,43 @@ class RetrievalService:
         index = self._load_json(figure, "index.json")
         if not index:
             return {"sources": [], "formatted": "", "passages": []}
-        secs = index.get("sections") or index.get("chapters") or index.get("books") or index.get("parts") or {}
+        secs = (
+            index.get("sections")
+            or index.get("chapters")
+            or index.get("books")
+            or index.get("parts")
+            or {}
+        )
         source_name = {
-            "epictetus": "Section", "mill": "Chapter", "aurelius": "Book",
-            "locke": "Chapter", "rousseau": "Book", "nietzsche": "Part", "hobbes": "Part",
-            "plato": "Book", "aristotle": "Book", "hume": "Section",
-            "kant": "Section", "wollstonecraft": "Chapter", "marx": "Part", "thoreau": "Section",
-            "seneca": "Letter", "cicero": "Book", "lucretius": "Book",
-            "descartes": "Meditation", "spinoza": "Part", "leibniz": "Section",
-            "voltaire": "Chapter", "paine": "Section", "burke": "Section",
-            "douglass": "Chapter", "emerson": "Essay", "dubois": "Chapter",
-            "darwin": "Chapter", "james": "Lecture", "tocqueville": "Chapter",
+            "epictetus": "Section",
+            "mill": "Chapter",
+            "aurelius": "Book",
+            "locke": "Chapter",
+            "rousseau": "Book",
+            "nietzsche": "Part",
+            "hobbes": "Part",
+            "plato": "Book",
+            "aristotle": "Book",
+            "hume": "Section",
+            "kant": "Section",
+            "wollstonecraft": "Chapter",
+            "marx": "Part",
+            "thoreau": "Section",
+            "seneca": "Letter",
+            "cicero": "Book",
+            "lucretius": "Book",
+            "descartes": "Meditation",
+            "spinoza": "Part",
+            "leibniz": "Section",
+            "voltaire": "Chapter",
+            "paine": "Section",
+            "burke": "Section",
+            "douglass": "Chapter",
+            "emerson": "Essay",
+            "dubois": "Chapter",
+            "darwin": "Chapter",
+            "james": "Lecture",
+            "tocqueville": "Chapter",
             "russell": "Chapter",
         }.get(figure, "Section")
         formatted_parts = []
@@ -430,11 +574,29 @@ class RetrievalService:
             section = secs.get(sid, {})
             text = section.get("text", "")
             if text:
-                title = section.get("section") or section.get("chapter") or section.get("book") or section.get("part") or sid
-                formatted_parts.append(f"=== {source_name.upper()} {title}: ===\n{text[:2000]}")
+                title = (
+                    section.get("section")
+                    or section.get("chapter")
+                    or section.get("book")
+                    or section.get("part")
+                    or sid
+                )
+                formatted_parts.append(
+                    f"=== {source_name.upper()} {title}: ===\n{text[:2000]}"
+                )
                 sources.append(f"{source_name.title()} {title}")
-                passages.append({"source_id": sid, "title": str(title), "text_excerpt": self._to_excerpt(text)})
-        return {"sources": sources, "formatted": "\n\n".join(formatted_parts), "passages": passages}
+                passages.append(
+                    {
+                        "source_id": sid,
+                        "title": str(title),
+                        "text_excerpt": self._to_excerpt(text),
+                    }
+                )
+        return {
+            "sources": sources,
+            "formatted": "\n\n".join(formatted_parts),
+            "passages": passages,
+        }
 
     def get_context(self, figure: str, topic: str, user_argument: str) -> dict:
         semantic_result = self._get_context_semantic(figure, topic, user_argument)
@@ -448,16 +610,26 @@ class RetrievalService:
             ]
             chapters = result.get("chapters", [])
             result["passages"] = [
-                {"source_id": ch.get("chapter", ""), "title": ch.get("title", ""), "text_excerpt": self._to_excerpt(ch.get("text", ""))}
+                {
+                    "source_id": ch.get("chapter", ""),
+                    "title": ch.get("title", ""),
+                    "text_excerpt": self._to_excerpt(ch.get("text", "")),
+                }
                 for ch in chapters
             ]
             return result
         elif figure == "socrates":
             result = self.get_context_for_socrates(topic, user_argument)
-            result["sources"] = result.get("dialogue_ids", [])
+            result["sources"] = [
+                f"Dialogue {d}" for d in result.get("dialogue_ids", [])
+            ]
             dialogues = result.get("dialogues", [])
             result["passages"] = [
-                {"source_id": d.get("id", ""), "title": d.get("title", ""), "text_excerpt": self._to_excerpt(d.get("text", ""))}
+                {
+                    "source_id": d.get("id", ""),
+                    "title": d.get("title", ""),
+                    "text_excerpt": self._to_excerpt(d.get("text", "")),
+                }
                 for d in dialogues
             ]
             return result
@@ -484,7 +656,9 @@ class RetrievalService:
         elif figure == "kant":
             return self._generic_retrieval("kant", topic, user_argument, "Section")
         elif figure == "wollstonecraft":
-            return self._generic_retrieval("wollstonecraft", topic, user_argument, "Chapter")
+            return self._generic_retrieval(
+                "wollstonecraft", topic, user_argument, "Chapter"
+            )
         elif figure == "marx":
             return self._generic_retrieval("marx", topic, user_argument, "Part")
         elif figure == "thoreau":
@@ -496,7 +670,9 @@ class RetrievalService:
         elif figure == "lucretius":
             return self._generic_retrieval("lucretius", topic, user_argument, "Book")
         elif figure == "descartes":
-            return self._generic_retrieval("descartes", topic, user_argument, "Meditation")
+            return self._generic_retrieval(
+                "descartes", topic, user_argument, "Meditation"
+            )
         elif figure == "spinoza":
             return self._generic_retrieval("spinoza", topic, user_argument, "Part")
         elif figure == "leibniz":
@@ -518,7 +694,9 @@ class RetrievalService:
         elif figure == "james":
             return self._generic_retrieval("james", topic, user_argument, "Lecture")
         elif figure == "tocqueville":
-            return self._generic_retrieval("tocqueville", topic, user_argument, "Chapter")
+            return self._generic_retrieval(
+                "tocqueville", topic, user_argument, "Chapter"
+            )
         elif figure == "russell":
             return self._generic_retrieval("russell", topic, user_argument, "Chapter")
         return {"formatted": "", "sources": [], "passages": []}

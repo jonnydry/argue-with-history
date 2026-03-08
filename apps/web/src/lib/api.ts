@@ -1,28 +1,42 @@
 import { FigureInfo, DebateTopic, StartDebateRequest, DebateState, SubmitArgumentRequest, SubmitArgumentResponse, StartDebateResponse } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+const REQUEST_TIMEOUT_MS = 30000;
 
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: "Unknown error" }));
-    const msg = Array.isArray(error.detail)
-      ? error.detail
-          .map((e: { msg?: string }) => e.msg)
-          .filter(Boolean)
-          .join("; ") || "Validation error"
-      : (typeof error.detail === "string" ? error.detail : null) || `HTTP ${response.status}`;
-    throw new Error(msg);
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: "Unknown error" }));
+      const msg = Array.isArray(error.detail)
+        ? error.detail
+            .map((e: { msg?: string }) => e.msg)
+            .filter(Boolean)
+            .join("; ") || "Validation error"
+        : (typeof error.detail === "string" ? error.detail : null) || `HTTP ${response.status}`;
+      throw new Error(msg);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Request timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return response.json();
 }
 
 export const api = {

@@ -51,6 +51,29 @@ function scoreToneBarClass(tone: ScoreTone): string {
   return `score-bar-${tone}`;
 }
 
+function AccessibleDetails({
+  children,
+  className,
+  ...props
+}: React.DetailsHTMLAttributes<HTMLDetailsElement>) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      {...props}
+      className={className}
+      open={open}
+      onToggle={(e) => {
+        const isOpen = e.currentTarget.open;
+        setOpen(isOpen);
+        props.onToggle?.(e);
+      }}
+      aria-expanded={open}
+    >
+      {children}
+    </details>
+  );
+}
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -450,7 +473,7 @@ export default function DebatePageContent() {
         {hasDetails && (
           <div className="mt-3 space-y-2">
             {turn.scores.strengths?.length > 0 && (
-              <details className="group/strengths">
+              <AccessibleDetails className="group/strengths">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/85 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/strengths:rotate-90 transition-transform inline-block">▶</span>
                   Strengths ({turn.scores.strengths.length})
@@ -460,10 +483,10 @@ export default function DebatePageContent() {
                     <p key={i} className="text-sm text-foreground/90">+ {s}</p>
                   ))}
                 </div>
-              </details>
+              </AccessibleDetails>
             )}
             {turn.scores.improvements?.length > 0 && (
-              <details className="group/improvements">
+              <AccessibleDetails className="group/improvements">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/improvements:rotate-90 transition-transform inline-block">▶</span>
                   Improvements ({turn.scores.improvements.length})
@@ -473,10 +496,10 @@ export default function DebatePageContent() {
                     <p key={i} className="text-sm text-muted-foreground">~ {s}</p>
                   ))}
                 </div>
-              </details>
+              </AccessibleDetails>
             )}
             {hasTurnClaims && (
-              <details className="group/claims">
+              <AccessibleDetails className="group/claims">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/75 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/claims:rotate-90 transition-transform inline-block">▶</span>
                   Claim Check ({turnClaimChecks!.length})
@@ -496,7 +519,7 @@ export default function DebatePageContent() {
                     </p>
                   ))}
                 </div>
-              </details>
+              </AccessibleDetails>
             )}
           </div>
         )}
@@ -505,7 +528,7 @@ export default function DebatePageContent() {
 
     if (!isLatestTurn) {
       return (
-        <details className="mt-4 group/turnscore">
+        <AccessibleDetails className="mt-4 group/turnscore">
           <summary className="cursor-pointer list-none arena-panel px-4 py-3 flex items-center gap-2">
             <span className="group-open/turnscore:rotate-90 transition-transform inline-block text-muted-foreground">▶</span>
             <span className="text-xs uppercase tracking-[0.2em] font-bold text-foreground/80">Scorecard</span>
@@ -514,7 +537,7 @@ export default function DebatePageContent() {
             </span>
           </summary>
           <div className="mt-3">{scorecardDetails}</div>
-        </details>
+        </AccessibleDetails>
       );
     }
 
@@ -658,7 +681,7 @@ export default function DebatePageContent() {
                       {openingStatement}
                     </p>
                     {openingPassages.length > 0 && (
-                      <details className="mt-4 group">
+                      <AccessibleDetails className="mt-4 group">
                         <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
                           <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                           View sources used
@@ -671,7 +694,7 @@ export default function DebatePageContent() {
                             </div>
                           ))}
                         </div>
-                      </details>
+                      </AccessibleDetails>
                     )}
                   </div>
 
@@ -732,7 +755,7 @@ export default function DebatePageContent() {
                         {turn.figure_response}
                       </p>
                       {turn.passages && turn.passages.length > 0 && (
-                        <details className="mt-4 group">
+                        <AccessibleDetails className="mt-4 group">
                           <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
                             <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                             View sources used
@@ -745,7 +768,7 @@ export default function DebatePageContent() {
                               </div>
                             ))}
                           </div>
-                        </details>
+                        </AccessibleDetails>
                       )}
                     </div>
 
@@ -809,13 +832,13 @@ export default function DebatePageContent() {
 
               {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
                 <div className="text-left max-w-lg mx-auto mb-8 arena-panel px-4 py-4 sm:px-5">
-                  <details className="sm:hidden group/learn">
+                  <AccessibleDetails className="sm:hidden group/learn">
                     <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-foreground list-none flex items-center gap-1.5 mb-2">
                       <span className="group-open/learn:rotate-90 transition-transform inline-block">▶</span>
                       Learning Summary
                     </summary>
                     <div className="mt-2 text-foreground">{renderLearningSummaryContent()}</div>
-                  </details>
+                  </AccessibleDetails>
                   <div className="hidden sm:block text-foreground">
                     <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground">Learning Summary</p>
                     {renderLearningSummaryContent()}
@@ -866,7 +889,7 @@ export default function DebatePageContent() {
               {hasAnyHelper && (
                 <>
                   <div className="lg:hidden">
-                    <details className="group/helpers">
+                    <AccessibleDetails className="group/helpers">
                       <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
                         <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
                         Debate aids
@@ -875,14 +898,14 @@ export default function DebatePageContent() {
                         )}
                       </summary>
                       <div className="mt-3 space-y-3">{renderHelperSections()}</div>
-                    </details>
+                    </AccessibleDetails>
                   </div>
                   <div className="hidden lg:block space-y-3">{renderHelperSections()}</div>
                 </>
               )}
 
               {/* Argument structure helper */}
-              <details className="group/arghelper">
+              <AccessibleDetails className="group/arghelper">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
                   Argument structure helper
@@ -899,7 +922,7 @@ export default function DebatePageContent() {
                     {structuredInput ? "Use freeform placeholder" : "Use structured placeholder"}
                   </button>
                 </div>
-              </details>
+              </AccessibleDetails>
 
               <div className="relative">
                 <Textarea

@@ -12,13 +12,28 @@ _SCORE_RESPONSE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
         "logic_score": {"type": "integer", "description": "Logic score 1-10"},
-        "historical_accuracy_score": {"type": "integer", "description": "Historical accuracy score 1-10"},
+        "historical_accuracy_score": {
+            "type": "integer",
+            "description": "Historical accuracy score 1-10",
+        },
         "rhetoric_score": {"type": "integer", "description": "Rhetoric score 1-10"},
         "rebuttal_score": {"type": "integer", "description": "Rebuttal score 1-10"},
-        "logic_reason": {"type": "string", "description": "1-2 sentences explaining the logic score"},
-        "historical_reason": {"type": "string", "description": "1-2 sentences explaining historical accuracy"},
-        "rhetoric_reason": {"type": "string", "description": "1-2 sentences explaining the rhetoric score"},
-        "rebuttal_reason": {"type": "string", "description": "1-2 sentences explaining the rebuttal score"},
+        "logic_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the logic score",
+        },
+        "historical_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining historical accuracy",
+        },
+        "rhetoric_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the rhetoric score",
+        },
+        "rebuttal_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the rebuttal score",
+        },
         "strengths": {
             "type": "array",
             "items": {"type": "string"},
@@ -46,7 +61,10 @@ _SCORE_RESPONSE_SCHEMA: dict[str, Any] = {
             },
             "description": "Claim validation notes",
         },
-        "source_used_well": {"type": "boolean", "description": "Whether user used sources well"},
+        "source_used_well": {
+            "type": "boolean",
+            "description": "Whether user used sources well",
+        },
     },
     "required": [
         "logic_score",
@@ -133,7 +151,7 @@ class GrokService:
 
 {context}
 
-CITATION RULE: When referencing your works, quote or paraphrase specific passages. Use format: [As I wrote in Chapter X: '...'] or [In my words: ...]. If a claim is general rather than from a specific passage, acknowledge that you are speaking from your broader view."""
+CITATION RULE: When referencing your works, quote or paraphrase specific passages. Use format: [As I wrote in Chapter X: '...'] or [In my words: ...]. If a claim is general rather than from a specific passage, acknowledge that you are speaking from your broader view.""",
                 }
             )
 
@@ -169,7 +187,9 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
             raise ValueError("Empty message content from Grok")
         return msg
 
-    async def extract_key_claims(self, figure_response: str, figure_name: str) -> list[str]:
+    async def extract_key_claims(
+        self, figure_response: str, figure_name: str
+    ) -> list[str]:
         """Extract 2-4 key claims from the figure's response for rebuttal challenge."""
         if not figure_response or len(figure_response.strip()) < 50:
             return []
@@ -188,8 +208,13 @@ Response:
                 },
             )
             response.raise_for_status()
-            content = response.json().get("choices", [{}])[0].get("message", {}).get("content") or "[]"
-            import json
+            content = (
+                response.json()
+                .get("choices", [{}])[0]
+                .get("message", {})
+                .get("content")
+                or "[]"
+            )
             claims = json.loads(content)
             if isinstance(claims, list) and all(isinstance(c, str) for c in claims):
                 return [c.strip() for c in claims[:4] if c.strip()]
@@ -322,13 +347,17 @@ Respond with valid JSON matching the required schema."""
     ) -> dict:
         """Generate a learning summary and suggested readings after a debate."""
         turns_text = "\n\n".join(
-            f"Turn {t.get('turn_number', i+1)}:\nYou: {t.get('user_argument', '')}\n{figure_name}: {t.get('figure_response', '')}"
+            f"Turn {t.get('turn_number', i + 1)}:\nYou: {t.get('user_argument', '')}\n{figure_name}: {t.get('figure_response', '')}"
             for i, t in enumerate(turns)
         )
-        passages_text = "\n\n".join(
-            f"- {p.get('title', '')}: {p.get('text_excerpt', '')[:200]}..."
-            for p in passages[:5]
-        ) if passages else "None cited"
+        passages_text = (
+            "\n\n".join(
+                f"- {p.get('title', '')}: {p.get('text_excerpt', '')[:200]}..."
+                for p in passages[:5]
+            )
+            if passages
+            else "None cited"
+        )
 
         prompt = f"""After this debate with {figure_name} on "{topic}", provide a learning summary.
 
@@ -358,12 +387,15 @@ Keep suggested_readings to 2-3 items. Add source_id (e.g. chapter number) when p
         response.raise_for_status()
         data = response.json()
         content = data.get("choices", [{}])[0].get("message", {}).get("content") or "{}"
-        import json
+
         try:
             return json.loads(content)
         except json.JSONDecodeError as exc:
             logger.warning("Learning summary parse failed: %s", exc, exc_info=True)
-            return {"summary": "Reflect on the debate and the passages cited.", "suggested_readings": []}
+            return {
+                "summary": "Reflect on the debate and the passages cited.",
+                "suggested_readings": [],
+            }
 
     async def generate_position_primer(
         self,
@@ -372,10 +404,14 @@ Keep suggested_readings to 2-3 items. Add source_id (e.g. chapter number) when p
         passages: list[dict],
     ) -> dict:
         """Generate a short position primer: what the figure argues + sample quote + user task."""
-        passages_text = "\n\n".join(
-            f"- {p.get('title', '')}: \"{p.get('text_excerpt', '')[:300]}...\""
-            for p in passages[:3]
-        ) if passages else "No specific passages."
+        passages_text = (
+            "\n\n".join(
+                f'- {p.get("title", "")}: "{p.get("text_excerpt", "")[:300]}..."'
+                for p in passages[:3]
+            )
+            if passages
+            else "No specific passages."
+        )
         prompt = f"""Given this topic and passages from {figure_name}'s works, provide a brief position primer.
 
 TOPIC: {topic}
@@ -400,8 +436,14 @@ Respond with valid JSON only:
                 },
             )
             response.raise_for_status()
-            content = response.json().get("choices", [{}])[0].get("message", {}).get("content") or "{}"
-            import json
+            content = (
+                response.json()
+                .get("choices", [{}])[0]
+                .get("message", {})
+                .get("content")
+                or "{}"
+            )
+
             return json.loads(content)
         except Exception as exc:
             logger.warning("Position primer generation failed: %s", exc, exc_info=True)
