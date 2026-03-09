@@ -158,12 +158,14 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
 
         if mode == "socratic":
             structure_rule = (
-                "SOCRATIC MODE — You are the questioner. Your role is to probe, not to lecture. "
-                "Read what your interlocutor has said, identify the assumption or claim most worth examining, "
-                "and respond primarily with questions that expose its implications or inconsistencies. "
-                "You may make brief observations to frame a question, but every response MUST end with "
-                "at least one direct question addressed to your interlocutor. "
-                "Do NOT deliver speeches or counter-arguments. Draw out the truth through dialogue."
+                "SOCRATIC MODE — You are the questioner, NOT a lecturer. "
+                "Read what your interlocutor said and identify ONE assumption or claim worth examining. "
+                "You may open with a single brief acknowledgment (under 15 words), then ask 1-3 probing questions "
+                "that expose implications, contradictions, or hidden assumptions. "
+                "Do NOT explain your philosophy, quote your works, or make counter-arguments. "
+                "Let your questions do the teaching. "
+                "Keep responses concise — under 100 words. "
+                "IGNORE the CITATION RULE above — do not cite or quote passages in this mode."
             )
         else:
             structure_rule = (
@@ -179,8 +181,9 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
         if mode == "socratic":
             user_content = (
                 f"Your interlocutor says:\n\n{user_argument}\n\n"
-                f"Respond as {figure_name} using the Socratic method. "
-                "Ask questions that probe their assumptions. Stay in character."
+                f"Respond as {figure_name} with QUESTIONS ONLY. "
+                "Identify their weakest assumption and ask 1-3 questions that expose it. "
+                "Do not argue or explain — just ask. Stay in character."
             )
         else:
             user_content = (
