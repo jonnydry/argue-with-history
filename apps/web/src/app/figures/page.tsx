@@ -24,7 +24,6 @@ import {
   filterFiguresByEra,
   type EraCategory,
 } from "@/lib/figures";
-import { FigureLoadedTexts } from "@/components/figure-loaded-texts";
 
 type PreviewPassage = {
   source_id: string;
@@ -111,10 +110,6 @@ export default function FiguresPage() {
     topicSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const scrollToSettings = () => {
-    settingsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   const handleFigureSelect = (figure: FigureInfo) => {
     if (activeSelectedFigure?.id === figure.id) return;
     selectFigure(figure);
@@ -135,6 +130,15 @@ export default function FiguresPage() {
       ? String(currentDebate.figure).charAt(0).toUpperCase() +
         String(currentDebate.figure).slice(1)
       : "");
+
+  const showBottomBar = activeSelectedFigure != null;
+  const settingsSummary = [
+    debateMode === "structured" ? "Structured" : "Freeform",
+    debateMode === "structured" ? `${maxTurns} turns` : null,
+    scholarMode ? "Scholar mode" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg relative">
@@ -198,23 +202,30 @@ export default function FiguresPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <main className={`container mx-auto px-4 sm:px-6 py-8 sm:py-12 ${showBottomBar ? "pb-28" : ""}`}>
+        {/* Hero */}
         <div className="mb-8 sm:mb-12 arena-enter">
-          <p className="war-label mb-3">SELECT YOUR ADVERSARY</p>
-          <h2 className="editorial-display text-4xl sm:text-5xl md:text-7xl mb-3 sm:mb-4">
-            CHOOSE YOUR
-            <br />
-            <span className="headline-emphasis">OPPONENT</span>
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-lg max-w-lg">
-            Single-click to select an opponent, then continue when you are ready. Browsing should feel exploratory, not jumpy.
-          </p>
-          <div className="arena-divider mt-6">
-            <Swords size={16} className="text-muted-foreground/40" />
+          <p className="war-label mb-3">ENTER THE ARENA</p>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 lg:gap-10">
+            <h2 className="editorial-display text-5xl sm:text-6xl md:text-7xl leading-[0.92]">
+              CHOOSE YOUR
+              <br />
+              <span className="headline-emphasis">OPPONENT.</span>
+            </h2>
+            <div className="lg:pb-2 max-w-sm">
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                Select a historical figure to debate. Click to learn more,
+                then pick a topic and configure your match.
+              </p>
+              <p className="text-xs text-foreground/30 mt-1">
+                {figures.length}+ figures across 5 eras
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6 justify-center sm:justify-start max-w-5xl mx-auto">
+        {/* Era filters */}
+        <div className="flex flex-wrap gap-2 mb-6 justify-center sm:justify-start">
           {ERA_CATEGORIES.map((era) => (
             <button
               key={era}
@@ -231,7 +242,8 @@ export default function FiguresPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto mb-6">
+        {/* Figure grid — 3 columns on lg */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {filteredFigures.slice(0, visibleCount).map((figure) => {
             const isSelected = activeSelectedFigure?.id === figure.id;
             const debateCount = progression.byFigure[figure.id] ?? 0;
@@ -239,9 +251,9 @@ export default function FiguresPage() {
             return (
               <Card
                 key={figure.id}
-                className={`overflow-hidden rounded-xl shadow-lg hover:shadow-xl arena-texture transition-all duration-300 ${
+                className={`overflow-hidden rounded-xl arena-texture transition-all duration-300 ${
                   isSelected
-                    ? "bg-foreground text-background border-foreground shadow-lg"
+                    ? "bg-foreground text-background border-foreground"
                     : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
                 }`}
               >
@@ -251,10 +263,11 @@ export default function FiguresPage() {
                   aria-pressed={isSelected}
                   className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
-                  <CardContent className="p-5 sm:p-6">
-                    <div className="flex items-start gap-4 sm:gap-5">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3.5">
+                      {/* Avatar */}
                       <div
-                        className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center font-blackletter font-bold text-lg sm:text-xl shrink-0 ${
+                        className={`w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center font-blackletter font-bold text-lg shrink-0 ${
                           isSelected
                             ? "bg-background text-foreground"
                             : "bg-foreground text-background"
@@ -263,82 +276,79 @@ export default function FiguresPage() {
                         {figure.name.charAt(0)}
                       </div>
 
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-bold text-base sm:text-lg tracking-tight truncate">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-base tracking-tight truncate">
                             {figure.name}
                           </h3>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <p
-                            className={`text-xs sm:text-sm ${
-                              isSelected ? "text-background/70" : "text-muted-foreground"
-                            }`}
-                          >
-                            {figure.era}
-                          </p>
-                          {debateCount > 0 && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            {debateCount > 0 && (
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                  isSelected
+                                    ? "bg-background/12 text-background border border-background/20"
+                                    : "bg-foreground/10 text-foreground/70"
+                                }`}
+                              >
+                                {debateCount} debate{debateCount !== 1 ? "s" : ""}
+                              </span>
+                            )}
                             <span
-                              className={`text-[10px] sm:text-xs px-2.5 py-1 rounded-full ${
-                                isSelected
-                                  ? "bg-background/12 text-background border border-background/20"
-                                  : "bg-foreground/20 text-foreground/90"
+                              className={`text-[10px] uppercase tracking-[0.18em] ${
+                                isSelected ? "text-accent/90" : "text-accent/60"
                               }`}
                             >
-                              {debateCount} debate{debateCount !== 1 ? "s" : ""}
+                              {figure.era.split("(")[0].trim()}
                             </span>
-                          )}
+                          </div>
                         </div>
 
                         <p
-                          className={`text-sm line-clamp-3 mb-4 leading-relaxed ${
-                            isSelected ? "text-background/80" : "text-muted-foreground"
+                          className={`text-sm line-clamp-3 leading-relaxed ${
+                            isSelected ? "text-background/75" : "text-muted-foreground"
                           }`}
                         >
                           {figure.description}
                         </p>
-
-                        <div className="flex flex-wrap gap-2">
-                          {figure.traits.slice(0, 4).map((trait) => (
-                            <span
-                              key={trait}
-                              className={`px-2.5 py-1 text-[10px] sm:text-xs rounded-full ${
-                                isSelected
-                                  ? "bg-background/20 text-background"
-                                  : "bg-foreground/10 text-foreground/80"
-                              }`}
-                            >
-                              {trait}
-                            </span>
-                          ))}
-                        </div>
                       </div>
 
+                      {/* Select indicator — top right */}
                       <div
-                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-1 ${
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
                           isSelected
                             ? "border-background bg-background"
-                            : "border-foreground/30"
+                            : "border-foreground/20"
                         }`}
                       >
-                        {isSelected && <span className="text-foreground text-xs">✓</span>}
+                        {isSelected && <span className="text-foreground text-[10px]">✓</span>}
                       </div>
+                    </div>
+
+                    {/* Trait pills */}
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {figure.traits.slice(0, 4).map((trait) => (
+                        <span
+                          key={trait}
+                          className={`px-2.5 py-0.5 text-[10px] sm:text-[11px] rounded-full ${
+                            isSelected
+                              ? "bg-background/15 text-background/80"
+                              : "bg-foreground/[0.06] text-foreground/60"
+                          }`}
+                        >
+                          {trait}
+                        </span>
+                      ))}
                     </div>
                   </CardContent>
                 </button>
-                <CardContent className="px-5 sm:px-6 pb-5 sm:pb-6 pt-0">
-                  <FigureLoadedTexts
-                    figureId={figure.id}
-                    variant={isSelected ? "selected" : "default"}
-                  />
-                </CardContent>
               </Card>
             );
           })}
         </div>
 
-        {filteredFigures.length > visibleCount && (
+        {/* Load more — only when "All" is selected */}
+        {selectedEra === "All" && filteredFigures.length > visibleCount && (
           <div className="flex justify-center mb-10 sm:mb-16">
             <Button
               variant="outline"
@@ -346,43 +356,25 @@ export default function FiguresPage() {
               onClick={() => setVisibleCount((count) => count + 6)}
               className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto gap-2"
             >
-              <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
+              <Swords size={20} strokeWidth={1.5} />
               <span className="uppercase tracking-wider font-medium">Load more</span>
             </Button>
           </div>
         )}
 
-        {activeSelectedFigure && (
-          <Card className="max-w-5xl mx-auto mb-8 arena-panel border-accent/20">
-            <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                  Opponent Selected
-                </p>
-                <p className="text-lg font-semibold">{activeSelectedFigure.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  Browse topics below, or jump there when you are ready.
-                </p>
-              </div>
-              <Button onClick={scrollToTopics} className="btn-press sm:min-w-48">
-                Continue to topics
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
+        {/* Topic section */}
         {activeSelectedFigure && (
           <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
               <div className="arena-divider">
                 <Swords size={14} className="text-muted-foreground/40" />
               </div>
-              <p className="war-label mb-2">CHOOSE YOUR BATTLEFIELD</p>
+              <p className="war-label mb-2">SELECT A TOPIC</p>
               <h3 className="editorial-section-title text-2xl sm:text-3xl mb-2">
-                SELECT A TOPIC
+                CHOOSE YOUR BATTLEFIELD
               </h3>
               <p className="text-sm text-muted-foreground">
-                Single-click selects a topic. We only move the page when you ask us to.
+                Pick what you want to argue about with {activeSelectedFigure.name}.
               </p>
             </div>
 
@@ -451,30 +443,7 @@ export default function FiguresPage() {
           </div>
         )}
 
-        {activeSelectedFigure && activeSelectedTopic && (
-          <Card className="max-w-3xl mx-auto mb-8 arena-panel border-accent/20">
-            <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
-                  Topic Selected
-                </p>
-                <p className="text-lg font-semibold">{activeSelectedTopic.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  Preview the source material or keep moving into debate settings.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button variant="outline" className="btn-press" onClick={() => void openPreviewDialog()}>
-                  Preview sources
-                </Button>
-                <Button onClick={scrollToSettings} className="btn-press">
-                  Continue to settings
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
+        {/* Settings section — appears after topic selected */}
         {activeSelectedFigure && activeSelectedTopic && (
           <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
@@ -562,28 +531,10 @@ export default function FiguresPage() {
                 </CardContent>
               </Card>
             </div>
-
-            <div className="text-center flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-sm sm:text-lg px-6 sm:px-8 py-4 sm:py-6 h-auto btn-press w-full sm:w-auto"
-                onClick={() => void openPreviewDialog()}
-              >
-                PREVIEW SOURCES
-              </Button>
-              <Link href="/debate" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press w-full sm:w-auto"
-                >
-                  {isLoading ? "PREPARING..." : "START DEBATE"}
-                </Button>
-              </Link>
-            </div>
           </div>
         )}
 
+        {/* Preview dialog */}
         {activeSelectedFigure && activeSelectedTopic && (
           <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
             <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -612,6 +563,63 @@ export default function FiguresPage() {
           </Dialog>
         )}
       </main>
+
+      {/* Sticky bottom bar */}
+      {showBottomBar && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-foreground/10 bg-background/92 backdrop-blur-md arena-enter">
+          <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center font-blackletter text-base font-bold shrink-0">
+                {activeSelectedFigure.name.charAt(0)}
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-sm sm:text-base truncate">
+                  {activeSelectedFigure.name}
+                </p>
+                {activeSelectedTopic && (
+                  <p className="text-xs text-muted-foreground truncate">
+                    {activeSelectedTopic.title}
+                  </p>
+                )}
+              </div>
+              {activeSelectedTopic && (
+                <>
+                  <div className="hidden sm:block w-px h-7 bg-foreground/10" />
+                  <span className="hidden sm:block text-xs text-foreground/40">
+                    {settingsSummary}
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {!activeSelectedTopic ? (
+                <Button onClick={scrollToTopics} className="btn-press text-sm">
+                  Continue to topics
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="btn-press hidden sm:inline-flex"
+                    onClick={() => void openPreviewDialog()}
+                  >
+                    Preview sources
+                  </Button>
+                  <Link href="/debate">
+                    <Button
+                      size="sm"
+                      className="bg-foreground text-background hover:bg-foreground/90 btn-press"
+                    >
+                      {isLoading ? "PREPARING..." : "Start Debate"}
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
