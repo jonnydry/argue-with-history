@@ -31,7 +31,7 @@ export type Figure =
   | "james"
   | "tocqueville"
   | "russell";
-export type DebateMode = "structured" | "freeform";
+export type DebateMode = "structured" | "freeform" | "socratic";
 
 export interface DebateTopic {
   id: string;

@@ -133,7 +133,7 @@ export default function FiguresPage() {
 
   const showBottomBar = activeSelectedFigure != null;
   const settingsSummary = [
-    debateMode === "structured" ? "Structured" : "Freeform",
+    debateMode === "structured" ? "Structured" : debateMode === "socratic" ? "Socratic" : "Freeform",
     debateMode === "structured" ? `${maxTurns} turns` : null,
     scholarMode ? "Scholar mode" : null,
   ]
@@ -224,22 +224,31 @@ export default function FiguresPage() {
           </div>
         </div>
 
-        {/* Era filters */}
-        <div className="flex flex-wrap gap-2 mb-6 justify-center sm:justify-start">
-          {ERA_CATEGORIES.map((era) => (
-            <button
-              key={era}
-              type="button"
-              onClick={() => setSelectedEra(era)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedEra === era
-                  ? "bg-foreground text-background"
-                  : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/50"
-              }`}
-            >
-              {era}
-            </button>
-          ))}
+        {/* Era filters — horizontal scroll on mobile, wrap on sm+ */}
+        <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar sm:flex-wrap sm:justify-start pb-1 sm:pb-0">
+          {ERA_CATEGORIES.map((era) => {
+            const mobileLabel =
+              era === "Renaissance / Early Modern"
+                ? "Renaissance"
+                : era === "19th–20th Century"
+                  ? "19th–20th"
+                  : era;
+            return (
+              <button
+                key={era}
+                type="button"
+                onClick={() => setSelectedEra(era)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors shrink-0 ${
+                  selectedEra === era
+                    ? "bg-foreground text-background"
+                    : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/50"
+                }`}
+              >
+                <span className="sm:hidden">{mobileLabel}</span>
+                <span className="hidden sm:inline">{era}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Figure grid — 3 columns on lg */}
@@ -305,7 +314,7 @@ export default function FiguresPage() {
                         </div>
 
                         <p
-                          className={`text-sm line-clamp-3 leading-relaxed ${
+                          className={`text-sm line-clamp-2 sm:line-clamp-3 leading-relaxed ${
                             isSelected ? "text-background/75" : "text-muted-foreground"
                           }`}
                         >
@@ -378,14 +387,14 @@ export default function FiguresPage() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-3 mb-8">
+            <div className="flex flex-col gap-3 mb-8">
               {activeSelectedFigure.topics.map((topic) => {
                 const isTopicSelected = activeSelectedTopic?.id === topic.id;
 
                 return (
                   <Card
                     key={topic.id}
-                    className={`overflow-hidden transition-all duration-300 ${
+                    className={`overflow-hidden rounded-xl arena-texture transition-all duration-300 ${
                       isTopicSelected
                         ? "bg-foreground text-background border-foreground"
                         : "bg-secondary/40 backdrop-blur-sm border border-border/50 hover:border-foreground/30"
@@ -397,40 +406,45 @@ export default function FiguresPage() {
                       aria-pressed={isTopicSelected}
                       className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
+                      <CardContent className="p-5">
+                        <div className="flex items-start gap-3.5">
+                          {/* Avatar */}
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-blackletter text-xs font-bold shrink-0 ${
+                            className={`w-12 h-12 rounded-full flex items-center justify-center font-blackletter font-bold text-lg shrink-0 ${
                               isTopicSelected
                                 ? "bg-background text-foreground"
-                                : "bg-foreground/10 text-foreground"
+                                : "bg-foreground text-background"
                             }`}
                           >
                             {activeSelectedFigure.name.charAt(0)}
                           </div>
+
+                          {/* Content */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm mb-1">{topic.title}</h4>
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h4 className="font-bold text-base tracking-tight">
+                                {topic.title}
+                              </h4>
+                              <div
+                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                                  isTopicSelected
+                                    ? "border-background bg-background"
+                                    : "border-foreground/20"
+                                }`}
+                              >
+                                {isTopicSelected && (
+                                  <span className="text-foreground text-[10px]">✓</span>
+                                )}
+                              </div>
+                            </div>
                             {topic.description && (
                               <p
-                                className={`text-xs line-clamp-2 ${
-                                  isTopicSelected
-                                    ? "text-background/70"
-                                    : "text-muted-foreground"
+                                className={`text-sm leading-relaxed mt-1 ${
+                                  isTopicSelected ? "text-background/75" : "text-muted-foreground"
                                 }`}
                               >
                                 {topic.description}
                               </p>
-                            )}
-                          </div>
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                              isTopicSelected
-                                ? "border-background bg-background"
-                                : "border-foreground/30"
-                            }`}
-                          >
-                            {isTopicSelected && (
-                              <span className="text-foreground text-xs">✓</span>
                             )}
                           </div>
                         </div>
@@ -456,40 +470,59 @@ export default function FiguresPage() {
               </h3>
 
               <Card className="arena-panel">
-                <CardContent className="p-6">
-                  <div className="grid sm:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-sm font-medium mb-3">MODE</label>
-                      <div className="flex gap-2">
-                        <Button
-                          variant={debateMode === "structured" ? "default" : "outline"}
-                          onClick={() => setDebateMode("structured")}
-                          title="Fixed number of turns. Good for focused practice."
-                          className={`flex-1 btn-press ${
-                            debateMode === "structured" ? "bg-foreground text-background" : ""
-                          }`}
-                        >
-                          {debateMode === "structured" ? "✓ " : ""}
-                          STRUCTURED
-                        </Button>
-                        <Button
-                          variant={debateMode === "freeform" ? "default" : "outline"}
-                          onClick={() => setDebateMode("freeform")}
-                          title="Open-ended. Continue until you end the debate."
-                          className={`flex-1 btn-press ${
-                            debateMode === "freeform" ? "bg-foreground text-background" : ""
-                          }`}
-                        >
-                          {debateMode === "freeform" ? "✓ " : ""}
-                          FREEFORM
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {debateMode === "structured"
-                          ? "Turn-limited debate with clear rounds."
-                          : "Open-ended debate. End when you choose."}
-                      </p>
-                    </div>
+                 <CardContent className="p-6">
+                   <div className="grid sm:grid-cols-2 gap-8">
+                     <div>
+                       <label className="block text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Debate Mode</label>
+                       <div className="flex flex-col gap-2">
+                         {(
+                           [
+                             {
+                               value: "socratic",
+                               label: "Socratic",
+                               description: "The figure questions you. Defend your positions.",
+                             },
+                             {
+                               value: "structured",
+                               label: "Structured",
+                               description: "Fixed rounds. Both sides argue a proposition.",
+                             },
+                             {
+                               value: "freeform",
+                               label: "Freeform",
+                               description: "Open-ended. End the debate when you choose.",
+                             },
+                           ] as const
+                         ).map(({ value, label, description }) => (
+                           <button
+                             key={value}
+                             type="button"
+                             onClick={() => setDebateMode(value)}
+                             className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
+                               debateMode === value
+                                 ? "border-foreground bg-foreground/[0.08]"
+                                 : "border-border/50 hover:border-foreground/30"
+                             }`}
+                           >
+                             <div className="flex items-center justify-between">
+                               <span className="font-semibold text-sm">{label}</span>
+                               <div
+                                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                   debateMode === value
+                                     ? "border-foreground bg-foreground"
+                                     : "border-foreground/20"
+                                 }`}
+                               >
+                                 {debateMode === value && (
+                                   <span className="text-background text-[8px] font-bold">✓</span>
+                                 )}
+                               </div>
+                             </div>
+                             <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                           </button>
+                         ))}
+                       </div>
+                     </div>
 
                     {debateMode === "structured" && (
                       <div>
@@ -594,7 +627,8 @@ export default function FiguresPage() {
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {!activeSelectedTopic ? (
                 <Button onClick={scrollToTopics} className="btn-press text-sm">
-                  Continue to topics
+                  <span className="sm:hidden">Topics →</span>
+                  <span className="hidden sm:inline">Continue to topics</span>
                 </Button>
               ) : (
                 <>

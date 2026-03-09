@@ -41,6 +41,7 @@ class Figure(str, Enum):
 class DebateMode(str, Enum):
     structured = "structured"
     freeform = "freeform"
+    socratic = "socratic"
 
 
 class DebateTopic(BaseModel):
@@ -68,6 +69,7 @@ class Message(BaseModel):
 
 class Passage(BaseModel):
     """Excerpt from a source used in the debate."""
+
     source_id: str
     title: str
     text_excerpt: str
@@ -81,7 +83,9 @@ class DebateTurn(BaseModel):
     passages: list[Passage] = []
     scores: Optional[dict] = None
     scores_error: Optional[str] = None  # When scoring parse failed
-    key_claims: list[str] = []  # Key claims from figure's response for rebuttal challenge
+    key_claims: list[
+        str
+    ] = []  # Key claims from figure's response for rebuttal challenge
 
 
 class DebateState(BaseModel):
@@ -101,7 +105,7 @@ class DebateState(BaseModel):
 class StartDebateRequest(BaseModel):
     figure: Figure
     topic_id: str = Field(..., min_length=1, max_length=100)
-    mode: DebateMode = DebateMode.structured
+    mode: DebateMode = DebateMode.socratic
     max_turns: int = Field(default=3, ge=1, le=10)
 
 

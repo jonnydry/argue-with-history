@@ -135,6 +135,7 @@ class GrokService:
         debate_history: list[dict],
         user_argument: str,
         figure_name: str,
+        mode: str = "structured",
         temperature: float = 0.8,
         max_tokens: int = 600,
     ) -> str:
@@ -155,17 +156,39 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
                 }
             )
 
-        structure_rule = """RESPONSE STRUCTURE: Address their strongest point first. For each main claim: (1) Quote or paraphrase what they said. (2) Agree, disagree, or qualify. (3) Give your view with citation from your works. Stay in character."""
+        if mode == "socratic":
+            structure_rule = (
+                "SOCRATIC MODE — You are the questioner. Your role is to probe, not to lecture. "
+                "Read what your interlocutor has said, identify the assumption or claim most worth examining, "
+                "and respond primarily with questions that expose its implications or inconsistencies. "
+                "You may make brief observations to frame a question, but every response MUST end with "
+                "at least one direct question addressed to your interlocutor. "
+                "Do NOT deliver speeches or counter-arguments. Draw out the truth through dialogue."
+            )
+        else:
+            structure_rule = (
+                "RESPONSE STRUCTURE: Address their strongest point first. "
+                "For each main claim: (1) Quote or paraphrase what they said. "
+                "(2) Agree, disagree, or qualify. "
+                "(3) Give your view with citation from your works. Stay in character."
+            )
         messages.append({"role": "system", "content": structure_rule})
 
         messages.extend(debate_history)
 
-        messages.append(
-            {
-                "role": "user",
-                "content": f"Your opponent argues:\n\n{user_argument}\n\nRespond as {figure_name}, tackling their arguments directly. Reference your writings where relevant. Stay in character.",
-            }
-        )
+        if mode == "socratic":
+            user_content = (
+                f"Your interlocutor says:\n\n{user_argument}\n\n"
+                f"Respond as {figure_name} using the Socratic method. "
+                "Ask questions that probe their assumptions. Stay in character."
+            )
+        else:
+            user_content = (
+                f"Your opponent argues:\n\n{user_argument}\n\n"
+                f"Respond as {figure_name}, tackling their arguments directly. "
+                "Reference your writings where relevant. Stay in character."
+            )
+        messages.append({"role": "user", "content": user_content})
 
         response = await self.client.post(
             "/chat/completions",

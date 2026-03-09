@@ -98,6 +98,7 @@ export default function DebatePageContent() {
   const structuredInput = useDebateStore((s) => s.structuredInput);
   const setStructuredInput = useDebateStore((s) => s.setStructuredInput);
   const scholarMode = useDebateStore((s) => s.scholarMode);
+  const debateMode = useDebateStore((s) => s.debateMode);
   const startDebate = useDebateStore((s) => s.startDebate);
   const submitArgument = useDebateStore((s) => s.submitArgument);
   const endDebate = useDebateStore((s) => s.endDebate);
@@ -301,6 +302,22 @@ export default function DebatePageContent() {
               <div>
                 <p className="war-label mb-2">TOPIC OF CONTENTION</p>
                 <p className="editorial-section-title text-xl sm:text-2xl">{selectedTopic.title}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="war-label">MODE</p>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-[0.12em] border ${
+                    debateMode === "socratic"
+                      ? "text-accent border-accent/40 bg-accent/10"
+                      : "text-muted-foreground border-border/60 bg-secondary/40"
+                  }`}
+                >
+                  {debateMode === "socratic"
+                    ? "Socratic"
+                    : debateMode === "structured"
+                      ? "Structured"
+                      : "Freeform"}
+                </span>
               </div>
             </div>
 
@@ -622,11 +639,28 @@ export default function DebatePageContent() {
     </>
   );
 
+  // ── Mode pill helper ─────────────────────────────────────────────────────
+  const modePill = (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-[0.12em] border ${
+        currentDebate.mode === "socratic"
+          ? "text-accent border-accent/40 bg-accent/10"
+          : "text-muted-foreground border-border/60 bg-secondary/40"
+      }`}
+    >
+      {currentDebate.mode === "socratic"
+        ? "Socratic"
+        : currentDebate.mode === "structured"
+          ? "Structured"
+          : "Freeform"}
+    </span>
+  );
+
   // ── Main render ───────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background text-foreground font-display noise-bg">
 
-      {/* Header — matches homepage exactly */}
+      {/* Header */}
       <header className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -634,15 +668,26 @@ export default function DebatePageContent() {
             <Link href="/" className="text-base sm:text-xl font-bold tracking-tight hover:underline underline-offset-4 whitespace-nowrap">
               ARGUE WITH HISTORY
             </Link>
+            {/* Desktop: figure / topic then mode pill */}
             <span className="hidden sm:block text-muted-foreground">·</span>
             <span className="hidden sm:block text-sm text-muted-foreground truncate">
               {selectedFigure.name} / {currentDebate.topic}
             </span>
+            <span className="hidden sm:inline-flex">{modePill}</span>
+            {/* Mobile: mode pill only (figure/topic hidden) */}
+            <span className="sm:hidden">{modePill}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
-              {currentDebate.current_turn}/{currentDebate.max_turns}
-            </span>
+            {/* Turn counter: x/max in structured, just "Turn x" otherwise */}
+            {currentDebate.mode === "structured" ? (
+              <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
+                {currentDebate.current_turn}/{currentDebate.max_turns}
+              </span>
+            ) : currentDebate.current_turn > 0 ? (
+              <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
+                Turn {currentDebate.current_turn}
+              </span>
+            ) : null}
             {!isCompleted && (
               <Button
                 variant="outline"

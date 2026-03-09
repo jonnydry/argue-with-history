@@ -82,7 +82,7 @@ interface DebateStore {
   learningSummary: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } | null;
   topicPrimer: { position_summary?: string; sample_quote?: string | null; user_task?: string } | null;
   topicPrimerKey: string | null;
-  debateMode: "structured" | "freeform";
+  debateMode: "structured" | "freeform" | "socratic";
   maxTurns: number;
   structuredInput: boolean;
   scholarMode: boolean;
@@ -99,7 +99,7 @@ interface DebateStore {
   clearForNewTopic: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
-  setDebateMode: (mode: "structured" | "freeform") => void;
+  setDebateMode: (mode: "structured" | "freeform" | "socratic") => void;
   setMaxTurns: (turns: number) => void;
   setStructuredInput: (enabled: boolean) => void;
   setScholarMode: (enabled: boolean) => void;
@@ -153,7 +153,7 @@ export const useDebateStore = create<DebateStore>()(
       learningSummary: null,
       topicPrimer: null,
       topicPrimerKey: null,
-      debateMode: "structured",
+      debateMode: "socratic",
       maxTurns: 3,
       structuredInput: false,
       scholarMode: false,

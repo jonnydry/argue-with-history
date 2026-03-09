@@ -71,14 +71,23 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
         )
     persona_prompt = get_persona_prompt(body.figure.value, body.topic_id)
 
+    if body.mode.value == "socratic":
+        opening_prompt = (
+            "Open this dialogue with a single probing question on this topic. "
+            "Do not make statements or arguments — only ask a question that invites the interlocutor to examine their assumptions."
+        )
+    else:
+        opening_prompt = "Present your opening statement on this topic."
+
     try:
         opening_statement = await grok_service.generate_response(
             system_prompt=persona_prompt,
             context=context.get("formatted", ""),
             topic=topic_title,
             debate_history=[],
-            user_argument="Present your opening statement on this topic.",
+            user_argument=opening_prompt,
             figure_name=figure_info.name,
+            mode=body.mode.value,
             max_tokens=200,
         )
     except Exception as exc:
@@ -150,7 +159,9 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
         raise HTTPException(status_code=400, detail="Debate has reached maximum turns")
 
     figure_info = FIGURES_DATA[debate.figure]
-    persona_prompt = get_persona_prompt(debate.figure.value, getattr(debate, "topic_id", None))
+    persona_prompt = get_persona_prompt(
+        debate.figure.value, getattr(debate, "topic_id", None)
+    )
 
     if os.environ.get("REPL_ID"):
         context = retrieval_service.get_context(
@@ -178,6 +189,7 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
             debate_history=debate_history,
             user_argument=request.argument,
             figure_name=figure_info.name,
+            mode=debate.mode.value,
         )
     except Exception as exc:
         logger.warning("Turn response generation failed: %s", exc, exc_info=True)
@@ -191,7 +203,9 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
 
     key_claims = []
     try:
-        key_claims = await grok_service.extract_key_claims(figure_response, figure_info.name)
+        key_claims = await grok_service.extract_key_claims(
+            figure_response, figure_info.name
+        )
     except Exception as exc:
         logger.warning("Turn key-claim extraction failed: %s", exc, exc_info=True)
         pass
@@ -226,7 +240,9 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
             }
     passages = [Passage(**p) for p in raw_passages] if raw_passages else []
 
-    scores = score_result.get("scores") if "scores_error" in score_result else score_result
+    scores = (
+        score_result.get("scores") if "scores_error" in score_result else score_result
+    )
     scores_error = score_result.get("scores_error")
 
     turn = DebateTurn(
@@ -254,7 +270,9 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
         for t in debate.turns:
             if hasattr(t, "passages") and t.passages:
                 for p in t.passages:
-                    all_passages.append({"title": p.title, "text_excerpt": p.text_excerpt})
+                    all_passages.append(
+                        {"title": p.title, "text_excerpt": p.text_excerpt}
+                    )
         try:
             learning_summary = await grok_service.generate_learning_summary(
                 figure_name=figure_info.name,
@@ -313,7 +331,9 @@ async def end_debate(debate_id: str) -> Dict:
                     passages=all_passages[:6],
                 )
             except Exception as exc:
-                logger.warning("End-debate summary generation failed: %s", exc, exc_info=True)
+                logger.warning(
+                    "End-debate summary generation failed: %s", exc, exc_info=True
+                )
                 learning_summary = {"summary": None, "suggested_readings": []}
 
         return {
