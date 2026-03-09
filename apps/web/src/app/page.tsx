@@ -163,11 +163,6 @@ export default function Home() {
                     CHOOSE YOUR OPPONENT
                   </Button>
                 </Link>
-                <Link href="/figures">
-                  <Button size="lg" variant="outline" className="text-base sm:text-lg px-8 sm:px-10 py-5 sm:py-6 h-auto btn-press w-full sm:w-auto">
-                    BROWSE FIGURES
-                  </Button>
-                </Link>
               </div>
             </div>
 
