@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "=== Building Next.js frontend ==="
-cd apps/web
-npm run build
-cd ../..
+cleanup() {
+  echo "Shutting down..."
+  kill $NEXT_PID 2>/dev/null || true
+  kill $API_PID 2>/dev/null || true
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT SIGTERM SIGINT
 
 echo "=== Starting FastAPI backend ==="
 cd apps/api
@@ -30,12 +33,7 @@ PORT=5000 npx next start -H 0.0.0.0 &
 NEXT_PID=$!
 cd ../..
 
-cleanup() {
-  echo "Shutting down..."
-  kill $NEXT_PID 2>/dev/null || true
-  kill $API_PID 2>/dev/null || true
-  wait
-}
-trap cleanup SIGTERM SIGINT
-
-wait $NEXT_PID $API_PID
+wait -n $NEXT_PID $API_PID
+EXIT_CODE=$?
+echo "ERROR: A process exited unexpectedly with code $EXIT_CODE"
+exit $EXIT_CODE

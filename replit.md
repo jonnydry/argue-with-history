@@ -29,7 +29,7 @@ scripts/        — Data processing and embedding precomputation scripts
 
 - **Framework**: FastAPI with Pydantic for validation and settings management
 - **Entry point**: `apps/api/src/main.py` — creates the FastAPI app with CORS, GZip, and rate limiting middleware
-- **Configuration**: `apps/api/src/core/config.py` — uses `pydantic-settings` to load from `.env` file in `apps/api/`. Key settings: `GROK_API_KEY`, `OPENAI_API_KEY`, `FRONTEND_URL`, `ENVIRONMENT`
+- **Configuration**: `apps/api/src/core/config.py` — uses `pydantic-settings` to load from environment variables (or `.env` file in `apps/api/` for local dev). Key settings: `GROK_API_KEY`, `OPENAI_API_KEY`, `FRONTEND_URL`, `ENVIRONMENT`. Automatically picks up Replit domains for CORS.
 - **Routers**:
   - `figures` — Lists available historical figures and their debate topics, with caching headers
   - `debate` — Handles debate lifecycle: start, submit turns, end. Uses per-debate async locks to prevent race conditions
@@ -51,7 +51,7 @@ scripts/        — Data processing and embedding precomputation scripts
   - `/` — Home page with figure grid listing all available philosophers
   - `/figures` — Figure selection and topic picker with preview dialog
   - `/debate` — Active debate interface with turn-by-turn interaction
-- **API communication**: `src/lib/api.ts` — typed fetch wrapper that calls the backend. API base URL configured via `NEXT_PUBLIC_API_URL` env var (defaults to `http://localhost:8000`)
+- **API communication**: `src/lib/api.ts` — typed fetch wrapper that calls the backend. API base URL defaults to `/api`, which Next.js rewrites proxy to the backend at `localhost:3001`
 - **Progression tracking**: `src/lib/progression.ts` — localStorage-based tracking of completed debates per figure/topic
 - **Animation**: Framer Motion for UI transitions
 
@@ -66,8 +66,13 @@ scripts/        — Data processing and embedding precomputation scripts
 
 ### Deployment Architecture
 
-- **Backend**: Deployed on Railway using Nixpacks builder with gunicorn + uvicorn workers. Configuration in `railway.json`. Uses a mounted volume at `/app/data` for SQLite persistence
-- **Frontend**: Deployed on Vercel with root directory set to `apps/web`
+- **Replit Deployment**: Configured for autoscale deployment on Replit
+  - **Build**: `cd apps/web && npm run build` (Next.js production build)
+  - **Run**: `bash start.sh` — starts gunicorn (API on port 3001) and Next.js production server (port 5000)
+  - Next.js rewrites proxy `/api/*` requests to the backend at `localhost:3001`
+  - Port 5000 is the externally exposed port
+- **Secrets**: `GROK_API_KEY` and `OPENAI_API_KEY` stored as Replit secrets
+- **Environment**: `ENVIRONMENT=production` set for production deployments (disables API docs)
 - **Python version**: 3.11 (specified in `runtime.txt`)
 
 ## External Dependencies
@@ -92,5 +97,4 @@ scripts/        — Data processing and embedding precomputation scripts
 - **SQLite** (stdlib): Debate state persistence — no external database required
 
 ### Infrastructure
-- **Railway**: Backend hosting with optional persistent volume for SQLite
-- **Vercel**: Frontend hosting
+- **Replit**: Full-stack hosting with autoscale deployment. Both frontend and backend run on the same machine, with Next.js proxying API requests to the backend

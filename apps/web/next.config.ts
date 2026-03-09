@@ -7,15 +7,15 @@ const nextConfig: NextConfig = {
     "https://*.replit.dev",
     "https://*.picard.replit.dev",
     "https://*.repl.co",
-    "0ebcdb7e-dc5d-4c79-97bc-61716173a5f5-00-2gbudx0ckw11t.picard.replit.dev",
     ".replit.dev",
     ".picard.replit.dev",
   ],
   async rewrites() {
+    const apiHost = process.env.API_INTERNAL_URL || "http://localhost:3001";
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:3001/:path*",
+        destination: `${apiHost}/:path*`,
       },
     ];
   },
