@@ -110,6 +110,7 @@ export default function Home() {
   const step3 = useInView(0.3);
   const stepRefs = [step1, step2, step3];
   const featuredFigures = figures.slice(0, 3);
+  const scrollFigures = figures;
 
   useEffect(() => {
     void fetchFigures();
@@ -212,36 +213,72 @@ export default function Home() {
                         </Link>
                       </div>
 
-                      <div className="grid gap-3">
-                        {isLoading && featuredFigures.length === 0 ? (
-                          Array.from({ length: 3 }).map((_, index) => <FigurePreviewSkeleton key={index} />)
+                      <div
+                        className="relative overflow-hidden h-[224px]"
+                        style={{
+                          maskImage: "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+                          WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)",
+                        }}
+                      >
+                        {isLoading && scrollFigures.length === 0 ? (
+                          <div className="flex flex-col gap-3">
+                            {Array.from({ length: 3 }).map((_, index) => <FigurePreviewSkeleton key={index} />)}
+                          </div>
                         ) : (
-                          featuredFigures.map((figure) => (
-                            <Link
-                              key={figure.id}
-                              href="/figures"
-                              className="rounded-lg border border-border/50 bg-white/[0.02] px-4 py-3 transition-colors hover:bg-white/[0.04]"
-                            >
-                              <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center text-lg font-blackletter shrink-0">
-                                  {figure.name.charAt(0)}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-baseline justify-between gap-3 mb-1">
-                                    <p className="text-lg font-semibold tracking-tight truncate text-foreground">
-                                      {figure.name}
-                                    </p>
-                                    <span className="hidden sm:block text-[11px] uppercase tracking-[0.22em] text-accent/75 shrink-0">
-                                      {figure.era.split("(")[0].trim()}
-                                    </span>
+                          <div className="flex flex-col gap-3 animate-scroll-vertical" style={{ animationDuration: "40s" }}>
+                            {scrollFigures.map((figure) => (
+                              <Link
+                                key={`a-${figure.id}`}
+                                href="/figures"
+                                className="rounded-lg border border-border/50 bg-white/[0.02] px-4 py-3 transition-colors hover:bg-white/[0.04] shrink-0"
+                              >
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                  <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center text-lg font-blackletter shrink-0">
+                                    {figure.name.charAt(0)}
                                   </div>
-                                  <p className="text-sm text-muted-foreground line-clamp-1">
-                                    {figure.description}
-                                  </p>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-baseline justify-between gap-3 mb-1">
+                                      <p className="text-lg font-semibold tracking-tight truncate text-foreground">
+                                        {figure.name}
+                                      </p>
+                                      <span className="hidden sm:block text-[11px] uppercase tracking-[0.22em] text-accent/75 shrink-0">
+                                        {figure.era.split("(")[0].trim()}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground line-clamp-1">
+                                      {figure.description}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </Link>
-                          ))
+                              </Link>
+                            ))}
+                            {scrollFigures.map((figure) => (
+                              <Link
+                                key={`b-${figure.id}`}
+                                href="/figures"
+                                className="rounded-lg border border-border/50 bg-white/[0.02] px-4 py-3 transition-colors hover:bg-white/[0.04] shrink-0"
+                              >
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                  <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center text-lg font-blackletter shrink-0">
+                                    {figure.name.charAt(0)}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-baseline justify-between gap-3 mb-1">
+                                      <p className="text-lg font-semibold tracking-tight truncate text-foreground">
+                                        {figure.name}
+                                      </p>
+                                      <span className="hidden sm:block text-[11px] uppercase tracking-[0.22em] text-accent/75 shrink-0">
+                                        {figure.era.split("(")[0].trim()}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground line-clamp-1">
+                                      {figure.description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
