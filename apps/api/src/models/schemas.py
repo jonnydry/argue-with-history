@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, model_validator
+from typing import Any, Optional
 from enum import Enum
 
 
@@ -39,9 +39,27 @@ class Figure(str, Enum):
 
 
 class DebateMode(str, Enum):
-    structured = "structured"
-    freeform = "freeform"
+    debate = "debate"
     socratic = "socratic"
+
+
+def _normalize_legacy_mode_payload(data: Any) -> Any:
+    if not isinstance(data, dict):
+        return data
+
+    normalized = dict(data)
+    raw_mode = normalized.get("mode")
+    mode_value = raw_mode.value if isinstance(raw_mode, Enum) else raw_mode
+
+    if mode_value == "structured":
+        normalized["mode"] = DebateMode.debate.value
+    elif mode_value == "freeform":
+        normalized["mode"] = DebateMode.debate.value
+        normalized["max_turns"] = 0
+    elif mode_value == DebateMode.socratic.value:
+        normalized["max_turns"] = 0
+
+    return normalized
 
 
 class DebateTopic(BaseModel):
@@ -101,12 +119,22 @@ class DebateState(BaseModel):
     status: str = "active"
     opening_statement: Optional[str] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_mode(cls, data: Any) -> Any:
+        return _normalize_legacy_mode_payload(data)
+
 
 class StartDebateRequest(BaseModel):
     figure: Figure
     topic_id: str = Field(..., min_length=1, max_length=100)
-    mode: DebateMode = DebateMode.socratic
-    max_turns: int = Field(default=3, ge=1, le=10)
+    mode: DebateMode = DebateMode.debate
+    max_turns: int = Field(default=3, ge=0, le=20)
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_mode(cls, data: Any) -> Any:
+        return _normalize_legacy_mode_payload(data)
 
 
 class SubmitArgumentRequest(BaseModel):

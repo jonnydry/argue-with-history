@@ -132,9 +132,19 @@ export default function FiguresPage() {
       : "");
 
   const showBottomBar = activeSelectedFigure != null;
+  const hasFixedTurns = debateMode === "debate" && maxTurns > 0;
+  const savedDebateProgress = currentDebate
+    ? currentDebate.current_turn > 0
+      ? currentDebate.mode === "socratic"
+        ? `Exchange ${currentDebate.current_turn}`
+        : currentDebate.max_turns > 0
+          ? `Turn ${currentDebate.current_turn}/${currentDebate.max_turns}`
+          : `Turn ${currentDebate.current_turn}`
+      : "Ready to resume"
+    : "";
   const settingsSummary = [
-    debateMode === "structured" ? "Structured" : debateMode === "socratic" ? "Socratic" : "Freeform",
-    debateMode === "structured" ? `${maxTurns} turns` : null,
+    debateMode === "socratic" ? "Socratic" : "Debate",
+    debateMode === "debate" ? (hasFixedTurns ? `${maxTurns} turns` : "Open-ended") : null,
     scholarMode ? "Scholar mode" : null,
   ]
     .filter(Boolean)
@@ -173,7 +183,7 @@ export default function FiguresPage() {
                       {currentDebate.topic}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 tabular-nums">
-                      Round {currentDebate.current_turn}/{currentDebate.max_turns}
+                      {savedDebateProgress}
                     </p>
                     <p className="text-xs text-accent font-medium mt-2 group-hover:underline">
                       Resume
@@ -470,79 +480,94 @@ export default function FiguresPage() {
               </h3>
 
               <Card className="arena-panel">
-                 <CardContent className="p-6">
-                   <div className="grid sm:grid-cols-2 gap-8">
-                     <div>
-                       <label className="block text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">Debate Mode</label>
-                       <div className="flex flex-col gap-2">
-                         {(
-                           [
-                             {
-                               value: "socratic",
-                               label: "Socratic",
-                               description: "The figure questions you. Defend your positions.",
-                             },
-                             {
-                               value: "structured",
-                               label: "Structured",
-                               description: "Fixed rounds. Both sides argue a proposition.",
-                             },
-                             {
-                               value: "freeform",
-                               label: "Freeform",
-                               description: "Open-ended. End the debate when you choose.",
-                             },
-                           ] as const
-                         ).map(({ value, label, description }) => (
-                           <button
-                             key={value}
-                             type="button"
-                             onClick={() => setDebateMode(value)}
-                             className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
-                               debateMode === value
-                                 ? "border-foreground bg-foreground/[0.08]"
-                                 : "border-border/50 hover:border-foreground/30"
-                             }`}
-                           >
-                             <div className="flex items-center justify-between">
-                               <span className="font-semibold text-sm">{label}</span>
-                               <div
-                                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                   debateMode === value
-                                     ? "border-foreground bg-foreground"
-                                     : "border-foreground/20"
-                                 }`}
-                               >
-                                 {debateMode === value && (
-                                   <span className="text-background text-[8px] font-bold">✓</span>
-                                 )}
-                               </div>
-                             </div>
-                             <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-                           </button>
-                         ))}
-                       </div>
-                     </div>
-
-                    {debateMode === "structured" && (
-                      <div>
-                        <label className="block text-sm font-medium mb-3">
-                          TURNS: {maxTurns}
-                        </label>
-                        <input
-                          type="range"
-                          min={2}
-                          max={6}
-                          value={maxTurns}
-                          onChange={(event) => setMaxTurns(parseInt(event.target.value, 10))}
-                          title={`${maxTurns} exchange${maxTurns !== 1 ? "s" : ""} total`}
-                          className="w-full accent-foreground"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Number of back-and-forth exchanges.
-                        </p>
+                <CardContent className="p-6">
+                  <div className="grid sm:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-muted-foreground font-medium mb-3">
+                        Debate Mode
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {(
+                          [
+                            {
+                              value: "socratic",
+                              label: "Socratic",
+                              description: "The figure questions you. Defend your positions.",
+                            },
+                            {
+                              value: "debate",
+                              label: "Debate",
+                              description: "The figure argues against your position.",
+                            },
+                          ] as const
+                        ).map(({ value, label, description }) => (
+                          <button
+                            key={value}
+                            type="button"
+                            onClick={() => setDebateMode(value)}
+                            className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
+                              debateMode === value
+                                ? "border-foreground bg-foreground/[0.08]"
+                                : "border-border/50 hover:border-foreground/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-sm">{label}</span>
+                              <div
+                                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                  debateMode === value
+                                    ? "border-foreground bg-foreground"
+                                    : "border-foreground/20"
+                                }`}
+                              >
+                                {debateMode === value && (
+                                  <span className="text-background text-[8px] font-bold">✓</span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+                          </button>
+                        ))}
                       </div>
-                    )}
+                    </div>
+
+                     {debateMode === "debate" && (
+                       <div>
+                         <label className="block text-sm font-medium mb-2">FIXED TURNS</label>
+                         <Button
+                           variant={hasFixedTurns ? "default" : "outline"}
+                           onClick={() => setMaxTurns(hasFixedTurns ? 0 : 3)}
+                           size="sm"
+                           className={hasFixedTurns ? "bg-foreground text-background" : ""}
+                         >
+                           {hasFixedTurns ? "✓ " : ""}
+                           {hasFixedTurns ? "On" : "Off"}
+                         </Button>
+                         <p className="text-xs text-muted-foreground mt-1">
+                           Turn this off for an open-ended debate you end manually.
+                         </p>
+
+                         {hasFixedTurns && (
+                           <>
+                             <label className="block text-sm font-medium mt-4 mb-3">
+                               TURNS: {maxTurns}
+                             </label>
+                             <input
+                               type="range"
+                               min={2}
+                               max={6}
+                               value={maxTurns}
+                               onChange={(event) => setMaxTurns(parseInt(event.target.value, 10))}
+                               title={`${maxTurns} exchange${maxTurns !== 1 ? "s" : ""} total`}
+                               className="w-full accent-foreground"
+                             />
+                             <p className="text-xs text-muted-foreground mt-1">
+                               Number of back-and-forth exchanges.
+                             </p>
+                           </>
+                         )}
+                       </div>
+                     )}
 
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-medium mb-2">SCHOLAR MODE</label>

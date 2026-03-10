@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { DebateState, FigureInfo, DebateTopic, Figure, Passage } from "@/lib/types";
+import { DebateState, FigureInfo, DebateTopic, Figure, Passage, DebateMode } from "@/lib/types";
 import { api } from "@/lib/api";
 import { recordDebateComplete } from "@/lib/progression";
 
@@ -67,6 +67,43 @@ function createDebouncedStorage(
   return debouncedStorage;
 }
 
+function clampMaxTurns(value: unknown): number {
+  const parsed =
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.round(value)
+      : Number.parseInt(String(value ?? ""), 10);
+
+  if (Number.isNaN(parsed)) {
+    return 3;
+  }
+
+  return Math.min(20, Math.max(0, parsed));
+}
+
+function normalizePickerMaxTurns(value: unknown): number {
+  const parsed = clampMaxTurns(value);
+  if (parsed === 0) {
+    return 0;
+  }
+
+  return Math.min(6, Math.max(2, parsed));
+}
+
+function normalizeModeAndTurns(
+  mode: unknown,
+  maxTurns: unknown
+): { debateMode: DebateMode; maxTurns: number } {
+  if (mode === "socratic") {
+    return { debateMode: "socratic", maxTurns: normalizePickerMaxTurns(maxTurns) };
+  }
+
+  if (mode === "freeform") {
+    return { debateMode: "debate", maxTurns: 0 };
+  }
+
+  return { debateMode: "debate", maxTurns: normalizePickerMaxTurns(maxTurns) };
+}
+
 interface DebateStore {
   figures: FigureInfo[];
   selectedFigureId: string | null;
@@ -82,7 +119,7 @@ interface DebateStore {
   learningSummary: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } | null;
   topicPrimer: { position_summary?: string; sample_quote?: string | null; user_task?: string } | null;
   topicPrimerKey: string | null;
-  debateMode: "structured" | "freeform" | "socratic";
+  debateMode: DebateMode;
   maxTurns: number;
   structuredInput: boolean;
   scholarMode: boolean;
@@ -99,7 +136,7 @@ interface DebateStore {
   clearForNewTopic: () => void;
   selectFigure: (figure: FigureInfo) => void;
   selectTopic: (topic: DebateTopic) => void;
-  setDebateMode: (mode: "structured" | "freeform" | "socratic") => void;
+  setDebateMode: (mode: DebateMode) => void;
   setMaxTurns: (turns: number) => void;
   setStructuredInput: (enabled: boolean) => void;
   setScholarMode: (enabled: boolean) => void;
@@ -153,7 +190,7 @@ export const useDebateStore = create<DebateStore>()(
       learningSummary: null,
       topicPrimer: null,
       topicPrimerKey: null,
-      debateMode: "socratic",
+      debateMode: "debate",
       maxTurns: 3,
       structuredInput: false,
       scholarMode: false,
@@ -388,11 +425,12 @@ export const useDebateStore = create<DebateStore>()(
 
         set({ isLoading: true, error: null });
         try {
+          const effectiveMaxTurns = debateMode === "socratic" ? 0 : maxTurns;
           const response = await api.debate.start({
             figure: selectedFigure.id as Figure,
             topic_id: selectedTopic.id,
             mode: debateMode,
-            max_turns: maxTurns,
+            max_turns: effectiveMaxTurns,
           });
           set({ 
             currentDebateId: response.debate.id,
@@ -530,6 +568,20 @@ export const useDebateStore = create<DebateStore>()(
         structuredInput: state.structuredInput,
         scholarMode: state.scholarMode,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<DebateStore>;
+        const normalized = normalizeModeAndTurns(
+          persisted.debateMode,
+          persisted.maxTurns
+        );
+
+        return {
+          ...currentState,
+          ...persisted,
+          debateMode: normalized.debateMode,
+          maxTurns: normalized.maxTurns,
+        };
+      },
     }
   )
 );

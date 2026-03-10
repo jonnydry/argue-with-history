@@ -40,7 +40,7 @@ class DebateRouterLockingTests(unittest.IsolatedAsyncioTestCase):
             figure=Figure.machiavelli,
             topic="Fear vs Love",
             topic_id="fear-vs-love",
-            mode=DebateMode.structured,
+            mode=DebateMode.debate,
             max_turns=3,
             current_turn=1,
             turns=[],
@@ -49,11 +49,14 @@ class DebateRouterLockingTests(unittest.IsolatedAsyncioTestCase):
             opening_statement="Opening statement",
         )
 
-        with patch.object(
-            debate_router.debate_persistence, "get", AsyncMock(return_value=debate)
-        ) as mocked_get, patch.object(
-            debate_router.debate_persistence, "save", AsyncMock()
-        ) as mocked_save:
+        with (
+            patch.object(
+                debate_router.debate_persistence, "get", AsyncMock(return_value=debate)
+            ) as mocked_get,
+            patch.object(
+                debate_router.debate_persistence, "save", AsyncMock()
+            ) as mocked_save,
+        ):
             result = await debate_router.end_debate("debate-2")
 
         self.assertEqual(result["debate"]["status"], "completed")

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from typing import Dict
+from typing import Dict, TypedDict
 import os
 import uuid
 import time
@@ -21,9 +21,16 @@ from ..services.persistence import debate_persistence
 
 router = APIRouter(prefix="/debate", tags=["debate"])
 logger = logging.getLogger(__name__)
+MAX_TURNS_HARD_CAP = 20
+
+
+class DebateLockEntry(TypedDict):
+    lock: asyncio.Lock
+    ref_count: int
+
 
 # Per-debate locks with refcounts to avoid lock-map growth over time.
-_debate_locks: Dict[str, Dict[str, object]] = {}
+_debate_locks: Dict[str, DebateLockEntry] = {}
 _lock_factory = asyncio.Lock()
 
 
@@ -31,10 +38,10 @@ async def _acquire_debate_lock(debate_id: str) -> asyncio.Lock:
     async with _lock_factory:
         entry = _debate_locks.get(debate_id)
         if not entry:
-            entry = {"lock": asyncio.Lock(), "ref_count": 0}
+            entry = DebateLockEntry(lock=asyncio.Lock(), ref_count=0)
             _debate_locks[debate_id] = entry
-        entry["ref_count"] = int(entry["ref_count"]) + 1
-        return entry["lock"]  # type: ignore[return-value]
+        entry["ref_count"] += 1
+        return entry["lock"]
 
 
 async def _release_debate_lock(debate_id: str) -> None:
@@ -42,7 +49,7 @@ async def _release_debate_lock(debate_id: str) -> None:
         entry = _debate_locks.get(debate_id)
         if not entry:
             return
-        next_count = int(entry["ref_count"]) - 1
+        next_count = entry["ref_count"] - 1
         if next_count <= 0:
             _debate_locks.pop(debate_id, None)
         else:
@@ -73,8 +80,9 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
 
     if body.mode.value == "socratic":
         opening_prompt = (
-            "Open this dialogue with a single probing question on this topic. "
-            "Do not make statements or arguments — only ask a question that invites the interlocutor to examine their assumptions."
+            "You are opening a Socratic inquiry. Do not make statements or arguments. "
+            "Ask the ONE question that, if left unanswered, reveals the deepest assumption your interlocutor holds about this topic. "
+            "Stay in character. Maximum 40 words."
         )
     else:
         opening_prompt = "Present your opening statement on this topic."
@@ -92,18 +100,24 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
         )
     except Exception as exc:
         logger.warning("Opening statement generation failed: %s", exc, exc_info=True)
-        opening_statement = (
-            f"I am ready to debate you on the topic: {topic_title}. Let us begin."
-        )
+        if body.mode.value == "socratic":
+            opening_statement = f"What assumption about {topic_title} are you least willing to question?"
+        else:
+            opening_statement = (
+                f"I am ready to debate you on the topic: {topic_title}. Let us begin."
+            )
 
+    # Key claims: skip for Socratic mode — figure opens with a question, not a claim set
     opening_key_claims = []
-    try:
-        opening_key_claims = await grok_service.extract_key_claims(
-            opening_statement, figure_info.name
-        )
-    except Exception as exc:
-        logger.warning("Opening key-claim extraction failed: %s", exc, exc_info=True)
-        pass
+    if body.mode.value != "socratic":
+        try:
+            opening_key_claims = await grok_service.extract_key_claims(
+                opening_statement, figure_info.name
+            )
+        except Exception as exc:
+            logger.warning(
+                "Opening key-claim extraction failed: %s", exc, exc_info=True
+            )
 
     debate_id = str(uuid.uuid4())
     debate = DebateState(
@@ -153,7 +167,11 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
     if debate.status != "active":
         raise HTTPException(status_code=400, detail="Debate is not active")
 
-    if debate.mode == "structured" and debate.current_turn >= debate.max_turns:
+    if (
+        debate.mode == "debate"
+        and 0 < debate.max_turns <= MAX_TURNS_HARD_CAP
+        and debate.current_turn >= debate.max_turns
+    ):
         debate.status = "completed"
         await debate_persistence.save(debate)
         raise HTTPException(status_code=400, detail="Debate has reached maximum turns")
@@ -201,15 +219,17 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
 
     raw_passages = context.get("passages", [])
 
+    # Key claims: only extract for non-Socratic modes (Socratic figure asks questions, not claims)
     key_claims = []
-    try:
-        key_claims = await grok_service.extract_key_claims(
-            figure_response, figure_info.name
-        )
-    except Exception as exc:
-        logger.warning("Turn key-claim extraction failed: %s", exc, exc_info=True)
-        pass
+    if debate.mode.value != "socratic":
+        try:
+            key_claims = await grok_service.extract_key_claims(
+                figure_response, figure_info.name
+            )
+        except Exception as exc:
+            logger.warning("Turn key-claim extraction failed: %s", exc, exc_info=True)
 
+    # Identify the previous figure turn (opening statement or last response)
     previous_figure_response = None
     if debate.current_turn == 0:
         previous_figure_response = getattr(debate, "opening_statement", None) or ""
@@ -221,6 +241,22 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
             "scores": None,
             "scores_error": "Scoring unavailable — response generation failed",
         }
+    elif debate.mode.value == "socratic":
+        # Socratic: score on Clarity / Depth / Consistency / Self-Awareness
+        try:
+            score_result = await grok_service.score_argument_socratic(
+                user_argument=request.argument,
+                prompt_question=previous_figure_response or debate.topic,
+                topic=debate.topic,
+                figure_name=figure_info.name,
+                prior_user_responses=[turn.user_argument for turn in debate.turns],
+            )
+        except Exception as exc:
+            logger.warning("Socratic turn scoring failed: %s", exc, exc_info=True)
+            score_result = {
+                "scores": None,
+                "scores_error": "Scoring unavailable — temporary scoring error",
+            }
     else:
         try:
             score_result = await grok_service.score_argument(
@@ -259,7 +295,14 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
     debate.turns.append(turn)
     debate.current_turn += 1
 
-    if debate.mode == "structured" and debate.current_turn >= debate.max_turns:
+    if (
+        debate.mode == "debate"
+        and 0 < debate.max_turns <= MAX_TURNS_HARD_CAP
+        and debate.current_turn >= debate.max_turns
+    ):
+        debate.status = "completed"
+
+    if debate.current_turn >= MAX_TURNS_HARD_CAP:
         debate.status = "completed"
 
     await debate_persistence.save(debate)

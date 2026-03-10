@@ -21,17 +21,43 @@ function toOptionalScore(val: unknown): number {
 }
 
 function totalTurnScore(scores: {
-  logic_score: unknown;
-  historical_accuracy_score: unknown;
-  rhetoric_score: unknown;
+  logic_score?: unknown;
+  historical_accuracy_score?: unknown;
+  rhetoric_score?: unknown;
   rebuttal_score?: unknown;
+  // Socratic axes
+  clarity_score?: unknown;
+  depth_score?: unknown;
+  consistency_score?: unknown;
+  self_awareness_score?: unknown;
 }): number {
+  // If socratic axes present, use those
+  if (scores.clarity_score !== undefined || scores.depth_score !== undefined) {
+    return (
+      toScore(scores.clarity_score) +
+      toScore(scores.depth_score) +
+      toScore(scores.consistency_score) +
+      toScore(scores.self_awareness_score)
+    );
+  }
   return (
     toScore(scores.logic_score) +
     toScore(scores.historical_accuracy_score) +
     toScore(scores.rhetoric_score) +
     toOptionalScore(scores.rebuttal_score)
   );
+}
+
+function isSocraticScores(
+  scores: StandardDebateScores | SocraticDebateScores | Record<string, unknown>
+): scores is SocraticDebateScores {
+  return "clarity_score" in scores || "depth_score" in scores;
+}
+
+function isStandardScores(
+  scores: StandardDebateScores | SocraticDebateScores | Record<string, unknown>
+): scores is StandardDebateScores {
+  return "logic_score" in scores || "historical_accuracy_score" in scores;
 }
 
 type ScoreTone = "high" | "medium" | "low";
@@ -79,7 +105,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { SocraticDebateScores, StandardDebateScores } from "@/lib/types";
 import { useDebateStore } from "@/stores/debate-store";
+
+// ── Mode display helper ───────────────────────────────────────────────────────
+function modeDisplayName(mode: string): string {
+  if (mode === "socratic") return "Socratic";
+  return "Debate";
+}
+
+// ── Turn/Exchange label ───────────────────────────────────────────────────────
+function turnLabel(mode: string, n: number): string {
+  const prefix = mode === "socratic" ? "Exchange" : "Round";
+  return `${prefix} ${String(n).padStart(2, "0")}`;
+}
 
 export default function DebatePageContent() {
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
@@ -279,10 +318,11 @@ export default function DebatePageContent() {
         <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
           <div className="max-w-xl mx-auto arena-enter">
             <p className="war-label mb-4">ENTERING THE ARENA</p>
+            {/* Figure name in editorial serif, last word italicised */}
             <h2 className="editorial-display text-5xl sm:text-7xl md:text-8xl mb-4">
-              {selectedFigure.name.split(' ').map((word, i) => (
+              {selectedFigure.name.split(' ').map((word, i, arr) => (
                 <span key={i}>
-                  {i === selectedFigure.name.split(' ').length - 1 ? (
+                  {i === arr.length - 1 ? (
                     <span className="headline-emphasis">{word.toUpperCase()}</span>
                   ) : (
                     <>{word.toUpperCase()} </>
@@ -312,11 +352,7 @@ export default function DebatePageContent() {
                       : "text-muted-foreground border-border/60 bg-secondary/40"
                   }`}
                 >
-                  {debateMode === "socratic"
-                    ? "Socratic"
-                    : debateMode === "structured"
-                      ? "Structured"
-                      : "Freeform"}
+                  {modeDisplayName(debateMode)}
                 </span>
               </div>
             </div>
@@ -368,6 +404,11 @@ export default function DebatePageContent() {
 
   // ── Active debate ─────────────────────────────────────────────────────────
   const isCompleted = currentDebate.status === "completed";
+  const isDebateMode = currentDebate.mode === "debate";
+  const isSocratic = currentDebate.mode === "socratic";
+  const isFixedTurns = isDebateMode && currentDebate.max_turns > 0;
+  const isUnlimitedDebate = isDebateMode && currentDebate.max_turns === 0;
+
   const latestTurn = currentDebate.turns[currentDebate.turns.length - 1];
   const maxScore = 40;
   const latestTurnScore = latestTurn?.scores
@@ -380,9 +421,15 @@ export default function DebatePageContent() {
     scoredTurnTotals.length > 0
       ? Math.round(scoredTurnTotals.reduce((sum, n) => sum + n, 0) / scoredTurnTotals.length)
       : latestTurnScore;
-  const outcomeLabel =
+
+  // ── Outcome label: Socratic vs standard ──────────────────────────────────
+  const socraticOutcomeLabel =
+    aggregateScore >= 30 ? "DIALECTICIAN" : aggregateScore >= 20 ? "INTERLOCUTOR" : "NOVICE";
+  const standardOutcomeLabel =
     aggregateScore >= 30 ? "VICTORY" : aggregateScore >= 20 ? "WELL FOUGHT" : "DEFEATED";
+  const outcomeLabel = isSocratic ? socraticOutcomeLabel : standardOutcomeLabel;
   const outcomeToneClass = scoreToneTextClass(getScoreTone(aggregateScore, maxScore));
+
   const roundTrend = currentDebate.turns.map((turn) => {
     if (!turn.scores) {
       return { turnNumber: turn.turn_number, score: null as number | null };
@@ -398,7 +445,7 @@ export default function DebatePageContent() {
     : [];
 
   const tips: string[] = [];
-  if (latestTurn?.scores && !isCompleted) {
+  if (latestTurn?.scores && !isCompleted && !isSocratic && isStandardScores(latestTurn.scores)) {
     const s = latestTurn.scores;
     if (toScore(s.historical_accuracy_score) < 6) {
       tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
@@ -456,29 +503,57 @@ export default function DebatePageContent() {
     }
     if (!turn.scores) return null;
 
-    const logic = toScore(turn.scores.logic_score);
-    const historical = toScore(turn.scores.historical_accuracy_score);
-    const rhetoric = toScore(turn.scores.rhetoric_score);
-    const rebuttal = toOptionalScore(turn.scores.rebuttal_score);
-    const turnTotal = logic + historical + rhetoric + rebuttal;
+    const scores = turn.scores;
+    const useSocratic = isSocratic && isSocraticScores(scores);
 
-    const turnClaimChecks = "claim_checks" in turn.scores
-      ? (turn.scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
+    const scorecardTitle = isSocratic ? "Reflection" : "Scorecard";
+
+    let cells: React.ReactNode;
+    let turnTotal: number;
+
+    if (useSocratic) {
+      const clarity = toScore(scores.clarity_score);
+      const depth = toScore(scores.depth_score);
+      const consistency = toScore(scores.consistency_score);
+      const selfAwareness = toScore(scores.self_awareness_score);
+      turnTotal = clarity + depth + consistency + selfAwareness;
+      cells = (
+        <div className="debate-score-grid border border-border/30">
+          {renderScoreCell("Clarity", clarity, scores.clarity_reason as string | undefined)}
+          {renderScoreCell("Depth", depth, scores.depth_reason as string | undefined)}
+          {renderScoreCell("Consistency", consistency, scores.consistency_reason as string | undefined)}
+          {renderScoreCell("Self-Awareness", selfAwareness, scores.self_awareness_reason as string | undefined)}
+        </div>
+      );
+    } else {
+      const standardScores = isStandardScores(scores) ? scores : null;
+      const logic = toScore(standardScores?.logic_score);
+      const historical = toScore(standardScores?.historical_accuracy_score);
+      const rhetoric = toScore(standardScores?.rhetoric_score);
+      const rebuttal = toOptionalScore(standardScores?.rebuttal_score);
+      turnTotal = logic + historical + rhetoric + rebuttal;
+      cells = (
+        <div className="debate-score-grid border border-border/30">
+          {renderScoreCell("Logic", logic, standardScores?.logic_reason || undefined)}
+          {renderScoreCell("Historical", historical, standardScores?.historical_reason || undefined)}
+          {renderScoreCell("Rhetoric", rhetoric, standardScores?.rhetoric_reason || undefined)}
+          {renderScoreCell("Rebuttal", rebuttal, standardScores?.rebuttal_reason || undefined)}
+        </div>
+      );
+    }
+
+    const turnClaimChecks = "claim_checks" in scores
+      ? (scores as { claim_checks?: Array<{ type: string; note: string }> }).claim_checks
       : undefined;
     const hasTurnClaims = Array.isArray(turnClaimChecks) && turnClaimChecks.length > 0;
     const hasDetails =
-      turn.scores.strengths?.length > 0 ||
-      turn.scores.improvements?.length > 0 ||
+      ((turn.scores as { strengths?: string[] }).strengths?.length ?? 0) > 0 ||
+      ((turn.scores as { improvements?: string[] }).improvements?.length ?? 0) > 0 ||
       hasTurnClaims;
 
     const scorecardDetails = (
       <>
-        <div className="debate-score-grid border border-border/30">
-          {renderScoreCell("Logic", logic, turn.scores.logic_reason || undefined)}
-          {renderScoreCell("Historical", historical, turn.scores.historical_reason || undefined)}
-          {renderScoreCell("Rhetoric", rhetoric, turn.scores.rhetoric_reason || undefined)}
-          {renderScoreCell("Rebuttal", rebuttal, turn.scores.rebuttal_reason || undefined)}
-        </div>
+        {cells}
 
         <div className="border border-border/30 border-t-0 px-4 py-3 flex items-center justify-between">
           <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</span>
@@ -489,27 +564,27 @@ export default function DebatePageContent() {
 
         {hasDetails && (
           <div className="mt-3 space-y-2">
-            {turn.scores.strengths?.length > 0 && (
+            {((turn.scores as { strengths?: string[] }).strengths?.length ?? 0) > 0 && (
               <AccessibleDetails className="group/strengths">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/85 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/strengths:rotate-90 transition-transform inline-block">▶</span>
-                  Strengths ({turn.scores.strengths.length})
+                  Strengths ({(turn.scores as { strengths: string[] }).strengths.length})
                 </summary>
                 <div className="mt-1 p-3 bg-secondary/30 border border-border/50 border-l-2 border-l-accent/60 space-y-1">
-                  {turn.scores.strengths.map((s: string, i: number) => (
+                  {(turn.scores as { strengths: string[] }).strengths.map((s: string, i: number) => (
                     <p key={i} className="text-sm text-foreground/90">+ {s}</p>
                   ))}
                 </div>
               </AccessibleDetails>
             )}
-            {turn.scores.improvements?.length > 0 && (
+            {((turn.scores as { improvements?: string[] }).improvements?.length ?? 0) > 0 && (
               <AccessibleDetails className="group/improvements">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/improvements:rotate-90 transition-transform inline-block">▶</span>
-                  Improvements ({turn.scores.improvements.length})
+                  Improvements ({(turn.scores as { improvements: string[] }).improvements.length})
                 </summary>
                 <div className="mt-1 p-3 bg-secondary/20 border border-border/50 border-l-2 border-l-foreground/40 space-y-1">
-                  {turn.scores.improvements.map((s: string, i: number) => (
+                  {(turn.scores as { improvements: string[] }).improvements.map((s: string, i: number) => (
                     <p key={i} className="text-sm text-muted-foreground">~ {s}</p>
                   ))}
                 </div>
@@ -548,7 +623,7 @@ export default function DebatePageContent() {
         <AccessibleDetails className="mt-4 group/turnscore">
           <summary className="cursor-pointer list-none arena-panel px-4 py-3 flex items-center gap-2">
             <span className="group-open/turnscore:rotate-90 transition-transform inline-block text-muted-foreground">▶</span>
-            <span className="text-xs uppercase tracking-[0.2em] font-bold text-foreground/80">Scorecard</span>
+            <span className="text-xs uppercase tracking-[0.2em] font-bold text-foreground/80">{scorecardTitle}</span>
             <span className="ml-auto text-sm tabular-nums font-semibold">
               {turnTotal}<span className="text-xs font-normal text-muted-foreground">/{maxScore}</span>
             </span>
@@ -561,52 +636,107 @@ export default function DebatePageContent() {
     return (
       <div className="mt-6">
         <div className="debate-scorecard-divider">
-          <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Scorecard</span>
+          <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">{scorecardTitle}</span>
         </div>
         {scorecardDetails}
       </div>
     );
   };
 
-  // ── Helper sections (key claims, tips, scholar sources) ───────────────────
-  const renderHelperSections = () => (
-    <>
-      {scholarPassages.length > 0 && (
-        <div className="mb-4 p-4 border border-border">
-          <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">Sources to Engage With</p>
-          <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
-          <div className="space-y-3 max-h-48 overflow-y-auto">
-            {scholarPassages.map((p, i) => (
-              <div key={i} className="pl-3 border-l-2 border-border">
-                <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
-              </div>
+  // ── Sidebar: key claims + scholar sources ─────────────────────────────────
+  const renderSidebar = () => {
+    if (!hasAnyHelper) return null;
+    return (
+      <aside className="hidden lg:flex flex-col gap-4 w-72 xl:w-80 shrink-0">
+        {hasKeyClaims && (
+          <div className="arena-panel p-4 space-y-2">
+            <p className="war-label">{selectedFigure!.name.toUpperCase()} ARGUES</p>
+            <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 pl-1">
+              {keyClaims!.map((c, i) => (
+                <li key={i} className="leading-relaxed">{c}</li>
+              ))}
+            </ol>
+            <p className="text-xs text-muted-foreground italic">How do you respond to these points?</p>
+          </div>
+        )}
+        {scholarPassages.length > 0 && (
+          <div className="arena-panel p-4 space-y-2">
+            <p className="war-label">SOURCES TO ENGAGE WITH</p>
+            <p className="text-xs text-muted-foreground">Review these passages before responding.</p>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {scholarPassages.map((p, i) => (
+                <div key={i} className="pl-3 border-l-2 border-border">
+                  <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {tips.length > 0 && (
+          <div className="p-3 bg-secondary/25 border border-border/50 border-l-2 border-l-accent/60">
+            {tips.map((t, i) => (
+              <p key={i} className="text-sm text-foreground/85">• {t}</p>
             ))}
           </div>
-        </div>
-      )}
-      {tips.length > 0 && (
-        <div className="mb-4 p-3 bg-secondary/25 border border-border/50 border-l-2 border-l-accent/60">
-          {tips.map((t, i) => (
-            <p key={i} className="text-sm text-foreground/85">• {t}</p>
-          ))}
-        </div>
-      )}
-      {hasKeyClaims && (
-        <div className="p-4 border-l-4 border-accent/50 bg-secondary/20 mb-4">
-          <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">
-            {selectedFigure!.name} argues
-          </p>
-          <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 pl-1">
-            {keyClaims!.map((c, i) => (
-              <li key={i} className="leading-relaxed">{c}</li>
-            ))}
-          </ol>
-          <p className="text-xs text-muted-foreground mt-3 italic">How do you respond to these points?</p>
-        </div>
-      )}
-    </>
-  );
+        )}
+      </aside>
+    );
+  };
+
+  // ── Mobile helper sections ────────────────────────────────────────────────
+  const renderMobileHelpers = () => {
+    if (!hasAnyHelper) return null;
+    return (
+      <div className="lg:hidden">
+        <AccessibleDetails className="group/helpers">
+          <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+            <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
+            Debate aids
+            {tips.length > 0 && (
+              <Badge variant="outline" className="text-xs ml-1 py-0 border-foreground/30 text-foreground/80">Tips</Badge>
+            )}
+          </summary>
+          <div className="mt-3 space-y-3">
+            {scholarPassages.length > 0 && (
+              <div className="mb-4 p-4 border border-border">
+                <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">Sources to Engage With</p>
+                <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {scholarPassages.map((p, i) => (
+                    <div key={i} className="pl-3 border-l-2 border-border">
+                      <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {tips.length > 0 && (
+              <div className="mb-4 p-3 bg-secondary/25 border border-border/50 border-l-2 border-l-accent/60">
+                {tips.map((t, i) => (
+                  <p key={i} className="text-sm text-foreground/85">• {t}</p>
+                ))}
+              </div>
+            )}
+            {hasKeyClaims && (
+              <div className="p-4 border-l-4 border-accent/50 bg-secondary/20 mb-4">
+                <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">
+                  {selectedFigure!.name} argues
+                </p>
+                <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 pl-1">
+                  {keyClaims!.map((c, i) => (
+                    <li key={i} className="leading-relaxed">{c}</li>
+                  ))}
+                </ol>
+                <p className="text-xs text-muted-foreground mt-3 italic">How do you respond to these points?</p>
+              </div>
+            )}
+          </div>
+        </AccessibleDetails>
+      </div>
+    );
+  };
 
   // ── Learning summary ──────────────────────────────────────────────────────
   const renderLearningSummaryContent = () => (
@@ -648,13 +778,20 @@ export default function DebatePageContent() {
           : "text-muted-foreground border-border/60 bg-secondary/40"
       }`}
     >
-      {currentDebate.mode === "socratic"
-        ? "Socratic"
-        : currentDebate.mode === "structured"
-          ? "Structured"
-          : "Freeform"}
+      {modeDisplayName(currentDebate.mode)}
     </span>
   );
+
+  // ── Submit button label ───────────────────────────────────────────────────
+  const submitLabel = isSocratic ? "RESPOND" : "STRIKE";
+  const submitLoadingLabel = "JUDGING...";
+
+  // ── Textarea placeholder ──────────────────────────────────────────────────
+  const textareaPlaceholder = isSocratic
+    ? "Respond to the question..."
+    : structuredInput
+      ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
+      : "Present your argument...";
 
   // ── Main render ───────────────────────────────────────────────────────────
   return (
@@ -674,173 +811,53 @@ export default function DebatePageContent() {
               {selectedFigure.name} / {currentDebate.topic}
             </span>
             <span className="hidden sm:inline-flex">{modePill}</span>
-            {/* Mobile: mode pill only (figure/topic hidden) */}
+            {/* Mobile: mode pill only */}
             <span className="sm:hidden">{modePill}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {/* Turn counter: x/max in structured, just "Turn x" otherwise */}
-            {currentDebate.mode === "structured" ? (
+            {/* Turn counter */}
+            {isFixedTurns ? (
               <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
                 {currentDebate.current_turn}/{currentDebate.max_turns}
               </span>
             ) : currentDebate.current_turn > 0 ? (
               <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
-                Turn {currentDebate.current_turn}
+                {isSocratic ? "Exchange" : "Turn"} {currentDebate.current_turn}
               </span>
             ) : null}
+
+            {/* End button — primary for open-ended debate, outline for fixed debates and Socratic */}
             {!isCompleted && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEndDebate}
-                className="btn-press border-foreground/30 text-xs sm:text-sm"
-              >
-                END
-              </Button>
+              isUnlimitedDebate ? (
+                <Button
+                  size="sm"
+                  onClick={handleEndDebate}
+                  className="btn-press bg-foreground text-background hover:bg-foreground/90 font-bold text-xs sm:text-sm"
+                >
+                  END DEBATE
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEndDebate}
+                  className="btn-press border-foreground/30 text-xs sm:text-sm"
+                >
+                  END
+                </Button>
+              )
             )}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <div className="max-w-3xl mx-auto">
-
-          {/* Scroll area for transcript */}
-          <ScrollArea className="h-[50vh] sm:h-[60vh] mb-6">
-            <div ref={transcriptContentRef} className="space-y-0 pr-2">
-
-              {/* Opening statement */}
-              {currentDebate.turns.length === 0 && openingStatement && (
-                <div className="mb-6">
-                  <div className="debate-round-divider">
-                    <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">Opening Statement</span>
-                  </div>
-
-                  <div className="debate-figure-block p-4 sm:p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs uppercase tracking-[0.2em] font-bold">
-                        {selectedFigure.name.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
-                      {openingStatement}
-                    </p>
-                    {openingPassages.length > 0 && (
-                      <AccessibleDetails className="mt-4 group">
-                        <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
-                          <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-                          View sources used
-                        </summary>
-                        <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
-                          {openingPassages.map((p, i) => (
-                            <div key={i}>
-                              <p className="text-xs font-medium text-background/70">{p.title}</p>
-                              <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </AccessibleDetails>
-                    )}
-                  </div>
-
-                  <div className="mt-6 text-center">
-                    <div className="arena-divider">
-                      <Swords size={12} className="text-muted-foreground/30" />
-                    </div>
-                    <p className="war-label">Your turn to respond</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty state */}
-              {currentDebate.turns.length === 0 && !openingStatement && (
-                <div className="py-20 text-center arena-enter">
-                  <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
-                  <p className="editorial-display text-4xl sm:text-5xl mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
-                  <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
-                </div>
-              )}
-
-              {/* Turns */}
-              {currentDebate.turns.map((turn) => {
-                const isLatestTurn = turn.turn_number === latestTurn?.turn_number;
-                return (
-                <div key={turn.turn_number}>
-                  {/* Round divider */}
-                  <div className="debate-round-divider">
-                    <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">
-                      Round {String(turn.turn_number).padStart(2, "0")}
-                    </span>
-                  </div>
-
-                  {/* Your argument */}
-                  <div className="debate-you-block mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className="font-mono text-xs border-foreground/30">YOU</Badge>
-                    </div>
-                    <div className="bg-secondary/40 border border-border/40 p-4">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{turn.user_argument}</p>
-                    </div>
-                  </div>
-
-                  {/* Figure response */}
-                  <div className="mb-2">
-                    <div className="debate-figure-block p-4 sm:p-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs uppercase tracking-[0.2em] font-bold text-background">
-                          {selectedFigure.name.toUpperCase()}
-                        </span>
-                        {turn.sources_used.length > 0 && (
-                          <span className="text-xs text-background/50">
-                            {turn.sources_used.join(", ")}
-                          </span>
-                        )}
-                      </div>
-                      <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
-                        {turn.figure_response}
-                      </p>
-                      {turn.passages && turn.passages.length > 0 && (
-                        <AccessibleDetails className="mt-4 group">
-                          <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
-                            <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-                            View sources used
-                          </summary>
-                          <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
-                            {turn.passages.map((p, i) => (
-                              <div key={i}>
-                                <p className="text-xs font-medium text-background/70">{p.title}</p>
-                                <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </AccessibleDetails>
-                      )}
-                    </div>
-
-                    {/* Inline scorecard */}
-                    {renderInlineScorecard(turn, isLatestTurn)}
-                  </div>
-                </div>
-              );
-              })}
-
-              {/* Loading indicator */}
-              {isLoading && (
-                <div className="flex items-center gap-3 py-8 text-muted-foreground arena-enter">
-                  <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm uppercase tracking-[0.2em] font-bold">
-                    {selectedFigure.name.toUpperCase()} is formulating a response...
-                  </span>
-                </div>
-              )}
-
-            </div>
-          </ScrollArea>
-
-          {/* ── Completed banner ─────────────────────────────────────────── */}
-          {isCompleted ? (
-            <div className="arena-panel p-8 sm:p-12 text-center arena-enter">
-              <Swords size={28} className="mx-auto mb-3 text-foreground/25" />
+        {/* ── Completed / Results screen ──────────────────────────────────── */}
+        {isCompleted ? (
+          <div className="max-w-3xl mx-auto">
+            <div className="arena-panel p-8 sm:p-12 text-center arena-enter" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", paddingTop: "4rem" }}>
+              <Swords size={28} className="mb-3 text-foreground/25" />
+              <p className="war-label mb-2">{isSocratic ? "REFLECTION" : "RESULT"}</p>
               <p className={`war-label mb-4 ${outcomeToneClass}`}>
                 {outcomeLabel}
               </p>
@@ -850,13 +867,15 @@ export default function DebatePageContent() {
               <p className="text-sm text-muted-foreground mb-8 uppercase tracking-[0.15em]">of {maxScore} possible</p>
 
               {roundTrend.length > 0 && (
-                <div className="max-w-lg mx-auto mb-8 text-left arena-panel px-4 py-4 sm:px-5">
-                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground/80">Round Trend</p>
+                <div className="max-w-lg w-full mb-8 text-left arena-panel px-4 py-4 sm:px-5">
+                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground/80">
+                    {isSocratic ? "Exchange Trend" : "Round Trend"}
+                  </p>
                   <div className="space-y-2">
                     {roundTrend.map((entry) => (
                       <div key={entry.turnNumber} className="flex items-center gap-3">
-                        <span className="text-xs uppercase tracking-[0.15em] w-14 text-muted-foreground">
-                          R{String(entry.turnNumber).padStart(2, "0")}
+                        <span className="text-xs uppercase tracking-[0.15em] w-16 text-muted-foreground">
+                          {isSocratic ? "Ex" : "R"}{String(entry.turnNumber).padStart(2, "0")}
                         </span>
                         <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
                           {entry.score !== null && (
@@ -876,7 +895,7 @@ export default function DebatePageContent() {
               )}
 
               {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
-                <div className="text-left max-w-lg mx-auto mb-8 arena-panel px-4 py-4 sm:px-5">
+                <div className="text-left max-w-lg w-full mb-8 arena-panel px-4 py-4 sm:px-5">
                   <AccessibleDetails className="sm:hidden group/learn">
                     <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-foreground list-none flex items-center gap-1.5 mb-2">
                       <span className="group-open/learn:rotate-90 transition-transform inline-block">▶</span>
@@ -910,114 +929,261 @@ export default function DebatePageContent() {
                 </Button>
               </div>
             </div>
-          ) : (
-            // ── Input area ────────────────────────────────────────────────
-            <div className="space-y-4">
-              {latestScoredTurn?.scores && latestScoredTurnTotal !== null && (
-                <div className="arena-panel px-4 py-3 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="war-label mb-1">
-                      Latest score · Round {String(latestScoredTurn.turn_number).padStart(2, "0")}
-                    </p>
-                    <p className="text-xs sm:text-sm text-foreground/80">
-                      Logic {toScore(latestScoredTurn.scores.logic_score)} · Historical {toScore(latestScoredTurn.scores.historical_accuracy_score)} · Rhetoric {toScore(latestScoredTurn.scores.rhetoric_score)} · Rebuttal {toOptionalScore(latestScoredTurn.scores.rebuttal_score)}
-                    </p>
-                  </div>
-                  <p className={`text-3xl font-bold tabular-nums shrink-0 ${latestScoreToneClass}`}>
-                    {latestScoredTurnTotal}
-                    <span className="text-xs font-normal text-muted-foreground">/{maxScore}</span>
-                  </p>
-                </div>
-              )}
+          </div>
+        ) : (
+          // ── Active debate: two-column layout ──────────────────────────────
+          <div className="flex gap-8 items-start max-w-6xl mx-auto">
 
-              {/* Helpers: desktop expanded, mobile collapsible */}
-              {hasAnyHelper && (
-                <>
-                  <div className="lg:hidden">
-                    <AccessibleDetails className="group/helpers">
-                      <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
-                        <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
-                        Debate aids
-                        {tips.length > 0 && (
-                          <Badge variant="outline" className="text-xs ml-1 py-0 border-foreground/30 text-foreground/80">Tips</Badge>
+            {/* Left: transcript + input */}
+            <div className="flex-1 min-w-0">
+              {/* Scroll area for transcript */}
+              <ScrollArea className="h-[50vh] sm:h-[60vh] mb-6">
+                <div ref={transcriptContentRef} className="space-y-0 pr-2">
+
+                  {/* Opening statement (figure opens first in both modes) */}
+                  {currentDebate.turns.length === 0 && openingStatement && (
+                    <div className="mb-6">
+                      <div className="debate-round-divider">
+                        <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">
+                          {isSocratic ? "Opening Question" : "Opening Statement"}
+                        </span>
+                      </div>
+
+                      <div className="debate-figure-block p-4 sm:p-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs uppercase tracking-[0.2em] font-bold">
+                            {selectedFigure.name.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
+                          {openingStatement}
+                        </p>
+                        {openingPassages.length > 0 && (
+                          <AccessibleDetails className="mt-4 group">
+                            <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
+                              <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                              View sources used
+                            </summary>
+                            <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
+                              {openingPassages.map((p, i) => (
+                                <div key={i}>
+                                  <p className="text-xs font-medium text-background/70">{p.title}</p>
+                                  <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </AccessibleDetails>
                         )}
-                      </summary>
-                      <div className="mt-3 space-y-3">{renderHelperSections()}</div>
-                    </AccessibleDetails>
-                  </div>
-                  <div className="hidden lg:block space-y-3">{renderHelperSections()}</div>
-                </>
-              )}
+                      </div>
 
-              {/* Argument structure helper */}
-              <AccessibleDetails className="group/arghelper">
-                <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
-                  <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
-                  Argument structure helper
-                </summary>
-                <div className="mt-2 p-3 bg-secondary/30 border border-border text-sm space-y-1">
-                  <p className="text-muted-foreground">
-                    Claim: Your main thesis. Evidence: Cite or paraphrase a passage. Warrant: Why this supports your claim.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setStructuredInput(!structuredInput)}
-                    className="text-xs text-foreground/80 hover:underline underline-offset-2"
-                  >
-                    {structuredInput ? "Use freeform placeholder" : "Use structured placeholder"}
-                  </button>
-                </div>
-              </AccessibleDetails>
-
-              <div className="relative">
-                <Textarea
-                  value={argument}
-                  onChange={(e) => setArgument(e.target.value)}
-                  placeholder={
-                    structuredInput
-                      ? "Claim: [Your main thesis]\nEvidence: [Cite or paraphrase a passage]\nWarrant: [Why this supports your claim]"
-                      : "Present your argument..."
-                  }
-                  className="min-h-32 sm:min-h-40 bg-card border-2 ink-border focus:border-foreground resize-none text-sm sm:text-base"
-                  disabled={isLoading}
-                />
-                <span className="absolute bottom-2 right-3 text-xs text-muted-foreground/40 tabular-nums">
-                  {argument.length > 0 ? `${argument.length} chars` : ''}
-                </span>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleSubmitArgument}
-                  disabled={isLoading || !argument.trim()}
-                  className="flex-1 text-sm sm:text-base py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                      JUDGING...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Swords size={16} />
-                      STRIKE
-                    </span>
+                      <div className="mt-6 text-center">
+                        <div className="arena-divider">
+                          <Swords size={12} className="text-muted-foreground/30" />
+                        </div>
+                        <p className="war-label">
+                          {isSocratic ? "Respond to the question" : "Your turn to respond"}
+                        </p>
+                      </div>
+                    </div>
                   )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setArgument("")}
-                  disabled={isLoading}
-                  className="btn-press border-foreground/30"
-                >
-                  CLEAR
-                </Button>
-              </div>
 
-              {error && <p className="text-destructive text-sm">{error}</p>}
+                  {/* Empty state fallback when no opening statement is available */}
+                  {currentDebate.turns.length === 0 && !openingStatement && (
+                    <div className="py-20 text-center arena-enter">
+                      <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
+                      <p className="editorial-display text-4xl sm:text-5xl mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
+                      <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
+                    </div>
+                  )}
+
+                  {/* Turns */}
+                  {currentDebate.turns.map((turn) => {
+                    const isLatestTurn = turn.turn_number === latestTurn?.turn_number;
+                    return (
+                    <div key={turn.turn_number}>
+                      {/* Round/Exchange divider */}
+                      <div className="debate-round-divider">
+                        <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">
+                          {turnLabel(currentDebate.mode, turn.turn_number)}
+                        </span>
+                      </div>
+
+                      {/* Your argument */}
+                      <div className="debate-you-block mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="font-mono text-xs border-foreground/30">YOU</Badge>
+                        </div>
+                        <div className="bg-secondary/40 border border-border/40 p-4">
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed">{turn.user_argument}</p>
+                        </div>
+                      </div>
+
+                      {/* Figure response */}
+                      <div className="mb-2">
+                        <div className="debate-figure-block p-4 sm:p-6">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs uppercase tracking-[0.2em] font-bold text-background">
+                              {selectedFigure.name.toUpperCase()}
+                            </span>
+                            {turn.sources_used.length > 0 && (
+                              <span className="text-xs text-background/50">
+                                {turn.sources_used.join(", ")}
+                              </span>
+                            )}
+                          </div>
+                          <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
+                            {turn.figure_response}
+                          </p>
+                          {turn.passages && turn.passages.length > 0 && (
+                            <AccessibleDetails className="mt-4 group">
+                              <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
+                                <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+                                View sources used
+                              </summary>
+                              <div className="mt-2 space-y-2 pl-3 border-l-2 border-background/20">
+                                {turn.passages.map((p, i) => (
+                                  <div key={i}>
+                                    <p className="text-xs font-medium text-background/70">{p.title}</p>
+                                    <p className="text-sm text-background/60 mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </AccessibleDetails>
+                          )}
+                        </div>
+
+                        {/* Inline scorecard */}
+                        {renderInlineScorecard(turn, isLatestTurn)}
+                      </div>
+                    </div>
+                  );
+                  })}
+
+                  {/* Loading indicator */}
+                  {isLoading && (
+                    <div className="flex items-center gap-3 py-8 text-muted-foreground arena-enter">
+                      <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm uppercase tracking-[0.2em] font-bold">
+                        {selectedFigure.name.toUpperCase()} is {isSocratic ? "formulating a question" : "formulating a response"}...
+                      </span>
+                    </div>
+                  )}
+
+                </div>
+              </ScrollArea>
+
+              {/* ── Input area ─────────────────────────────────────────────── */}
+              <div className="space-y-4">
+                {latestScoredTurn?.scores && latestScoredTurnTotal !== null && (
+                  <div className="arena-panel px-4 py-3 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="war-label mb-1">
+                        Latest score · {turnLabel(currentDebate.mode, latestScoredTurn.turn_number)}
+                      </p>
+                      {isSocratic ? (
+                        <p className="text-xs sm:text-sm text-foreground/80">
+                          {(() => {
+                            const s = latestScoredTurn.scores;
+                            if (isSocraticScores(s)) {
+                              return `Clarity ${toScore(s.clarity_score)} · Depth ${toScore(s.depth_score)} · Consistency ${toScore(s.consistency_score)} · Self-Awareness ${toScore(s.self_awareness_score)}`;
+                            }
+                            if (isStandardScores(s)) {
+                              return `Logic ${toScore(s.logic_score)} · Historical ${toScore(s.historical_accuracy_score)} · Rhetoric ${toScore(s.rhetoric_score)}`;
+                            }
+                            return "Reflection available";
+                          })()}
+                        </p>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-foreground/80">
+                          {(() => {
+                            const s = latestScoredTurn.scores;
+                            if (!isStandardScores(s)) return "Score details unavailable";
+                            return `Logic ${toScore(s.logic_score)} · Historical ${toScore(s.historical_accuracy_score)} · Rhetoric ${toScore(s.rhetoric_score)} · Rebuttal ${toOptionalScore(s.rebuttal_score)}`;
+                          })()}
+                        </p>
+                      )}
+                    </div>
+                    <p className={`text-3xl font-bold tabular-nums shrink-0 ${latestScoreToneClass}`}>
+                      {latestScoredTurnTotal}
+                      <span className="text-xs font-normal text-muted-foreground">/{maxScore}</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Mobile helpers */}
+                {renderMobileHelpers()}
+
+                {/* Argument structure helper — only for non-Socratic */}
+                {!isSocratic && (
+                  <AccessibleDetails className="group/arghelper">
+                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+                      <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
+                      Argument structure helper
+                    </summary>
+                    <div className="mt-2 p-3 bg-secondary/30 border border-border text-sm space-y-1">
+                      <p className="text-muted-foreground">
+                        Claim: Your main thesis. Evidence: Cite or paraphrase a passage. Warrant: Why this supports your claim.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setStructuredInput(!structuredInput)}
+                        className="text-xs text-foreground/80 hover:underline underline-offset-2"
+                      >
+                        {structuredInput ? "Use freeform placeholder" : "Use structured placeholder"}
+                      </button>
+                    </div>
+                  </AccessibleDetails>
+                )}
+
+                <div className="relative">
+                  <Textarea
+                    value={argument}
+                    onChange={(e) => setArgument(e.target.value)}
+                    placeholder={textareaPlaceholder}
+                    className="min-h-32 sm:min-h-40 bg-card border-2 ink-border focus:border-foreground resize-none text-sm sm:text-base"
+                    disabled={isLoading}
+                  />
+                  <span className="absolute bottom-2 right-3 text-xs text-muted-foreground/40 tabular-nums">
+                    {argument.length > 0 ? `${argument.length} chars` : ''}
+                  </span>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleSubmitArgument}
+                    disabled={isLoading || !argument.trim()}
+                    className="flex-1 text-sm sm:text-base py-5 sm:py-6 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                        {submitLoadingLabel}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Swords size={16} />
+                        {submitLabel}
+                      </span>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setArgument("")}
+                    disabled={isLoading}
+                    className="btn-press border-foreground/30"
+                  >
+                    CLEAR
+                  </Button>
+                </div>
+
+                {error && <p className="text-destructive text-sm">{error}</p>}
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Right: sidebar (desktop only) */}
+            {renderSidebar()}
+          </div>
+        )}
       </main>
     </div>
   );

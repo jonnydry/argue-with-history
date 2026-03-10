@@ -31,7 +31,7 @@ export type Figure =
   | "james"
   | "tocqueville"
   | "russell";
-export type DebateMode = "structured" | "freeform" | "socratic";
+export type DebateMode = "debate" | "socratic";
 
 export interface DebateTopic {
   id: string;
@@ -55,6 +55,35 @@ export interface Passage {
   text_excerpt: string;
 }
 
+export interface StandardDebateScores {
+  logic_score: number;
+  historical_accuracy_score: number;
+  rhetoric_score: number;
+  rebuttal_score?: number;
+  logic_reason?: string;
+  historical_reason?: string;
+  rhetoric_reason?: string;
+  rebuttal_reason?: string;
+  strengths: string[];
+  improvements: string[];
+  source_used_well: boolean;
+  claim_checks?: Array<{ type: string; note: string }>;
+}
+
+export interface SocraticDebateScores {
+  clarity_score: number;
+  depth_score: number;
+  consistency_score: number;
+  self_awareness_score: number;
+  clarity_reason?: string;
+  depth_reason?: string;
+  consistency_reason?: string;
+  self_awareness_reason?: string;
+  strengths: string[];
+  improvements: string[];
+  source_used_well: boolean;
+}
+
 export interface DebateTurn {
   turn_number: number;
   user_argument: string;
@@ -63,19 +92,7 @@ export interface DebateTurn {
   key_claims?: string[];
   passages?: Passage[];
   scores_error?: string;
-  scores: {
-    logic_score: number;
-    historical_accuracy_score: number;
-    rhetoric_score: number;
-    rebuttal_score?: number;
-    logic_reason?: string;
-    historical_reason?: string;
-    rhetoric_reason?: string;
-    rebuttal_reason?: string;
-    strengths: string[];
-    improvements: string[];
-    source_used_well: boolean;
-  } | null;
+  scores: StandardDebateScores | SocraticDebateScores | null;
 }
 
 export interface DebateState {

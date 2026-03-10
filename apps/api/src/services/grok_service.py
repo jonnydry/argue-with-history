@@ -8,6 +8,74 @@ from ..core.config import get_settings
 logger = logging.getLogger(__name__)
 
 # Inlined JSON schema for xAI structured output (no $ref, no minItems/maxItems/minLength/maxLength)
+
+# ── Socratic scoring schema (Clarity / Depth / Consistency / Self-Awareness) ──
+_SOCRATIC_SCORE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "clarity_score": {
+            "type": "integer",
+            "description": "Clarity of expression score 1-10",
+        },
+        "depth_score": {
+            "type": "integer",
+            "description": "Depth of reasoning score 1-10",
+        },
+        "consistency_score": {
+            "type": "integer",
+            "description": "Logical consistency score 1-10",
+        },
+        "self_awareness_score": {
+            "type": "integer",
+            "description": "Self-awareness / acknowledgment of assumptions score 1-10",
+        },
+        "clarity_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the clarity score",
+        },
+        "depth_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the depth score",
+        },
+        "consistency_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the consistency score",
+        },
+        "self_awareness_reason": {
+            "type": "string",
+            "description": "1-2 sentences explaining the self-awareness score",
+        },
+        "strengths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "What the user did well in this exchange",
+        },
+        "improvements": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Suggestions for improvement",
+        },
+        "source_used_well": {
+            "type": "boolean",
+            "description": "Whether the user engaged thoughtfully with the question",
+        },
+    },
+    "required": [
+        "clarity_score",
+        "depth_score",
+        "consistency_score",
+        "self_awareness_score",
+        "clarity_reason",
+        "depth_reason",
+        "consistency_reason",
+        "self_awareness_reason",
+        "strengths",
+        "improvements",
+        "source_used_well",
+    ],
+    "additionalProperties": False,
+}
+
 _SCORE_RESPONSE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -135,7 +203,7 @@ class GrokService:
         debate_history: list[dict],
         user_argument: str,
         figure_name: str,
-        mode: str = "structured",
+        mode: str = "debate",
         temperature: float = 0.8,
         max_tokens: int = 600,
     ) -> str:
@@ -158,13 +226,11 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
 
         if mode == "socratic":
             structure_rule = (
-                "SOCRATIC MODE — You are the questioner, NOT a lecturer. "
-                "Read what your interlocutor said and identify ONE assumption or claim worth examining. "
-                "You may open with a single brief acknowledgment (under 15 words), then ask 1-3 probing questions "
-                "that expose implications, contradictions, or hidden assumptions. "
-                "Do NOT explain your philosophy, quote your works, or make counter-arguments. "
-                "Let your questions do the teaching. "
-                "Keep responses concise — under 100 words. "
+                "SOCRATIC MODE — You are not a debater; you are an examiner of thought. "
+                "You have read what this person wrote. Find the ONE assumption their entire answer rests on. "
+                "Acknowledge in ten words or fewer that you heard them. Then ask exactly ONE precise question that forces them to examine that assumption — not a gentle question, but one they cannot easily dodge. "
+                "If their answer is vague, press on the vagueness. If it is confident, find the internal contradiction. "
+                "Never explain, never lecture, never answer for them. Stay entirely in character. Maximum 80 words. "
                 "IGNORE the CITATION RULE above — do not cite or quote passages in this mode."
             )
         else:
@@ -180,10 +246,11 @@ CITATION RULE: When referencing your works, quote or paraphrase specific passage
 
         if mode == "socratic":
             user_content = (
-                f"Your interlocutor says:\n\n{user_argument}\n\n"
-                f"Respond as {figure_name} with QUESTIONS ONLY. "
-                "Identify their weakest assumption and ask 1-3 questions that expose it. "
-                "Do not argue or explain — just ask. Stay in character."
+                "Your interlocutor has responded. Read their answer. "
+                "Identify the single assumption it depends on most. "
+                f"Respond as {figure_name} with one incisive question — the question that, if they cannot answer it, unravels their position. "
+                "Do not explain why you are asking it. Stay in character.\n\n"
+                f"Their answer:\n\n{user_argument}"
             )
         else:
             user_content = (
@@ -358,6 +425,103 @@ Respond with valid JSON matching the required schema."""
                 "historical_accuracy_score",
                 "rhetoric_score",
                 "rebuttal_score",
+            ):
+                if key in parsed:
+                    parsed[key] = _coerce_score(parsed[key])
+
+        return parsed
+
+    async def score_argument_socratic(
+        self,
+        user_argument: str,
+        prompt_question: str,
+        topic: str,
+        figure_name: str,
+        prior_user_responses: list[str] | None = None,
+    ) -> dict:
+        """Score a Socratic exchange on Clarity, Depth, Consistency, and Self-Awareness."""
+
+        prior_responses_block = ""
+        if prior_user_responses:
+            response_lines = "\n".join(
+                f"- Earlier response {i + 1}: {response}"
+                for i, response in enumerate(prior_user_responses[-3:])
+            )
+            prior_responses_block = f"""
+
+EARLIER RESPONSES FROM THE USER:
+{response_lines}
+"""
+
+        scoring_prompt = f"""You are evaluating a Socratic dialogue. The user is responding to a probing question from {figure_name}.
+
+TOPIC: {topic}
+
+QUESTION THE USER IS RESPONDING TO:
+{prompt_question}{prior_responses_block}
+
+USER'S RESPONSE:
+{user_argument}
+
+Evaluate the user's response on four axes (1-10 each):
+
+1. CLARITY — Is their position stated plainly and unambiguously?
+2. DEPTH — Do they engage with the underlying assumption or merely restate their view?
+3. CONSISTENCY — Does their response cohere with what they have said before, or do they contradict earlier responses?
+4. SELF-AWARENESS — Do they acknowledge their own assumptions, biases, or the limits of their view?
+
+Be educational and encouraging. Award partial credit for honest attempts.
+Note 1-2 strengths and 1-2 concrete improvements.
+
+Respond with valid JSON matching the required schema."""
+
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "socratic_score_result",
+                "strict": True,
+                "schema": _SOCRATIC_SCORE_SCHEMA,
+            },
+        }
+
+        response = await self.client.post(
+            "/chat/completions",
+            json={
+                "model": "grok-4-1-fast-non-reasoning",
+                "messages": [{"role": "user", "content": scoring_prompt}],
+                "temperature": 0.3,
+                "max_tokens": 650,
+                "response_format": response_format,
+            },
+        )
+
+        response.raise_for_status()
+        data = response.json()
+        choices = data.get("choices") or []
+        if not choices:
+            raise ValueError("No choices in Grok response")
+        content = choices[0].get("message", {}).get("content")
+        if content is None:
+            raise ValueError("Empty message content from Grok")
+
+        try:
+            parsed = json.loads(content)
+        except json.JSONDecodeError as e:
+            logger.warning(
+                "Grok Socratic scoring JSON parse failed: %s", e, exc_info=True
+            )
+            return {
+                "scores": None,
+                "scores_error": "Scoring unavailable — response format invalid",
+            }
+
+        # Sanitise integer fields
+        if isinstance(parsed, dict):
+            for key in (
+                "clarity_score",
+                "depth_score",
+                "consistency_score",
+                "self_awareness_score",
             ):
                 if key in parsed:
                     parsed[key] = _coerce_score(parsed[key])
