@@ -120,6 +120,19 @@ function turnLabel(mode: string, n: number): string {
   return `${prefix} ${String(n).padStart(2, "0")}`;
 }
 
+function compactText(value: string | null | undefined, maxLength = 180): string | null {
+  if (!value) return null;
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (!normalized) return null;
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
 export default function DebatePageContent() {
   const selectedFigure = useDebateStore((s) => s.selectedFigure);
   const selectedTopic = useDebateStore((s) => s.selectedTopic);
@@ -138,6 +151,7 @@ export default function DebatePageContent() {
   const setStructuredInput = useDebateStore((s) => s.setStructuredInput);
   const scholarMode = useDebateStore((s) => s.scholarMode);
   const debateMode = useDebateStore((s) => s.debateMode);
+  const maxTurns = useDebateStore((s) => s.maxTurns);
   const startDebate = useDebateStore((s) => s.startDebate);
   const submitArgument = useDebateStore((s) => s.submitArgument);
   const endDebate = useDebateStore((s) => s.endDebate);
@@ -299,6 +313,9 @@ export default function DebatePageContent() {
 
   // ── Pre-debate / READY screen ─────────────────────────────────────────────
   if (!currentDebate) {
+    const readyTurnsLabel =
+      debateMode === "debate" ? (maxTurns > 0 ? String(maxTurns) : "Open") : "Open";
+
     return (
       <div className="min-h-screen bg-background text-foreground noise-bg">
         <header className="border-b border-border">
@@ -316,86 +333,102 @@ export default function DebatePageContent() {
         </header>
 
         <main className="container mx-auto px-4 sm:px-6 py-12 sm:py-24">
-          <div className="max-w-xl mx-auto arena-enter">
-            <p className="war-label mb-4">ENTERING THE ARENA</p>
-            {/* Figure name in editorial serif, last word italicised */}
-            <h2 className="editorial-display text-5xl sm:text-7xl md:text-8xl mb-4">
-              {selectedFigure.name.split(' ').map((word, i, arr) => (
-                <span key={i}>
-                  {i === arr.length - 1 ? (
-                    <span className="headline-emphasis">{word.toUpperCase()}</span>
-                  ) : (
-                    <>{word.toUpperCase()} </>
-                  )}
-                </span>
-              ))}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-8 sm:mb-12">
-              {selectedFigure.era} · {selectedFigure.traits?.slice(0, 3).join(' · ')}
-            </p>
+          <div className="max-w-6xl mx-auto arena-enter lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16 lg:items-center">
+            <div>
+              <p className="war-label mb-4">ENTERING THE ARENA</p>
+              <h2 className="editorial-display text-5xl sm:text-7xl md:text-8xl mb-4 max-w-4xl">
+                {selectedFigure.name.split(" ").map((word, i, arr) => (
+                  <span key={i}>
+                    {i === arr.length - 1 ? (
+                      <span className="headline-emphasis">{word.toUpperCase()}</span>
+                    ) : (
+                      <>{word.toUpperCase()} </>
+                    )}
+                  </span>
+                ))}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-10 sm:mb-12">
+                {selectedFigure.era} · {selectedFigure.traits?.slice(0, 3).join(" · ")}
+              </p>
 
-            <div className="arena-divider mb-6">
-              <Swords size={14} className="text-muted-foreground/40" />
+              <div className="arena-divider mb-8">
+                <Swords size={14} className="text-muted-foreground/40" />
+              </div>
+
+              <div className="mb-10 space-y-6 max-w-2xl">
+                <div>
+                  <p className="war-label mb-2">TOPIC OF CONTENTION</p>
+                  <p className="editorial-section-title text-2xl sm:text-3xl leading-tight">
+                    {selectedTopic.title}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <p className="war-label">MODE</p>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-[0.12em] border ${
+                      debateMode === "socratic"
+                        ? "text-accent border-accent/40 bg-accent/10"
+                        : "text-muted-foreground border-border/60 bg-secondary/40"
+                    }`}
+                  >
+                    {modeDisplayName(debateMode)}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleStartDebate}
+                disabled={isLoading}
+                className="w-full sm:w-auto min-w-[320px] text-lg sm:text-xl py-7 px-10 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
+                    PREPARING ARENA...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-3">
+                    <Swords size={20} />
+                    ENTER THE ARENA
+                  </span>
+                )}
+              </Button>
+              {error && <p className="text-destructive text-sm mt-3">{error}</p>}
             </div>
 
-            <div className="mb-6 space-y-4">
-              <div>
-                <p className="war-label mb-2">TOPIC OF CONTENTION</p>
-                <p className="editorial-section-title text-xl sm:text-2xl">{selectedTopic.title}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <p className="war-label">MODE</p>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-[0.12em] border ${
-                    debateMode === "socratic"
-                      ? "text-accent border-accent/40 bg-accent/10"
-                      : "text-muted-foreground border-border/60 bg-secondary/40"
-                  }`}
-                >
-                  {modeDisplayName(debateMode)}
-                </span>
-              </div>
-            </div>
-
-            {effectivePrimer && (
-              <div className="border border-border p-4 sm:p-6 mb-6 space-y-3">
-                <p className="text-xs uppercase tracking-[0.2em] font-bold">Position Primer</p>
-                {effectivePrimer.position_summary && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">{effectivePrimer.position_summary}</p>
-                )}
-                {effectivePrimer.sample_quote && (
-                  <blockquote className="text-sm border-l-2 border-foreground/30 pl-3 italic text-muted-foreground">
-                    &ldquo;{effectivePrimer.sample_quote}&rdquo;
-                  </blockquote>
-                )}
-                {effectivePrimer.user_task && (
-                  <p className="text-xs text-muted-foreground">{effectivePrimer.user_task}</p>
-                )}
-              </div>
-            )}
-
-            <div className="arena-divider mb-6">
-              <Swords size={14} className="text-muted-foreground/40" />
-            </div>
-
-            <Button
-              onClick={handleStartDebate}
-              disabled={isLoading}
-              className="w-full text-lg sm:text-xl py-7 h-auto bg-foreground text-background hover:bg-foreground/90 btn-press font-bold tracking-wider"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
-                  PREPARING ARENA...
-                </span>
-              ) : (
-                <span className="flex items-center gap-3">
-                  <Swords size={20} />
-                  ENTER THE ARENA
-                </span>
+            <aside className="arena-panel mt-10 lg:mt-0 p-6 sm:p-8 space-y-5">
+              <p className="text-xs uppercase tracking-[0.2em] font-bold text-foreground/80">
+                Position Primer
+              </p>
+              {effectivePrimer?.position_summary && (
+                <p className="text-sm sm:text-base text-muted-foreground leading-8">
+                  {effectivePrimer.position_summary}
+                </p>
               )}
-            </Button>
-            {error && <p className="text-destructive text-sm mt-3">{error}</p>}
+              {effectivePrimer?.sample_quote && (
+                <blockquote className="text-base sm:text-lg border-l-2 border-foreground/30 pl-4 text-foreground/80 leading-8">
+                  &ldquo;{effectivePrimer.sample_quote}&rdquo;
+                </blockquote>
+              )}
+              {effectivePrimer?.user_task && (
+                <p className="text-sm text-muted-foreground leading-7">{effectivePrimer.user_task}</p>
+              )}
+
+              <div className="border-t border-border/80 pt-5 grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                    Turns
+                  </p>
+                  <p className="text-2xl sm:text-3xl tracking-tight">{readyTurnsLabel}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                    Mode
+                  </p>
+                  <p className="text-2xl sm:text-3xl tracking-tight">{modeDisplayName(debateMode)}</p>
+                </div>
+              </div>
+            </aside>
           </div>
         </main>
       </div>
@@ -438,11 +471,21 @@ export default function DebatePageContent() {
     return { turnNumber: turn.turn_number, score };
   });
 
+  const turnSummaries = currentDebate.turns.map((turn) => ({
+    turnNumber: turn.turn_number,
+    label: turnLabel(currentDebate.mode, turn.turn_number),
+    score: turn.scores ? totalTurnScore(turn.scores) : null,
+  }));
+
   const scholarPassages = scholarMode
     ? (currentDebate.turns.length > 0
         ? currentDebate.turns[currentDebate.turns.length - 1].passages ?? []
         : openingPassages)
     : [];
+
+  const learningSummaryText = learningSummary?.summary ?? null;
+  const learningKeyTakeaway = (learningSummary as { key_takeaway?: string } | null)?.key_takeaway ?? null;
+  const suggestedReadings = learningSummary?.suggested_readings ?? [];
 
   const tips: string[] = [];
   if (latestTurn?.scores && !isCompleted && !isSocratic && isStandardScores(latestTurn.scores)) {
@@ -471,6 +514,76 @@ export default function DebatePageContent() {
     latestScoredTurnTotal !== null
       ? scoreToneTextClass(getScoreTone(latestScoredTurnTotal, maxScore))
       : "";
+
+  const currentPrompt = isSocratic
+    ? compactText(
+        currentDebate.turns.length > 0
+          ? currentDebate.turns[currentDebate.turns.length - 1].figure_response
+          : openingStatement,
+        220
+      )
+    : null;
+
+  const socraticQuestionHistory = isSocratic
+    ? [
+        ...(openingStatement
+          ? [{ exchangeNumber: 1, prompt: openingStatement, isCurrent: currentDebate.turns.length === 0 }]
+          : []),
+        ...currentDebate.turns.map((turn, index) => ({
+          exchangeNumber: index + 2,
+          prompt: turn.figure_response,
+          isCurrent: index === currentDebate.turns.length - 1,
+        })),
+      ]
+    : [];
+
+  const scoredSocraticTurns = currentDebate.turns.flatMap((turn) =>
+    turn.scores && isSocraticScores(turn.scores) ? [{ turn, scores: turn.scores }] : []
+  );
+
+  const socraticAverages = scoredSocraticTurns.length
+    ? {
+        clarity: average(scoredSocraticTurns.map(({ scores }) => toScore(scores.clarity_score))),
+        depth: average(scoredSocraticTurns.map(({ scores }) => toScore(scores.depth_score))),
+        consistency: average(scoredSocraticTurns.map(({ scores }) => toScore(scores.consistency_score))),
+        selfAwareness: average(
+          scoredSocraticTurns.map(({ scores }) => toScore(scores.self_awareness_score))
+        ),
+      }
+    : null;
+
+  const latestSocraticScores =
+    latestTurn?.scores && isSocraticScores(latestTurn.scores) ? latestTurn.scores : null;
+
+  const socraticAssumptionText = compactText(
+    latestSocraticScores?.self_awareness_reason ??
+      latestSocraticScores?.depth_reason ??
+      latestSocraticScores?.improvements?.[0] ??
+      currentPrompt ??
+      "This question is trying to expose the premise your answer depends on most.",
+    180
+  );
+
+  const socraticSelfAwarenessTip = compactText(
+    latestSocraticScores?.improvements?.[0] ??
+      latestSocraticScores?.self_awareness_reason ??
+      "Try naming the assumption the figure is pressing on before you defend your answer.",
+    180
+  );
+
+  const socraticDialogueMap = scoredSocraticTurns.map(({ turn, scores }) => ({
+    exchangeNumber: turn.turn_number,
+    insight: compactText(
+      scores.self_awareness_reason ?? scores.improvements?.[0] ?? scores.depth_reason ?? turn.user_argument,
+      120
+    ) ?? "An underlying assumption came under pressure.",
+  }));
+
+  const resultsStatusLabel = isSocratic ? "DIALOGUE COMPLETE" : "COMPLETED";
+  const resultsKeyLabel = isSocratic ? "Key Insight" : "Key Takeaway";
+  const resultsProgressSubtitle = isSocratic
+    ? `of ${maxScore} · avg. across ${currentDebate.turns.length} exchange${currentDebate.turns.length === 1 ? "" : "s"}`
+    : `of ${maxScore} possible`;
 
   // ── Score cell renderer ───────────────────────────────────────────────────
   const renderScoreCell = (label: string, score: number, reason?: string) => {
@@ -507,6 +620,11 @@ export default function DebatePageContent() {
     const useSocratic = isSocratic && isSocraticScores(scores);
 
     const scorecardTitle = isSocratic ? "Reflection" : "Scorecard";
+    const strengthsLabel = useSocratic ? "What you examined well" : "Strengths";
+    const improvementsLabel = useSocratic ? "Assumptions left unexamined" : "Improvements";
+    const selfAwarenessNote = useSocratic
+      ? compactText(scores.self_awareness_reason as string | undefined, 180)
+      : null;
 
     let cells: React.ReactNode;
     let turnTotal: number;
@@ -568,7 +686,7 @@ export default function DebatePageContent() {
               <AccessibleDetails className="group/strengths">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-foreground/85 list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/strengths:rotate-90 transition-transform inline-block">▶</span>
-                  Strengths ({(turn.scores as { strengths: string[] }).strengths.length})
+                  {strengthsLabel} ({(turn.scores as { strengths: string[] }).strengths.length})
                 </summary>
                 <div className="mt-1 p-3 bg-secondary/30 border border-border/50 border-l-2 border-l-accent/60 space-y-1">
                   {(turn.scores as { strengths: string[] }).strengths.map((s: string, i: number) => (
@@ -581,7 +699,7 @@ export default function DebatePageContent() {
               <AccessibleDetails className="group/improvements">
                 <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground list-none flex items-center gap-1.5 py-1">
                   <span className="group-open/improvements:rotate-90 transition-transform inline-block">▶</span>
-                  Improvements ({(turn.scores as { improvements: string[] }).improvements.length})
+                  {improvementsLabel} ({(turn.scores as { improvements: string[] }).improvements.length})
                 </summary>
                 <div className="mt-1 p-3 bg-secondary/20 border border-border/50 border-l-2 border-l-foreground/40 space-y-1">
                   {(turn.scores as { improvements: string[] }).improvements.map((s: string, i: number) => (
@@ -613,6 +731,14 @@ export default function DebatePageContent() {
                 </div>
               </AccessibleDetails>
             )}
+            {selfAwarenessNote && (
+              <div className="border-l-2 border-l-accent/70 pl-3 py-1">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-accent/90">
+                  Self-Awareness Note
+                </p>
+                <p className="text-sm text-foreground/75 mt-1">{selfAwarenessNote}</p>
+              </div>
+            )}
           </div>
         )}
       </>
@@ -643,40 +769,171 @@ export default function DebatePageContent() {
     );
   };
 
-  // ── Sidebar: key claims + scholar sources ─────────────────────────────────
+  // ── Sidebar: Paper-inspired right rail ────────────────────────────────────
   const renderSidebar = () => {
-    if (!hasAnyHelper) return null;
+    if (isSocratic) {
+      return (
+        <aside className="hidden lg:flex flex-col gap-5 w-72 xl:w-80 shrink-0 border-l border-border pl-6 pt-2">
+          {currentDebate.turns.length === 0 ? (
+            <>
+              <div className="border border-accent/20 bg-accent/5 px-4 py-4 space-y-3">
+                <p className="war-label text-accent">Socratic Dialogue</p>
+                <p className="text-sm text-muted-foreground leading-7">
+                  {selectedFigure.name} will not argue with you - {" "}
+                  they will question you. Each answer exposes an assumption in what you said.
+                </p>
+              </div>
+
+              {currentPrompt && (
+                <div className="pt-5 border-t border-border/80">
+                  <p className="war-label mb-3 text-foreground/85">The Question</p>
+                  <div className="border-l-2 border-l-accent/50 pl-3">
+                    <p className="text-sm text-muted-foreground leading-7">{currentPrompt}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-5 border-t border-border/80">
+                <p className="war-label mb-3 text-foreground/85">You Will Be Evaluated On</p>
+                <div className="space-y-3 text-sm">
+                  {[
+                    ["Clarity", "How directly and precisely you answered"],
+                    ["Depth", "Whether you probed beneath the obvious"],
+                    ["Consistency", "Whether your answer holds together internally"],
+                    ["Self-Awareness", "Whether you recognised what was being exposed"],
+                  ].map(([label, description]) => (
+                    <div key={label} className="flex gap-3 items-start">
+                      <p className="w-24 shrink-0 text-accent text-xs uppercase tracking-[0.08em] pt-0.5">
+                        {label}
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-6">{description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {socraticQuestionHistory.length > 0 && (
+                <div>
+                  <p className="war-label mb-3 text-foreground/85">Questions Posed So Far</p>
+                  <div className="space-y-3">
+                    {socraticQuestionHistory.map((entry) => (
+                      <div key={entry.exchangeNumber} className="border-l-2 border-l-accent/40 pl-3">
+                        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                          {turnLabel("socratic", entry.exchangeNumber)}
+                          {entry.isCurrent ? " · Now" : ""}
+                        </p>
+                        <p className={`text-sm leading-7 ${entry.isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
+                          {compactText(entry.prompt, 120)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {socraticAssumptionText && (
+                <div className="border border-accent/15 bg-accent/5 px-4 py-4 space-y-2">
+                  <p className="war-label text-accent">Assumption Under Examination</p>
+                  <p className="text-sm text-muted-foreground leading-7">{socraticAssumptionText}</p>
+                </div>
+              )}
+
+              {socraticSelfAwarenessTip && (
+                <div className="pt-5 border-t border-border/80">
+                  <p className="war-label mb-3 text-foreground/75">Self-Awareness Tip</p>
+                  <div className="border-l-2 border-l-foreground/15 pl-3">
+                    <p className="text-sm text-muted-foreground leading-7">{socraticSelfAwarenessTip}</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </aside>
+      );
+    }
+
     return (
-      <aside className="hidden lg:flex flex-col gap-4 w-72 xl:w-80 shrink-0">
-        {hasKeyClaims && (
-          <div className="arena-panel p-4 space-y-2">
-            <p className="war-label">{selectedFigure!.name.toUpperCase()} ARGUES</p>
-            <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1.5 pl-1">
-              {keyClaims!.map((c, i) => (
-                <li key={i} className="leading-relaxed">{c}</li>
-              ))}
-            </ol>
-            <p className="text-xs text-muted-foreground italic">How do you respond to these points?</p>
+      <aside className="hidden lg:flex flex-col gap-5 w-72 xl:w-80 shrink-0 border-l border-border pl-6 pt-2">
+        {isUnlimitedDebate && (
+          <div className="border border-foreground/10 bg-card/70 px-4 py-4 space-y-3">
+            <p className="war-label text-foreground/85">Open-Ended Debate</p>
+            <p className="text-sm text-muted-foreground leading-7">
+              You control when this debate ends. Strike when you are ready to conclude - or keep going.
+            </p>
+            <Button
+              size="sm"
+              onClick={handleEndDebate}
+              className="w-full justify-center bg-foreground text-background hover:bg-foreground/90 btn-press"
+            >
+              END DEBATE →
+            </Button>
           </div>
         )}
-        {scholarPassages.length > 0 && (
-          <div className="arena-panel p-4 space-y-2">
-            <p className="war-label">SOURCES TO ENGAGE WITH</p>
-            <p className="text-xs text-muted-foreground">Review these passages before responding.</p>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {scholarPassages.map((p, i) => (
-                <div key={i} className="pl-3 border-l-2 border-border">
-                  <p className="text-xs font-medium text-foreground/80">{p.title}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+
+        {roundTrend.some((entry) => entry.score !== null) && (
+          <div className="pt-5 border-t border-border/80">
+            <p className="war-label mb-3 text-foreground/85">Round Trend</p>
+            <div className="space-y-2.5">
+              {roundTrend.map((entry) => (
+                <div key={entry.turnNumber} className="flex items-center gap-3">
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground w-10">
+                    R{String(entry.turnNumber).padStart(2, "0")}
+                  </span>
+                  <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
+                    {entry.score !== null && (
+                      <div
+                        className={`h-full ${scoreToneBarClass(getScoreTone(entry.score, maxScore))}`}
+                        style={{ width: `${(entry.score / maxScore) * 100}%` }}
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs tabular-nums text-muted-foreground w-12 text-right">
+                    {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {hasKeyClaims && (
+          <div className="pt-5 border-t border-border/80">
+            <p className="war-label mb-3 text-foreground/85">{selectedFigure!.name.toUpperCase()} NOW ARGUES</p>
+            <div className="space-y-3">
+              {keyClaims!.map((claim, index) => (
+                <p key={index} className="text-sm text-muted-foreground leading-7">
+                  {claim}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {scholarPassages.length > 0 && (
+          <div className="pt-5 border-t border-border/80">
+            <p className="war-label mb-1 text-foreground/85">Sources to Engage With</p>
+            <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {scholarPassages.map((p, i) => (
+                <div key={i} className="pl-3 border-l-2 border-border/70">
+                  <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-6">
+                    {p.text_excerpt}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {tips.length > 0 && (
-          <div className="p-3 bg-secondary/25 border border-border/50 border-l-2 border-l-accent/60">
-            {tips.map((t, i) => (
-              <p key={i} className="text-sm text-foreground/85">• {t}</p>
+          <div className="border border-accent/20 border-l-2 border-l-accent/70 bg-card/70 px-4 py-4 space-y-2">
+            {tips.map((tip, index) => (
+              <p key={index} className="text-sm text-foreground/85 leading-7">
+                • {tip}
+              </p>
             ))}
           </div>
         )}
@@ -686,7 +943,70 @@ export default function DebatePageContent() {
 
   // ── Mobile helper sections ────────────────────────────────────────────────
   const renderMobileHelpers = () => {
-    if (!hasAnyHelper) return null;
+    if (isSocratic) {
+      return (
+        <div className="lg:hidden">
+          <AccessibleDetails className="group/helpers">
+            <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+              <span className="group-open/helpers:rotate-90 transition-transform inline-block">▶</span>
+              {currentDebate.turns.length === 0 ? "Dialogue guide" : "Dialogue notes"}
+            </summary>
+            <div className="mt-3 space-y-3">
+              {currentDebate.turns.length === 0 ? (
+                <>
+                  <div className="border border-accent/20 bg-accent/5 px-4 py-4">
+                    <p className="war-label text-accent mb-2">Socratic Dialogue</p>
+                    <p className="text-sm text-muted-foreground leading-7">
+                      {selectedFigure.name} will question you rather than argue. Answer directly, then examine what the question exposes.
+                    </p>
+                  </div>
+                  {currentPrompt && (
+                    <div className="p-4 border border-border">
+                      <p className="war-label mb-2">The Question</p>
+                      <p className="text-sm text-muted-foreground leading-7">{currentPrompt}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {socraticQuestionHistory.length > 0 && (
+                    <div className="p-4 border border-border space-y-3">
+                      <p className="war-label">Questions Posed So Far</p>
+                      {socraticQuestionHistory.map((entry) => (
+                        <div key={entry.exchangeNumber} className="border-l-2 border-l-accent/40 pl-3">
+                          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                            {turnLabel("socratic", entry.exchangeNumber)}
+                            {entry.isCurrent ? " · Now" : ""}
+                          </p>
+                          <p className="text-sm text-muted-foreground leading-7">
+                            {compactText(entry.prompt, 110)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {socraticAssumptionText && (
+                    <div className="border border-accent/20 bg-accent/5 px-4 py-4">
+                      <p className="war-label text-accent mb-2">Assumption Under Examination</p>
+                      <p className="text-sm text-muted-foreground leading-7">{socraticAssumptionText}</p>
+                    </div>
+                  )}
+                  {socraticSelfAwarenessTip && (
+                    <div className="p-4 border border-border">
+                      <p className="war-label mb-2">Self-Awareness Tip</p>
+                      <p className="text-sm text-muted-foreground leading-7">{socraticSelfAwarenessTip}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </AccessibleDetails>
+        </div>
+      );
+    }
+
+    if (!hasAnyHelper && !isUnlimitedDebate) return null;
+
     return (
       <div className="lg:hidden">
         <AccessibleDetails className="group/helpers">
@@ -698,6 +1018,14 @@ export default function DebatePageContent() {
             )}
           </summary>
           <div className="mt-3 space-y-3">
+            {isUnlimitedDebate && (
+              <div className="border border-foreground/10 bg-card/70 px-4 py-4">
+                <p className="war-label mb-2">Open-Ended Debate</p>
+                <p className="text-sm text-muted-foreground leading-7">
+                  You control when this debate ends. End it when you think the exchange has run its course.
+                </p>
+              </div>
+            )}
             {scholarPassages.length > 0 && (
               <div className="mb-4 p-4 border border-border">
                 <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">Sources to Engage With</p>
@@ -737,37 +1065,6 @@ export default function DebatePageContent() {
       </div>
     );
   };
-
-  // ── Learning summary ──────────────────────────────────────────────────────
-  const renderLearningSummaryContent = () => (
-    <>
-      {learningSummary!.summary && (
-        <p className="text-sm leading-relaxed">{learningSummary!.summary}</p>
-      )}
-      {(learningSummary as { key_takeaway?: string }).key_takeaway && (
-        <div className="mt-3 p-3 border border-foreground/20">
-          <p className="text-xs uppercase tracking-[0.15em] font-bold mb-1">Key Takeaway</p>
-          <p className="text-sm">{(learningSummary as { key_takeaway: string }).key_takeaway}</p>
-        </div>
-      )}
-      {learningSummary!.suggested_readings && learningSummary!.suggested_readings.length > 0 && (
-        <div className="mt-4">
-          <p className="text-xs uppercase tracking-[0.15em] font-bold mb-2">Continue Learning</p>
-          <ul className="text-sm space-y-1">
-            {learningSummary!.suggested_readings.map((r, i) => {
-              const rec = r as { title: string; reason: string; source_id?: string };
-              return (
-                <li key={i} className="opacity-80">
-                  • {rec.source_id ? `[${rec.source_id}] ` : ""}
-                  {rec.title}: {rec.reason}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-    </>
-  );
 
   // ── Mode pill helper ─────────────────────────────────────────────────────
   const modePill = (
@@ -815,37 +1112,37 @@ export default function DebatePageContent() {
             <span className="sm:hidden">{modePill}</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {/* Turn counter */}
-            {isFixedTurns ? (
-              <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
-                {currentDebate.current_turn}/{currentDebate.max_turns}
+            {isCompleted ? (
+              <span className="inline-flex items-center px-3 py-1 border border-accent/30 text-accent text-[10px] uppercase tracking-[0.2em]">
+                {resultsStatusLabel}
               </span>
-            ) : currentDebate.current_turn > 0 ? (
-              <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
-                {isSocratic ? "Exchange" : "Turn"} {currentDebate.current_turn}
-              </span>
-            ) : null}
+            ) : (
+              <>
+                <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
+                  {isFixedTurns
+                    ? `${currentDebate.current_turn}/${currentDebate.max_turns}`
+                    : `Turn ${currentDebate.current_turn}`}
+                </span>
 
-            {/* End button — primary for open-ended debate, outline for fixed debates and Socratic */}
-            {!isCompleted && (
-              isUnlimitedDebate ? (
-                <Button
-                  size="sm"
-                  onClick={handleEndDebate}
-                  className="btn-press bg-foreground text-background hover:bg-foreground/90 font-bold text-xs sm:text-sm"
-                >
-                  END DEBATE
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEndDebate}
-                  className="btn-press border-foreground/30 text-xs sm:text-sm"
-                >
-                  END
-                </Button>
-              )
+                {isUnlimitedDebate ? (
+                  <Button
+                    size="sm"
+                    onClick={handleEndDebate}
+                    className="btn-press bg-foreground text-background hover:bg-foreground/90 font-bold text-xs sm:text-sm"
+                  >
+                    END DEBATE
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEndDebate}
+                    className="btn-press border-foreground/30 text-xs sm:text-sm"
+                  >
+                    END
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -854,81 +1151,219 @@ export default function DebatePageContent() {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* ── Completed / Results screen ──────────────────────────────────── */}
         {isCompleted ? (
-          <div className="max-w-3xl mx-auto">
-            <div className="arena-panel p-8 sm:p-12 text-center arena-enter" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", paddingTop: "4rem" }}>
-              <Swords size={28} className="mb-3 text-foreground/25" />
-              <p className="war-label mb-2">{isSocratic ? "REFLECTION" : "RESULT"}</p>
-              <p className={`war-label mb-4 ${outcomeToneClass}`}>
-                {outcomeLabel}
+          <div className="arena-enter lg:grid lg:grid-cols-[260px_minmax(0,1fr)_320px] lg:gap-0 lg:border-t-0">
+            <aside className="hidden lg:flex flex-col gap-3 pr-5 border-r border-border pt-4">
+              <p className="war-label text-foreground/70 mb-1">
+                {isSocratic ? "Dialogue Transcript" : "Debate Transcript"}
               </p>
-              <p className={`text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums leading-none mb-1 score-reveal ${outcomeToneClass}`}>
-                {aggregateScore}
-              </p>
-              <p className="text-sm text-muted-foreground mb-8 uppercase tracking-[0.15em]">of {maxScore} possible</p>
+              {turnSummaries.map((entry) => {
+                const tone = entry.score !== null ? getScoreTone(entry.score, maxScore) : "low";
+                return (
+                  <div key={entry.turnNumber} className="border border-foreground/10 px-3 py-3 opacity-80">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                        {entry.label}
+                      </span>
+                      <span className={`text-xs tabular-nums ${entry.score !== null ? scoreToneTextClass(tone) : "text-muted-foreground"}`}>
+                        {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
+                      </span>
+                    </div>
+                    <div className="h-1 bg-foreground/10 overflow-hidden">
+                      {entry.score !== null && (
+                        <div
+                          className={`h-full ${scoreToneBarClass(tone)}`}
+                          style={{ width: `${(entry.score / maxScore) * 100}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </aside>
 
-              {roundTrend.length > 0 && (
-                <div className="max-w-lg w-full mb-8 text-left arena-panel px-4 py-4 sm:px-5">
-                  <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground/80">
-                    {isSocratic ? "Exchange Trend" : "Round Trend"}
-                  </p>
-                  <div className="space-y-2">
-                    {roundTrend.map((entry) => (
-                      <div key={entry.turnNumber} className="flex items-center gap-3">
-                        <span className="text-xs uppercase tracking-[0.15em] w-16 text-muted-foreground">
-                          {isSocratic ? "Ex" : "R"}{String(entry.turnNumber).padStart(2, "0")}
-                        </span>
-                        <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
-                          {entry.score !== null && (
-                            <div
-                              className={`h-full ${scoreToneBarClass(getScoreTone(entry.score, maxScore))}`}
-                              style={{ width: `${(entry.score / maxScore) * 100}%` }}
-                            />
-                          )}
-                        </div>
-                        <span className="text-xs tabular-nums w-12 text-right text-muted-foreground">
-                          {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
-                        </span>
+            <div className="px-0 lg:px-14 py-4 lg:py-14">
+              <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
+                <Swords size={28} className="mb-3 text-foreground/25" />
+                <p className={`war-label mb-4 ${outcomeToneClass}`}>{outcomeLabel}</p>
+                <p className={`text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums leading-none mb-2 score-reveal ${outcomeToneClass}`}>
+                  {aggregateScore}
+                </p>
+                <p className="text-sm text-muted-foreground mb-10 uppercase tracking-[0.18em]">
+                  {resultsProgressSubtitle}
+                </p>
+
+                {isSocratic && socraticAverages ? (
+                  <>
+                    <div className="arena-panel px-5 py-5 w-full text-left mb-6">
+                      <p className="text-xs uppercase tracking-[0.15em] font-bold mb-4 text-foreground/80">
+                        Dialogue Quality · Avg. Across All Exchanges
+                      </p>
+                      <div className="space-y-3">
+                        {[
+                          ["Clarity", socraticAverages.clarity],
+                          ["Depth", socraticAverages.depth],
+                          ["Consistency", socraticAverages.consistency],
+                          ["Self-Awareness", socraticAverages.selfAwareness],
+                        ].map(([label, value]) => {
+                          const numeric = value as number;
+                          const tone = getScoreTone(numeric, 10);
+                          return (
+                            <div key={label as string} className="flex items-center gap-3">
+                              <span className={`w-28 text-xs uppercase tracking-[0.08em] ${tone === "high" ? "text-accent" : "text-foreground/80"}`}>
+                                {label}
+                              </span>
+                              <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
+                                <div
+                                  className={`h-full ${scoreToneBarClass(tone)}`}
+                                  style={{ width: `${numeric * 10}%` }}
+                                />
+                              </div>
+                              <span className={`w-10 text-right text-sm tabular-nums ${scoreToneTextClass(tone)}`}>
+                                {numeric.toFixed(1)}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    </div>
 
-              {learningSummary && (learningSummary.summary || (learningSummary as { key_takeaway?: string }).key_takeaway) && (
-                <div className="text-left max-w-lg w-full mb-8 arena-panel px-4 py-4 sm:px-5">
-                  <AccessibleDetails className="sm:hidden group/learn">
-                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] font-bold text-foreground list-none flex items-center gap-1.5 mb-2">
-                      <span className="group-open/learn:rotate-90 transition-transform inline-block">▶</span>
-                      Learning Summary
-                    </summary>
-                    <div className="mt-2 text-foreground">{renderLearningSummaryContent()}</div>
-                  </AccessibleDetails>
-                  <div className="hidden sm:block text-foreground">
-                    <p className="text-xs uppercase tracking-[0.15em] font-bold mb-3 text-foreground">Learning Summary</p>
-                    {renderLearningSummaryContent()}
-                  </div>
-                </div>
-              )}
+                    {socraticDialogueMap.length > 0 && (
+                      <div className="arena-panel px-5 py-5 w-full text-left mb-8">
+                        <p className="text-xs uppercase tracking-[0.15em] font-bold mb-4 text-foreground/80">
+                          Dialogue Map · Assumptions Exposed
+                        </p>
+                        <div className="space-y-0">
+                          {socraticDialogueMap.map((entry, index) => (
+                            <div
+                              key={entry.exchangeNumber}
+                              className={`flex gap-4 ${index < socraticDialogueMap.length - 1 ? "border-b border-border/80 pb-4 mb-4" : ""}`}
+                            >
+                              <div className="flex flex-col items-center pt-1">
+                                <span className={`w-2 h-2 rounded-full ${index < socraticDialogueMap.length - 1 ? "bg-accent" : "bg-foreground/80"}`} />
+                                {index < socraticDialogueMap.length - 1 && (
+                                  <span className="w-px flex-1 bg-border mt-2" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                                  {turnLabel("socratic", entry.exchangeNumber)}
+                                </p>
+                                <p className="text-sm text-foreground/90 leading-7">{entry.insight}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  roundTrend.length > 0 && (
+                    <div className="arena-panel px-5 py-5 w-full text-left mb-8">
+                      <p className="text-xs uppercase tracking-[0.15em] font-bold mb-4 text-foreground/80">
+                        Round Trend
+                      </p>
+                      <div className="space-y-3">
+                        {roundTrend.map((entry) => (
+                          <div key={entry.turnNumber} className="flex items-center gap-3">
+                            <span className="text-xs uppercase tracking-[0.15em] w-10 text-muted-foreground">
+                              R{String(entry.turnNumber).padStart(2, "0")}
+                            </span>
+                            <div className="flex-1 h-2 bg-foreground/10 overflow-hidden">
+                              {entry.score !== null && (
+                                <div
+                                  className={`h-full ${scoreToneBarClass(getScoreTone(entry.score, maxScore))}`}
+                                  style={{ width: `${(entry.score / maxScore) * 100}%` }}
+                                />
+                              )}
+                            </div>
+                            <span className="text-xs tabular-nums w-12 text-right text-muted-foreground">
+                              {entry.score !== null ? `${entry.score}/${maxScore}` : "--"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/figures">
+                <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xl">
+                  <Link href="/figures" className="flex-1">
+                    <Button
+                      onClick={handleNewDebate}
+                      className="w-full bg-foreground text-background hover:bg-foreground/90 btn-press font-bold"
+                    >
+                      CHOOSE NEW OPPONENT →
+                    </Button>
+                  </Link>
                   <Button
-                    onClick={handleNewDebate}
-                    className="bg-foreground text-background hover:bg-foreground/90 btn-press font-bold"
+                    variant="outline"
+                    onClick={handleSameOpponentNewTopic}
+                    className="flex-1 border-foreground/30 text-foreground hover:bg-secondary/40 btn-press"
+                    title="Same opponent, different topic"
                   >
-                    CHOOSE NEW OPPONENT →
+                    SAME OPPONENT, NEW TOPIC
                   </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  onClick={handleSameOpponentNewTopic}
-                  className="border-foreground/30 text-foreground hover:bg-secondary/40 btn-press"
-                  title="Same opponent, different topic"
-                >
-                  SAME OPPONENT, NEW TOPIC
-                </Button>
+                </div>
               </div>
             </div>
+
+            <aside className="mt-8 lg:mt-0 lg:border-l border-border lg:pl-6 lg:pt-5 space-y-5">
+              {(learningSummaryText || learningKeyTakeaway || suggestedReadings.length > 0) && (
+                <div className="space-y-5">
+                  {learningSummaryText && (
+                    <div>
+                      <p className="war-label mb-3 text-foreground/85">Learning Summary</p>
+                      <p className="text-sm text-muted-foreground leading-7">{learningSummaryText}</p>
+                    </div>
+                  )}
+
+                  {learningKeyTakeaway && (
+                    <div className="pt-5 border-t border-border/80">
+                      <p className="war-label mb-3 text-foreground/85">{resultsKeyLabel}</p>
+                      <div className="border border-foreground/15 px-4 py-4">
+                        <p className="text-sm text-foreground/90 leading-7">{learningKeyTakeaway}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {isSocratic && (
+                    <div className="pt-5 border-t border-border/80">
+                      <p className="war-label mb-3 text-foreground/75">Socratic Rank</p>
+                      <div className="space-y-2">
+                        {[
+                          ["DIALECTICIAN", "≥ 75%", aggregateScore >= 30],
+                          ["INTERLOCUTOR", "50–74%", aggregateScore >= 20 && aggregateScore < 30],
+                          ["NOVICE", "< 50%", aggregateScore < 20],
+                        ].map(([label, range, isActive]) => (
+                          <div
+                            key={label as string}
+                            className={`flex items-center gap-3 px-3 py-3 border ${isActive ? "border-accent/50 bg-accent/10" : "border-foreground/10 opacity-60"}`}
+                          >
+                            <span className={`text-sm tracking-[0.06em] ${isActive ? "text-accent" : "text-foreground/75"}`}>
+                              {label}
+                            </span>
+                            <span className="ml-auto text-[10px] text-muted-foreground">{range}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {suggestedReadings.length > 0 && (
+                    <div className="pt-5 border-t border-border/80">
+                      <p className="war-label mb-3 text-foreground/85">Continue Learning</p>
+                      <div className="space-y-3">
+                        {suggestedReadings.map((reading, index) => (
+                          <p key={index} className="text-sm text-muted-foreground leading-7">
+                            • {reading.title}: {reading.reason}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </aside>
           </div>
         ) : (
           // ── Active debate: two-column layout ──────────────────────────────
@@ -945,7 +1380,7 @@ export default function DebatePageContent() {
                     <div className="mb-6">
                       <div className="debate-round-divider">
                         <span className="text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground whitespace-nowrap">
-                          {isSocratic ? "Opening Question" : "Opening Statement"}
+                          {isSocratic ? "The Dialogue Opens" : "Opening Statement"}
                         </span>
                       </div>
 
@@ -981,7 +1416,7 @@ export default function DebatePageContent() {
                           <Swords size={12} className="text-muted-foreground/30" />
                         </div>
                         <p className="war-label">
-                          {isSocratic ? "Respond to the question" : "Your turn to respond"}
+                          {isSocratic ? "Answer the question" : "Your turn to respond"}
                         </p>
                       </div>
                     </div>
@@ -1078,7 +1513,7 @@ export default function DebatePageContent() {
                   <div className="arena-panel px-4 py-3 flex items-center justify-between gap-4">
                     <div>
                       <p className="war-label mb-1">
-                        Latest score · {turnLabel(currentDebate.mode, latestScoredTurn.turn_number)}
+                        {isSocratic ? "Latest reflection" : "Latest score"} · {turnLabel(currentDebate.mode, latestScoredTurn.turn_number)}
                       </p>
                       {isSocratic ? (
                         <p className="text-xs sm:text-sm text-foreground/80">
@@ -1113,8 +1548,20 @@ export default function DebatePageContent() {
                 {/* Mobile helpers */}
                 {renderMobileHelpers()}
 
-                {/* Argument structure helper — only for non-Socratic */}
-                {!isSocratic && (
+                {/* Input helper */}
+                {isSocratic ? (
+                  <AccessibleDetails className="group/arghelper">
+                    <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
+                      <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
+                      How to respond in Socratic dialogue
+                    </summary>
+                    <div className="mt-2 p-3 bg-secondary/30 border border-border text-sm space-y-1">
+                      <p className="text-muted-foreground leading-7">
+                        Answer the question directly, then show that you understand the assumption it is pressing on. Precision matters more than volume.
+                      </p>
+                    </div>
+                  </AccessibleDetails>
+                ) : (
                   <AccessibleDetails className="group/arghelper">
                     <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5 py-1">
                       <span className="group-open/arghelper:rotate-90 transition-transform inline-block">▶</span>
