@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
   --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
-  --font-blackletter: "Old English Text MT", "Bookman Old Style", Georgia, serif;
+  --font-blackletter: var(--font-unifraktur), "Old English Text MT", Georgia, serif;
   --font-scholarly: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

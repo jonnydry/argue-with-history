@@ -915,7 +915,7 @@ export default function DebatePageContent() {
           <div className="pt-5 border-t border-border/80">
             <p className="war-label mb-1 text-foreground/85">Sources to Engage With</p>
             <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
+            <div className="space-y-3">
               {scholarPassages.map((p, i) => (
                 <div key={i} className="pl-3 border-l-2 border-border/70">
                   <p className="text-xs font-medium text-foreground/80">{p.title}</p>
@@ -1030,7 +1030,7 @@ export default function DebatePageContent() {
               <div className="mb-4 p-4 border border-border">
                 <p className="text-xs uppercase tracking-[0.2em] font-bold mb-2">Sources to Engage With</p>
                 <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
-                <div className="space-y-3 max-h-48 overflow-y-auto">
+                <div className="space-y-3">
                   {scholarPassages.map((p, i) => (
                     <div key={i} className="pl-3 border-l-2 border-border">
                       <p className="text-xs font-medium text-foreground/80">{p.title}</p>

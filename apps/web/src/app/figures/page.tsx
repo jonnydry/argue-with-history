@@ -497,7 +497,7 @@ export default function FiguresPage() {
                             {
                               value: "debate",
                               label: "Debate",
-                              description: "The figure argues against your position.",
+                              description: "Argue against the figure's own defense.",
                             },
                           ] as const
                         ).map(({ value, label, description }) => (
