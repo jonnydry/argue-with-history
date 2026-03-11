@@ -59,4 +59,4 @@ ENVIRONMENT = "production"
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "start.sh"]
-build = ["bash", "-c", "cd apps/web && npm run build"]
+build = ["bash", "build.sh"]
