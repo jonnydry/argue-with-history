@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Swords } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 /** Coerce score value to integer and clamp to a safe range. */
 function toScore(
@@ -1390,9 +1392,9 @@ export default function DebatePageContent() {
                             {selectedFigure.name.toUpperCase()}
                           </span>
                         </div>
-                        <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
-                          {openingStatement}
-                        </p>
+                        <div className="prose-figure text-sm sm:text-base leading-relaxed text-background">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{openingStatement}</ReactMarkdown>
+                        </div>
                         {openingPassages.length > 0 && (
                           <AccessibleDetails className="mt-4 group">
                             <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">
@@ -1466,9 +1468,9 @@ export default function DebatePageContent() {
                               </span>
                             )}
                           </div>
-                          <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed text-background">
-                            {turn.figure_response}
-                          </p>
+                          <div className="prose-figure text-sm sm:text-base leading-relaxed text-background">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{turn.figure_response}</ReactMarkdown>
+                          </div>
                           {turn.passages && turn.passages.length > 0 && (
                             <AccessibleDetails className="mt-4 group">
                               <summary className="cursor-pointer text-xs uppercase tracking-[0.15em] text-background/60 hover:text-background list-none flex items-center gap-1.5">

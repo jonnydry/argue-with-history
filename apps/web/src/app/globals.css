@@ -532,3 +532,9 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
+
+/* Markdown rendered inside figure debate blocks */
+.prose-figure p { margin-bottom: 0.75em; }
+.prose-figure p:last-child { margin-bottom: 0; }
+.prose-figure strong { font-weight: 700; }
+.prose-figure em { font-style: italic; }
