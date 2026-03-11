@@ -122,7 +122,6 @@ interface DebateStore {
   debateMode: DebateMode;
   maxTurns: number;
   structuredInput: boolean;
-  scholarMode: boolean;
   isLoading: boolean;
   error: string | null;
   figuresLastFetched: number | null;
@@ -139,7 +138,6 @@ interface DebateStore {
   setDebateMode: (mode: DebateMode) => void;
   setMaxTurns: (turns: number) => void;
   setStructuredInput: (enabled: boolean) => void;
-  setScholarMode: (enabled: boolean) => void;
   startDebate: () => Promise<boolean>;
   submitArgument: (argument: string) => Promise<void>;
   endDebate: () => Promise<void>;
@@ -193,7 +191,6 @@ export const useDebateStore = create<DebateStore>()(
       debateMode: "debate",
       maxTurns: 3,
       structuredInput: false,
-      scholarMode: false,
       isLoading: false,
       error: null,
       figuresLastFetched: null,
@@ -320,10 +317,10 @@ export const useDebateStore = create<DebateStore>()(
           set({
             currentDebate: debate,
             openingStatement: debate.opening_statement ?? null,
-            openingKeyClaims: [],
+            openingKeyClaims: debate.opening_key_claims ?? [],
             debateSources: [],
-            openingPassages: [],
-            learningSummary: null,
+            openingPassages: debate.opening_passages ?? [],
+            learningSummary: debate.learning_summary ?? null,
             isLoading: false,
           });
           get().hydrateSelectionsFromDebate();
@@ -410,10 +407,6 @@ export const useDebateStore = create<DebateStore>()(
 
       setStructuredInput: (enabled) => {
         set({ structuredInput: enabled });
-      },
-
-      setScholarMode: (enabled) => {
-        set({ scholarMode: enabled });
       },
 
       startDebate: async () => {
@@ -566,7 +559,6 @@ export const useDebateStore = create<DebateStore>()(
         debateMode: state.debateMode,
         maxTurns: state.maxTurns,
         structuredInput: state.structuredInput,
-        scholarMode: state.scholarMode,
       }),
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<DebateStore>;

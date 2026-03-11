@@ -151,7 +151,7 @@ export default function DebatePageContent() {
   const restoreDebateIfNeeded = useDebateStore((s) => s.restoreDebateIfNeeded);
   const structuredInput = useDebateStore((s) => s.structuredInput);
   const setStructuredInput = useDebateStore((s) => s.setStructuredInput);
-  const scholarMode = useDebateStore((s) => s.scholarMode);
+
   const debateMode = useDebateStore((s) => s.debateMode);
   const maxTurns = useDebateStore((s) => s.maxTurns);
   const startDebate = useDebateStore((s) => s.startDebate);
@@ -479,11 +479,9 @@ export default function DebatePageContent() {
     score: turn.scores ? totalTurnScore(turn.scores) : null,
   }));
 
-  const scholarPassages = scholarMode
-    ? (currentDebate.turns.length > 0
-        ? currentDebate.turns[currentDebate.turns.length - 1].passages ?? []
-        : openingPassages)
-    : [];
+  const scholarPassages = currentDebate.turns.length > 0
+    ? currentDebate.turns[currentDebate.turns.length - 1].passages ?? []
+    : openingPassages;
 
   const learningSummaryText = learningSummary?.summary ?? null;
   const learningKeyTakeaway = (learningSummary as { key_takeaway?: string } | null)?.key_takeaway ?? null;
@@ -813,6 +811,21 @@ export default function DebatePageContent() {
                   ))}
                 </div>
               </div>
+
+              {scholarPassages.length > 0 && (
+                <div className="pt-5 border-t border-border/80">
+                  <p className="war-label mb-1 text-foreground/85">Sources to Engage With</p>
+                  <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+                  <div className="space-y-3">
+                    {scholarPassages.map((p, i) => (
+                      <div key={i} className="pl-3 border-l-2 border-border/70">
+                        <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-6">{p.text_excerpt}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -847,6 +860,21 @@ export default function DebatePageContent() {
                   <p className="war-label mb-3 text-foreground/75">Self-Awareness Tip</p>
                   <div className="border-l-2 border-l-foreground/15 pl-3">
                     <p className="text-sm text-muted-foreground leading-7">{socraticSelfAwarenessTip}</p>
+                  </div>
+                </div>
+              )}
+
+              {scholarPassages.length > 0 && (
+                <div className="pt-5 border-t border-border/80">
+                  <p className="war-label mb-1 text-foreground/85">Sources to Engage With</p>
+                  <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+                  <div className="space-y-3">
+                    {scholarPassages.map((p, i) => (
+                      <div key={i} className="pl-3 border-l-2 border-border/70">
+                        <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-6">{p.text_excerpt}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -968,6 +996,36 @@ export default function DebatePageContent() {
                       <p className="text-sm text-muted-foreground leading-7">{currentPrompt}</p>
                     </div>
                   )}
+                  <div className="p-4 border border-border">
+                    <p className="war-label mb-3">You Will Be Evaluated On</p>
+                    <div className="space-y-2 text-sm">
+                      {[
+                        ["Clarity", "How directly and precisely you answered"],
+                        ["Depth", "Whether you probed beneath the obvious"],
+                        ["Consistency", "Whether your answer holds together internally"],
+                        ["Self-Awareness", "Whether you recognised what was being exposed"],
+                      ].map(([label, description]) => (
+                        <div key={label} className="flex gap-3 items-start">
+                          <p className="w-24 shrink-0 text-accent text-xs uppercase tracking-[0.08em] pt-0.5">{label}</p>
+                          <p className="text-xs text-muted-foreground leading-6">{description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {scholarPassages.length > 0 && (
+                    <div className="p-4 border border-border">
+                      <p className="war-label mb-2">Sources to Engage With</p>
+                      <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+                      <div className="space-y-3">
+                        {scholarPassages.map((p, i) => (
+                          <div key={i} className="pl-3 border-l-2 border-border">
+                            <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                            <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -997,6 +1055,20 @@ export default function DebatePageContent() {
                     <div className="p-4 border border-border">
                       <p className="war-label mb-2">Self-Awareness Tip</p>
                       <p className="text-sm text-muted-foreground leading-7">{socraticSelfAwarenessTip}</p>
+                    </div>
+                  )}
+                  {scholarPassages.length > 0 && (
+                    <div className="p-4 border border-border">
+                      <p className="war-label mb-2">Sources to Engage With</p>
+                      <p className="text-xs text-muted-foreground mb-3">Review these passages before responding.</p>
+                      <div className="space-y-3">
+                        {scholarPassages.map((p, i) => (
+                          <div key={i} className="pl-3 border-l-2 border-border">
+                            <p className="text-xs font-medium text-foreground/80">{p.title}</p>
+                            <p className="text-sm text-muted-foreground mt-0.5 whitespace-pre-wrap">{p.text_excerpt}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </>
@@ -1123,7 +1195,7 @@ export default function DebatePageContent() {
                 <span className="text-xs sm:text-sm font-bold tabular-nums text-muted-foreground">
                   {isFixedTurns
                     ? `${currentDebate.current_turn}/${currentDebate.max_turns}`
-                    : `Turn ${currentDebate.current_turn}`}
+                    : `${isSocratic ? "Exchange" : "Turn"} ${currentDebate.current_turn}`}
                 </span>
 
                 {isUnlimitedDebate ? (

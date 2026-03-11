@@ -120,6 +120,9 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
             )
 
     debate_id = str(uuid.uuid4())
+    raw_passages = context.get("passages", [])
+    passages = [Passage(**p) for p in raw_passages] if raw_passages else []
+
     debate = DebateState(
         id=debate_id,
         figure=body.figure,
@@ -132,12 +135,11 @@ async def start_debate(request: Request, body: StartDebateRequest) -> Dict:
         created_at=time.time(),
         status="active",
         opening_statement=opening_statement,
+        opening_passages=passages,
+        opening_key_claims=opening_key_claims,
     )
 
     await debate_persistence.save(debate)
-
-    raw_passages = context.get("passages", [])
-    passages = [Passage(**p) for p in raw_passages] if raw_passages else []
 
     return {
         "debate": debate.model_dump(),
@@ -327,6 +329,10 @@ async def _submit_turn_impl(request: SubmitArgumentRequest) -> Dict:
             logger.warning("Learning summary generation failed: %s", exc, exc_info=True)
             learning_summary = {"summary": None, "suggested_readings": []}
 
+        if learning_summary:
+            debate.learning_summary = learning_summary
+            await debate_persistence.save(debate)
+
     result = {
         "debate": debate.model_dump(),
         "turn": turn.model_dump(),
@@ -378,6 +384,10 @@ async def end_debate(debate_id: str) -> Dict:
                     "End-debate summary generation failed: %s", exc, exc_info=True
                 )
                 learning_summary = {"summary": None, "suggested_readings": []}
+
+            if learning_summary:
+                debate.learning_summary = learning_summary
+                await debate_persistence.save(debate)
 
         return {
             "debate": debate.model_dump(),

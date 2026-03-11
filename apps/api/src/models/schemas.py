@@ -118,6 +118,9 @@ class DebateState(BaseModel):
     created_at: float
     status: str = "active"
     opening_statement: Optional[str] = None
+    opening_passages: list[Passage] = []
+    opening_key_claims: list[str] = []
+    learning_summary: Optional[dict] = None
 
     @model_validator(mode="before")
     @classmethod

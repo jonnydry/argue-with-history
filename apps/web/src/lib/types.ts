@@ -107,6 +107,9 @@ export interface DebateState {
   created_at: number;
   status: "active" | "completed";
   opening_statement?: string | null;
+  opening_passages?: Passage[];
+  opening_key_claims?: string[];
+  learning_summary?: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } | null;
 }
 
 export interface StartDebateRequest {

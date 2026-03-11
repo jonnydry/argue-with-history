@@ -47,8 +47,6 @@ export default function FiguresPage() {
   const setDebateMode = useDebateStore((s) => s.setDebateMode);
   const maxTurns = useDebateStore((s) => s.maxTurns);
   const setMaxTurns = useDebateStore((s) => s.setMaxTurns);
-  const scholarMode = useDebateStore((s) => s.scholarMode);
-  const setScholarMode = useDebateStore((s) => s.setScholarMode);
   const deleteCurrentDebate = useDebateStore((s) => s.deleteCurrentDebate);
   const isLoading = useDebateStore((s) => s.isLoading);
 
@@ -145,7 +143,6 @@ export default function FiguresPage() {
   const settingsSummary = [
     debateMode === "socratic" ? "Socratic" : "Debate",
     debateMode === "debate" ? (hasFixedTurns ? `${maxTurns} turns` : "Open-ended") : null,
-    scholarMode ? "Scholar mode" : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -569,22 +566,7 @@ export default function FiguresPage() {
                        </div>
                      )}
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium mb-2">SCHOLAR MODE</label>
-                      <Button
-                        variant={scholarMode ? "default" : "outline"}
-                        onClick={() => setScholarMode(!scholarMode)}
-                        size="sm"
-                        title="Show key passages before you respond so you can cite them."
-                        className={scholarMode ? "bg-foreground text-background" : ""}
-                      >
-                        {scholarMode ? "✓ " : ""}
-                        Show sources before each reply
-                      </Button>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Sources appear prominently above the input so you can engage with the texts.
-                      </p>
-                    </div>
+
                   </div>
                 </CardContent>
               </Card>
