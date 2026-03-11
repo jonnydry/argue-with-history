@@ -220,7 +220,7 @@ export default function Home() {
                             {Array.from({ length: 3 }).map((_, index) => <FigurePreviewSkeleton key={index} />)}
                           </div>
                         ) : (
-                          <div className="flex flex-col gap-3 animate-scroll-vertical" style={{ animationDuration: "40s" }}>
+                          <div className="flex flex-col gap-3 animate-scroll-vertical" style={{ animationDuration: "60s" }}>
                             {scrollFigures.map((figure) => (
                               <Link
                                 key={`a-${figure.id}`}
