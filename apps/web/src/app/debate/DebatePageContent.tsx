@@ -8,9 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDebateStore } from "@/stores/debate-store";
 import {
+  toScore,
+  toOptionalScore,
   totalTurnScore,
+  isSocraticScores,
+  isStandardScores,
   getScoreTone,
   scoreToneTextClass,
+  compactText,
   modeDisplayName,
   MAX_SCORE,
 } from "./components/shared";
@@ -19,14 +24,6 @@ import { DebateTranscript } from "./components/DebateTranscript";
 import { DebateInput } from "./components/DebateInput";
 import { DebateResults } from "./components/DebateResults";
 import { DebateSidebar } from "./components/DebateSidebar";
-import {
-  toScore,
-  toOptionalScore,
-  isSocraticScores,
-  isStandardScores,
-  compactText,
-  average,
-} from "./components/shared";
 
 export default function DebatePageContent() {
   const selectedFigure = useDebateStore((s) => s.selectedFigure);

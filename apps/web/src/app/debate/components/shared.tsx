@@ -111,7 +111,6 @@ export function AccessibleDetails({
         setOpen(isOpen);
         props.onToggle?.(e);
       }}
-      aria-expanded={open}
     >
       {children}
     </details>

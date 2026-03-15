@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import type { SocraticDebateScores, StandardDebateScores } from "@/lib/types";
 import {
   toScore,
