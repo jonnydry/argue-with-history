@@ -19,32 +19,14 @@ import {
   AccessibleDetails,
   MAX_SCORE,
 } from "./shared";
+import type { Passage, SidebarData } from "./shared";
 
-interface Passage {
-  title: string;
-  text_excerpt: string;
-}
-
-interface DebateSidebarProps {
+interface DebateSidebarProps extends SidebarData {
   variant: "desktop" | "mobile";
   figureName: string;
   isSocratic: boolean;
   isUnlimitedDebate: boolean;
   turns: Array<{ turn_number: number; figure_response: string; scores?: unknown }>;
-  currentPrompt: string | null;
-  scholarPassages: Passage[];
-  tips: string[];
-  hasKeyClaims: boolean;
-  keyClaims: string[];
-  hasAnyHelper: boolean;
-  socraticQuestionHistory: Array<{
-    exchangeNumber: number;
-    prompt: string;
-    isCurrent: boolean;
-  }>;
-  socraticAssumptionText: string | null;
-  socraticSelfAwarenessTip: string | null;
-  roundTrend: Array<{ turnNumber: number; score: number | null }>;
   onEndDebate: () => Promise<void>;
 }
 

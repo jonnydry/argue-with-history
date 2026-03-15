@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { SocraticDebateScores, StandardDebateScores } from "@/lib/types";
+import type { Turn } from "./shared";
 import {
   toScore,
   toOptionalScore,
@@ -13,65 +13,34 @@ import {
   isStandardScores,
   getScoreTone,
   scoreToneTextClass,
-  compactText,
   turnLabel,
   AccessibleDetails,
   MAX_SCORE,
 } from "./shared";
-import { DebateSidebar } from "./DebateSidebar";
-
-interface Passage {
-  title: string;
-  text_excerpt: string;
-}
-
-interface Turn {
-  turn_number: number;
-  user_argument: string;
-  figure_response: string;
-  scores: StandardDebateScores | SocraticDebateScores | null;
-  scores_error?: string | null;
-  sources_used: string[];
-  key_claims?: string[];
-  passages?: Passage[];
-}
 
 interface DebateInputProps {
-  figureName: string;
   mode: string;
   isSocratic: boolean;
   isLoading: boolean;
   error: string | null;
   turns: Turn[];
-  openingStatement: string | null;
-  openingKeyClaims: string[] | null;
-  openingPassages: Passage[];
   structuredInput: boolean;
   setStructuredInput: (v: boolean) => void;
-  isUnlimitedDebate: boolean;
   onSubmitArgument: (text: string) => Promise<void>;
-  onEndDebate: () => Promise<void>;
 }
 
 export function DebateInput({
-  figureName,
   mode,
   isSocratic,
   isLoading,
   error,
   turns,
-  openingStatement,
-  openingKeyClaims,
-  openingPassages,
   structuredInput,
   setStructuredInput,
-  isUnlimitedDebate,
   onSubmitArgument,
-  onEndDebate,
 }: DebateInputProps) {
   const [argument, setArgument] = useState("");
 
-  const latestTurn = turns[turns.length - 1];
   const latestScoredTurn = [...turns].reverse().find((turn) => Boolean(turn.scores));
   const latestScoredTurnTotal = latestScoredTurn?.scores
     ? totalTurnScore(latestScoredTurn.scores)
@@ -80,79 +49,6 @@ export function DebateInput({
     latestScoredTurnTotal !== null
       ? scoreToneTextClass(getScoreTone(latestScoredTurnTotal, MAX_SCORE))
       : "";
-
-  const scholarPassages = turns.length > 0
-    ? turns[turns.length - 1].passages ?? []
-    : openingPassages;
-
-  const keyClaims = turns.length > 0
-    ? turns[turns.length - 1].key_claims
-    : openingKeyClaims;
-  const hasKeyClaims = keyClaims && keyClaims.length > 0;
-
-  const tips: string[] = [];
-  if (latestTurn?.scores && !isSocratic && isStandardScores(latestTurn.scores)) {
-    const s = latestTurn.scores;
-    if (toScore(s.historical_accuracy_score) < 6) {
-      tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
-    }
-    if (toOptionalScore(s.rebuttal_score) < 6) {
-      tips.push("Tip: Respond directly to a claim they made.");
-    }
-    if (toScore(s.logic_score) < 6) {
-      tips.push("Tip: Make your claim clear, then support it with evidence and reasoning.");
-    }
-  }
-
-  const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
-
-  const currentPrompt = isSocratic
-    ? compactText(
-        turns.length > 0
-          ? turns[turns.length - 1].figure_response
-          : openingStatement,
-        220
-      )
-    : null;
-
-  const socraticQuestionHistory = isSocratic
-    ? [
-        ...(openingStatement
-          ? [{ exchangeNumber: 1, prompt: openingStatement, isCurrent: turns.length === 0 }]
-          : []),
-        ...turns.map((turn, index) => ({
-          exchangeNumber: index + 2,
-          prompt: turn.figure_response,
-          isCurrent: index === turns.length - 1,
-        })),
-      ]
-    : [];
-
-  const latestSocraticScores =
-    latestTurn?.scores && isSocraticScores(latestTurn.scores) ? latestTurn.scores : null;
-
-  const socraticAssumptionText = compactText(
-    latestSocraticScores?.self_awareness_reason ??
-      latestSocraticScores?.depth_reason ??
-      latestSocraticScores?.improvements?.[0] ??
-      currentPrompt ??
-      "This question is trying to expose the premise your answer depends on most.",
-    180
-  );
-
-  const socraticSelfAwarenessTip = compactText(
-    latestSocraticScores?.improvements?.[0] ??
-      latestSocraticScores?.self_awareness_reason ??
-      "Try naming the assumption the figure is pressing on before you defend your answer.",
-    180
-  );
-
-  const roundTrend = turns.map((turn) => {
-    if (!turn.scores) {
-      return { turnNumber: turn.turn_number, score: null as number | null };
-    }
-    return { turnNumber: turn.turn_number, score: totalTurnScore(turn.scores) };
-  });
 
   const submitLabel = isSocratic ? "RESPOND" : "STRIKE";
   const submitLoadingLabel = "JUDGING...";
@@ -220,25 +116,6 @@ export function DebateInput({
           </p>
         </div>
       )}
-
-      <DebateSidebar
-        variant="mobile"
-        figureName={figureName}
-        isSocratic={isSocratic}
-        isUnlimitedDebate={isUnlimitedDebate}
-        turns={turns}
-        currentPrompt={currentPrompt}
-        scholarPassages={scholarPassages}
-        tips={tips}
-        hasKeyClaims={!!hasKeyClaims}
-        keyClaims={keyClaims ?? []}
-        hasAnyHelper={!!hasAnyHelper}
-        socraticQuestionHistory={socraticQuestionHistory}
-        socraticAssumptionText={socraticAssumptionText}
-        socraticSelfAwarenessTip={socraticSelfAwarenessTip}
-        roundTrend={roundTrend}
-        onEndDebate={onEndDebate}
-      />
 
       {isSocratic ? (
         <AccessibleDetails className="group/arghelper">

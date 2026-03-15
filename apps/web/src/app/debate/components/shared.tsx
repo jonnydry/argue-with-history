@@ -3,6 +3,39 @@
 import { useState } from "react";
 import type { SocraticDebateScores, StandardDebateScores } from "@/lib/types";
 
+export interface Passage {
+  title: string;
+  text_excerpt: string;
+}
+
+export interface Turn {
+  turn_number: number;
+  user_argument: string;
+  figure_response: string;
+  scores: StandardDebateScores | SocraticDebateScores | null;
+  scores_error?: string | null;
+  sources_used: string[];
+  key_claims?: string[];
+  passages?: Passage[];
+}
+
+export interface SidebarData {
+  currentPrompt: string | null;
+  scholarPassages: Passage[];
+  tips: string[];
+  hasKeyClaims: boolean;
+  keyClaims: string[];
+  hasAnyHelper: boolean;
+  socraticQuestionHistory: Array<{
+    exchangeNumber: number;
+    prompt: string;
+    isCurrent: boolean;
+  }>;
+  socraticAssumptionText: string | null;
+  socraticSelfAwarenessTip: string | null;
+  roundTrend: Array<{ turnNumber: number; score: number | null }>;
+}
+
 export function toScore(
   val: unknown,
   options: { fallback?: number; min?: number; max?: number } = {}
@@ -118,3 +151,100 @@ export function AccessibleDetails({
 }
 
 export const MAX_SCORE = 40;
+
+export function deriveSidebarData(opts: {
+  turns: Turn[];
+  openingStatement: string | null;
+  openingKeyClaims: string[] | null;
+  openingPassages: Passage[];
+  isSocratic: boolean;
+  isCompleted: boolean;
+}): SidebarData {
+  const { turns, openingStatement, openingKeyClaims, openingPassages, isSocratic, isCompleted } = opts;
+
+  const latestTurn = turns[turns.length - 1];
+
+  const scholarPassages = turns.length > 0
+    ? turns[turns.length - 1].passages ?? []
+    : openingPassages;
+
+  const keyClaims = turns.length > 0
+    ? turns[turns.length - 1].key_claims ?? []
+    : openingKeyClaims ?? [];
+  const hasKeyClaims = keyClaims.length > 0;
+
+  const tips: string[] = [];
+  if (latestTurn?.scores && !isCompleted && !isSocratic && isStandardScores(latestTurn.scores)) {
+    const s = latestTurn.scores;
+    if (toScore(s.historical_accuracy_score) < 6) {
+      tips.push("Tip: Quote or paraphrase a passage they used. Check \"View sources used\".");
+    }
+    if (toOptionalScore(s.rebuttal_score) < 6) {
+      tips.push("Tip: Respond directly to a claim they made.");
+    }
+    if (toScore(s.logic_score) < 6) {
+      tips.push("Tip: Make your claim clear, then support it with evidence and reasoning.");
+    }
+  }
+
+  const hasAnyHelper = scholarPassages.length > 0 || tips.length > 0 || hasKeyClaims;
+
+  const currentPrompt = isSocratic
+    ? compactText(
+        turns.length > 0
+          ? turns[turns.length - 1].figure_response
+          : openingStatement,
+        220
+      )
+    : null;
+
+  const socraticQuestionHistory = isSocratic
+    ? [
+        ...(openingStatement
+          ? [{ exchangeNumber: 1, prompt: openingStatement, isCurrent: turns.length === 0 }]
+          : []),
+        ...turns.map((turn, index) => ({
+          exchangeNumber: index + 2,
+          prompt: turn.figure_response,
+          isCurrent: index === turns.length - 1,
+        })),
+      ]
+    : [];
+
+  const latestSocraticScores =
+    latestTurn?.scores && isSocraticScores(latestTurn.scores) ? latestTurn.scores : null;
+
+  const socraticAssumptionText = compactText(
+    latestSocraticScores?.self_awareness_reason ??
+      latestSocraticScores?.depth_reason ??
+      latestSocraticScores?.improvements?.[0] ??
+      currentPrompt ??
+      "This question is trying to expose the premise your answer depends on most.",
+    180
+  );
+
+  const socraticSelfAwarenessTip = compactText(
+    latestSocraticScores?.improvements?.[0] ??
+      latestSocraticScores?.self_awareness_reason ??
+      "Try naming the assumption the figure is pressing on before you defend your answer.",
+    180
+  );
+
+  const roundTrend = turns.map((turn) => {
+    if (!turn.scores) return { turnNumber: turn.turn_number, score: null as number | null };
+    return { turnNumber: turn.turn_number, score: totalTurnScore(turn.scores) };
+  });
+
+  return {
+    currentPrompt,
+    scholarPassages,
+    tips,
+    hasKeyClaims,
+    keyClaims,
+    hasAnyHelper,
+    socraticQuestionHistory,
+    socraticAssumptionText,
+    socraticSelfAwarenessTip,
+    roundTrend,
+  };
+}
