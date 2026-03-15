@@ -10,6 +10,8 @@ cleanup() {
 trap cleanup EXIT SIGTERM SIGINT
 
 echo "=== Starting FastAPI backend ==="
+# NOTE: workers=1 is required — debate locks are in-process asyncio.Lock objects
+# and SQLite does not support concurrent writers across processes.
 cd apps/api
 gunicorn src.main:app \
   --worker-class uvicorn.workers.UvicornWorker \
