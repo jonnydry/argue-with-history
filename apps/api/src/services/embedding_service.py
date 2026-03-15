@@ -1,4 +1,7 @@
 """OpenAI embeddings for semantic retrieval."""
+import asyncio
+
+import numpy as np
 from openai import OpenAI
 from ..core.config import get_settings
 
@@ -21,7 +24,7 @@ class EmbeddingService:
         self._client = OpenAI(api_key=key) if key else None
 
     def embed(self, text: str) -> list[float]:
-        """Get embedding for a single text. Returns empty list if disabled."""
+        """Get embedding for a single text (sync). Returns empty list if disabled."""
         if not self._client:
             return []
         resp = self._client.embeddings.create(
@@ -30,15 +33,21 @@ class EmbeddingService:
         )
         return resp.data[0].embedding
 
-    def cosine_similarity(self, a: list[float], b: list[float]) -> float:
+    async def embed_async(self, text: str) -> list[float]:
+        """Non-blocking wrapper around embed() — runs in a thread."""
+        return await asyncio.to_thread(self.embed, text)
+
+    @staticmethod
+    def cosine_similarity(a: list[float], b: list[float]) -> float:
         if not a or not b or len(a) != len(b):
             return 0.0
-        dot = sum(x * y for x, y in zip(a, b))
-        norm_a = sum(x * x for x in a) ** 0.5
-        norm_b = sum(x * x for x in b) ** 0.5
-        if norm_a == 0 or norm_b == 0:
+        va = np.asarray(a, dtype=np.float64)
+        vb = np.asarray(b, dtype=np.float64)
+        norm_a = np.linalg.norm(va)
+        norm_b = np.linalg.norm(vb)
+        if norm_a == 0.0 or norm_b == 0.0:
             return 0.0
-        return dot / (norm_a * norm_b)
+        return float(np.dot(va, vb) / (norm_a * norm_b))
 
 
 embedding_service = EmbeddingService()

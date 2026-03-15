@@ -572,6 +572,7 @@ Keep suggested_readings to 2-3 items. Add source_id (e.g. chapter number) when p
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.5,
                 "max_tokens": 400,
+                "response_format": {"type": "json_object"},
             },
         )
         response.raise_for_status()

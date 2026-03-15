@@ -14,7 +14,7 @@ cd apps/api
 gunicorn src.main:app \
   --worker-class uvicorn.workers.UvicornWorker \
   --bind 0.0.0.0:3001 \
-  --workers 2 \
+  --workers 1 \
   --timeout 120 \
   --graceful-timeout 30 &
 API_PID=$!

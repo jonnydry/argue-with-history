@@ -90,8 +90,9 @@ scripts/        — Data processing and embedding precomputation scripts
 - **Zustand**: Lightweight state management with localStorage persistence
 
 ### Backend Dependencies
-- **FastAPI + Uvicorn/Gunicorn**: Web framework and ASGI servers
+- **FastAPI + Uvicorn/Gunicorn**: Web framework and ASGI servers (production runs single worker to avoid in-process lock and SQLite multi-writer issues)
 - **httpx**: Async HTTP client for calling the Grok API
+- **numpy**: Optimized cosine similarity for embedding vector comparison
 - **slowapi**: Rate limiting middleware
 - **pydantic-settings**: Configuration management from environment variables
 - **SQLite** (stdlib): Debate state persistence — no external database required

@@ -60,3 +60,7 @@ ENVIRONMENT = "production"
 deploymentTarget = "autoscale"
 run = ["bash", "start.sh"]
 build = ["bash", "build.sh"]
+
+[nix]
+channel = "stable-25_05"
+packages = ["libxcrypt"]

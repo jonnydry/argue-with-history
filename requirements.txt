@@ -1,3 +1,4 @@
 # Root requirements for deployment (Railway, Render, etc.)
 # Pins to API dependencies
 -r apps/api/requirements.txt
+numpy

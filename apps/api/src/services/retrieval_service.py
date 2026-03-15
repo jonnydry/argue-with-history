@@ -8,6 +8,39 @@ try:
 except ImportError:
     embedding_service = None
 
+FIGURE_SOURCE_TYPES: dict[str, str] = {
+    "epictetus": "Section",
+    "mill": "Chapter",
+    "aurelius": "Book",
+    "locke": "Chapter",
+    "rousseau": "Book",
+    "nietzsche": "Part",
+    "hobbes": "Part",
+    "plato": "Book",
+    "aristotle": "Book",
+    "hume": "Section",
+    "kant": "Section",
+    "wollstonecraft": "Chapter",
+    "marx": "Part",
+    "thoreau": "Section",
+    "seneca": "Letter",
+    "cicero": "Book",
+    "lucretius": "Book",
+    "descartes": "Meditation",
+    "spinoza": "Part",
+    "leibniz": "Section",
+    "voltaire": "Chapter",
+    "paine": "Section",
+    "burke": "Section",
+    "douglass": "Chapter",
+    "emerson": "Essay",
+    "dubois": "Chapter",
+    "darwin": "Chapter",
+    "james": "Lecture",
+    "tocqueville": "Chapter",
+    "russell": "Chapter",
+}
+
 
 class LRUCache:
     """Simple LRU cache with max size to prevent unbounded memory growth."""
@@ -313,38 +346,7 @@ class RetrievalService:
 
     def _get_source_type(self, figure: str) -> str:
         """Return the unit type (Chapter, Section, etc.) for a figure's sources."""
-        return {
-            "epictetus": "Section",
-            "mill": "Chapter",
-            "aurelius": "Book",
-            "locke": "Chapter",
-            "rousseau": "Book",
-            "nietzsche": "Part",
-            "hobbes": "Part",
-            "plato": "Book",
-            "aristotle": "Book",
-            "hume": "Section",
-            "kant": "Section",
-            "wollstonecraft": "Chapter",
-            "marx": "Part",
-            "thoreau": "Section",
-            "seneca": "Letter",
-            "cicero": "Book",
-            "lucretius": "Book",
-            "descartes": "Meditation",
-            "spinoza": "Part",
-            "leibniz": "Section",
-            "voltaire": "Chapter",
-            "paine": "Section",
-            "burke": "Section",
-            "douglass": "Chapter",
-            "emerson": "Essay",
-            "dubois": "Chapter",
-            "darwin": "Chapter",
-            "james": "Lecture",
-            "tocqueville": "Chapter",
-            "russell": "Chapter",
-        }.get(figure, "Section")
+        return FIGURE_SOURCE_TYPES.get(figure, "Section")
 
     def list_loaded_sources(self, figure: str) -> list[dict]:
         """Return list of loaded sources for a figure: [{id, title, type}]."""
@@ -535,38 +537,7 @@ class RetrievalService:
             or index.get("parts")
             or {}
         )
-        source_name = {
-            "epictetus": "Section",
-            "mill": "Chapter",
-            "aurelius": "Book",
-            "locke": "Chapter",
-            "rousseau": "Book",
-            "nietzsche": "Part",
-            "hobbes": "Part",
-            "plato": "Book",
-            "aristotle": "Book",
-            "hume": "Section",
-            "kant": "Section",
-            "wollstonecraft": "Chapter",
-            "marx": "Part",
-            "thoreau": "Section",
-            "seneca": "Letter",
-            "cicero": "Book",
-            "lucretius": "Book",
-            "descartes": "Meditation",
-            "spinoza": "Part",
-            "leibniz": "Section",
-            "voltaire": "Chapter",
-            "paine": "Section",
-            "burke": "Section",
-            "douglass": "Chapter",
-            "emerson": "Essay",
-            "dubois": "Chapter",
-            "darwin": "Chapter",
-            "james": "Lecture",
-            "tocqueville": "Chapter",
-            "russell": "Chapter",
-        }.get(figure, "Section")
+        source_name = FIGURE_SOURCE_TYPES.get(figure, "Section")
         formatted_parts = []
         sources = []
         passages = []
