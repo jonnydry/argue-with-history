@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Swords } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
+import { SwordBanner } from "@/components/sword-banner";
 
 function useInView(threshold = 0.2) {
   const ref = useRef<HTMLDivElement>(null);
@@ -138,6 +139,8 @@ export default function Home() {
           </nav>
         </div>
       </header>
+
+      <SwordBanner />
 
       <main>
         <section className="relative overflow-hidden border-b border-border">
