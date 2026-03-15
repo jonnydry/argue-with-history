@@ -1,19 +1,21 @@
 import { FigureInfo, DebateTopic, StartDebateRequest, DebateState, SubmitArgumentRequest, SubmitArgumentResponse, StartDebateResponse } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
-const REQUEST_TIMEOUT_MS = 30000;
+const DEFAULT_TIMEOUT_MS = 30_000;
+const LONG_TIMEOUT_MS = 90_000;
 
-async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
+async function fetchAPI<T>(path: string, options?: RequestInit & { timeoutMs?: number }): Promise<T> {
+  const { timeoutMs: customTimeout, ...fetchOptions } = options ?? {};
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), customTimeout ?? DEFAULT_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${API_BASE}${path}`, {
-      ...options,
+      ...fetchOptions,
       signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
-        ...options?.headers,
+        ...fetchOptions.headers,
       },
     });
 
@@ -63,18 +65,20 @@ export const api = {
       fetchAPI<StartDebateResponse>("/debate/start", {
         method: "POST",
         body: JSON.stringify(data),
+        timeoutMs: LONG_TIMEOUT_MS,
       }),
     
     submitTurn: (data: SubmitArgumentRequest) =>
       fetchAPI<SubmitArgumentResponse>("/debate/turn", {
         method: "POST",
         body: JSON.stringify(data),
+        timeoutMs: LONG_TIMEOUT_MS,
       }),
     
     get: (id: string) => fetchAPI<DebateState>(`/debate/${id}`),
     
     end: (id: string) =>
-      fetchAPI<{ debate: DebateState; learning_summary?: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } }>(`/debate/${id}/end`, { method: "POST" }),
+      fetchAPI<{ debate: DebateState; learning_summary?: { summary?: string; suggested_readings?: Array<{ title: string; reason: string }> } }>(`/debate/${id}/end`, { method: "POST", timeoutMs: LONG_TIMEOUT_MS }),
     
     delete: (id: string) =>
       fetchAPI<{ success: boolean }>(`/debate/${id}`, { method: "DELETE" }),

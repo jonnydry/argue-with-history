@@ -559,6 +559,7 @@ export const useDebateStore = create<DebateStore>()(
         debateMode: state.debateMode,
         maxTurns: state.maxTurns,
         structuredInput: state.structuredInput,
+        figuresLastFetched: state.figuresLastFetched,
       }),
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<DebateStore>;

@@ -294,8 +294,8 @@ export default function FiguresPage() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <h3 className="font-bold text-base tracking-tight truncate">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className="font-bold text-base tracking-tight leading-snug">
                             {figure.name}
                           </h3>
                           <div className="flex items-center gap-2 shrink-0">
@@ -363,8 +363,7 @@ export default function FiguresPage() {
           })}
         </div>
 
-        {/* Load more — only when "All" is selected */}
-        {selectedEra === "All" && filteredFigures.length > visibleCount && (
+        {filteredFigures.length > visibleCount && (
           <div className="flex justify-center mb-10 sm:mb-16">
             <Button
               variant="outline"
@@ -642,10 +641,11 @@ export default function FiguresPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="btn-press hidden sm:inline-flex"
+                    className="btn-press"
                     onClick={() => void openPreviewDialog()}
                   >
-                    Preview sources
+                    <span className="sm:hidden">Sources</span>
+                    <span className="hidden sm:inline">Preview sources</span>
                   </Button>
                   <Link href="/debate">
                     <Button
