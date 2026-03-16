@@ -51,6 +51,10 @@ scripts/        — Data processing and embedding precomputation scripts
   - `/` — Home page with figure grid listing all available philosophers
   - `/figures` — Figure selection and topic picker with preview dialog
   - `/debate` — Active debate interface with turn-by-turn interaction, refactored into sub-components under `src/app/debate/components/` (DebateHeader, DebateTranscript, DebateInput, DebateResults, DebateSidebar, ScorePanel, shared utilities)
+- **Error handling**:
+  - `error.tsx` — Route-level error boundaries for `/`, `/figures`, and `/debate` with contextual recovery actions
+  - `global-error.tsx` — Root-level catastrophic error fallback (inline styles, no dependency on CSS/components)
+  - `not-found.tsx` — Custom 404 page with themed UI and navigation back to the app
 - **API communication**: `src/lib/api.ts` — typed fetch wrapper that calls the backend. API base URL defaults to `/api`, which Next.js rewrites proxy to the backend at `localhost:3001`
 - **Progression tracking**: `src/lib/progression.ts` — localStorage-based tracking of completed debates per figure/topic
 - **Animation**: Framer Motion for UI transitions
