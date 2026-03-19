@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CrossedSwords } from "@/components/icons/CrossedSwords";
+import { Swords } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
@@ -141,7 +141,7 @@ export function DebateResults({
 
       <div className="px-0 lg:px-14 py-4 lg:py-14">
         <div className="flex flex-col items-center text-center max-w-2xl mx-auto">
-          <CrossedSwords size={28} className="mb-3 text-foreground/25" />
+          <Swords size={28} className="mb-3 text-foreground/25" />
           <p className={`war-label mb-4 ${outcomeToneClass}`}>{outcomeLabel}</p>
           <p className={`text-7xl sm:text-9xl font-bold tracking-tighter tabular-nums leading-none mb-2 score-reveal ${outcomeToneClass}`}>
             {aggregateScore}

@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
-import { CrossedSwords } from "@/components/icons/CrossedSwords";
+import { Swords, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -168,7 +167,7 @@ export default function FiguresPage() {
               <CardContent className="p-4 hover:bg-accent/5 transition-colors cursor-pointer group">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-                    <CrossedSwords size={18} className="text-accent" />
+                    <Swords size={18} className="text-accent" />
                   </div>
                   <div className="flex-1 min-w-0 pr-4">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
@@ -197,7 +196,7 @@ export default function FiguresPage() {
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-4">
-            <CrossedSwords size={20} strokeWidth={1.5} className="shrink-0 sm:w-6 sm:h-6" />
+            <Swords size={20} strokeWidth={1.5} className="shrink-0 sm:w-6 sm:h-6" />
             <h1 className="text-base sm:text-xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
@@ -372,7 +371,7 @@ export default function FiguresPage() {
               onClick={() => setVisibleCount((count) => count + 6)}
               className="border-foreground text-foreground hover:bg-foreground hover:text-background btn-press px-6 sm:px-8 py-4 sm:py-5 h-auto gap-2"
             >
-              <CrossedSwords size={20} strokeWidth={1.5} />
+              <Swords size={20} strokeWidth={1.5} />
               <span className="uppercase tracking-wider font-medium">Load more</span>
             </Button>
           </div>
@@ -383,7 +382,7 @@ export default function FiguresPage() {
           <div ref={topicSectionRef} className="max-w-3xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
               <div className="arena-divider">
-                <CrossedSwords size={14} className="text-muted-foreground/40" />
+                <Swords size={14} className="text-muted-foreground/40" />
               </div>
               <p className="war-label mb-2">SELECT A TOPIC</p>
               <h3 className="editorial-section-title text-2xl sm:text-3xl mb-2">
@@ -469,7 +468,7 @@ export default function FiguresPage() {
           <div ref={settingsSectionRef} className="max-w-2xl mx-auto arena-enter scroll-mt-24">
             <div className="mb-8">
               <div className="arena-divider">
-                <CrossedSwords size={14} className="text-muted-foreground/40" />
+                <Swords size={14} className="text-muted-foreground/40" />
               </div>
               <p className="war-label mb-2">CONFIGURE YOUR BATTLE</p>
               <h3 className="editorial-section-title text-2xl sm:text-3xl mb-6">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { CrossedSwords } from "@/components/icons/CrossedSwords";
+import { Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Turn } from "./shared";
@@ -176,7 +176,7 @@ export function DebateInput({
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              <CrossedSwords size={16} />
+              <Swords size={16} />
               {submitLabel}
             </span>
           )}

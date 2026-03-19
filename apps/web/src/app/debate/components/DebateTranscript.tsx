@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { CrossedSwords } from "@/components/icons/CrossedSwords";
+import { Swords } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Badge } from "@/components/ui/badge";
@@ -140,7 +140,7 @@ export function DebateTranscript({
 
             <div className="mt-6 text-center">
               <div className="arena-divider">
-                <CrossedSwords size={12} className="text-muted-foreground/30" />
+                <Swords size={12} className="text-muted-foreground/30" />
               </div>
               <p className="war-label">
                 {isSocratic ? "Answer the question" : "Your turn to respond"}
@@ -151,7 +151,7 @@ export function DebateTranscript({
 
         {turns.length === 0 && !openingStatement && (
           <div className="py-20 text-center arena-enter">
-            <CrossedSwords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
+            <Swords size={32} className="mx-auto mb-4 text-muted-foreground/40" />
             <p className="editorial-display text-4xl sm:text-5xl mb-3">THE ARENA<br/><span className="headline-emphasis">AWAITS</span></p>
             <p className="text-muted-foreground text-sm uppercase tracking-[0.2em]">Present your opening argument below.</p>
           </div>

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Home, Users } from "lucide-react";
-import { CrossedSwords } from "@/components/icons/CrossedSwords";
+import { Swords, Home, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -9,7 +8,7 @@ export default function NotFound() {
       <div className="max-w-md w-full text-center space-y-6">
         <div className="flex justify-center">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <CrossedSwords className="w-8 h-8 text-muted-foreground" />
+            <Swords className="w-8 h-8 text-muted-foreground" />
           </div>
         </div>
 
