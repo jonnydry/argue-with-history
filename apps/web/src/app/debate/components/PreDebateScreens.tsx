@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Swords } from "lucide-react";
+import { CrossedSwords } from "@/components/icons/CrossedSwords";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { modeDisplayName } from "./shared";
@@ -27,14 +27,14 @@ export function NoOpponentScreen() {
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center noise-bg px-4">
       <div className="max-w-md w-full text-center arena-enter">
-        <Swords size={40} className="mx-auto mb-6 text-muted-foreground/30" />
+        <CrossedSwords size={40} className="mx-auto mb-6 text-muted-foreground/30" />
         <h2 className="editorial-display text-3xl sm:text-4xl mb-3">NO OPPONENT<br/><span className="headline-emphasis">SELECTED</span></h2>
         <p className="text-muted-foreground mb-8 text-sm sm:text-base">
           Choose a figure and topic to enter the arena.
         </p>
         <Link href="/figures">
           <Button className="w-full text-base py-5 h-auto bg-foreground text-background btn-press font-bold tracking-wider">
-            <Swords size={18} className="mr-2" />
+            <CrossedSwords size={18} className="mr-2" />
             SELECT OPPONENT
           </Button>
         </Link>
@@ -80,7 +80,7 @@ export function ReadyScreen({
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
-            <Swords size={20} strokeWidth={1.5} className="shrink-0" />
+            <CrossedSwords size={20} strokeWidth={1.5} className="shrink-0" />
             <Link href="/" className="text-lg sm:text-2xl font-bold tracking-tight hover:underline underline-offset-4">
               ARGUE WITH HISTORY
             </Link>
@@ -111,7 +111,7 @@ export function ReadyScreen({
             </p>
 
             <div className="arena-divider mb-8">
-              <Swords size={14} className="text-muted-foreground/40" />
+              <CrossedSwords size={14} className="text-muted-foreground/40" />
             </div>
 
             <div className="mb-10 space-y-6 max-w-2xl">
@@ -147,7 +147,7 @@ export function ReadyScreen({
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-3">
-                  <Swords size={20} />
+                  <CrossedSwords size={20} />
                   ENTER THE ARENA
                 </span>
               )}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Swords } from "lucide-react";
+import { CrossedSwords } from "@/components/icons/CrossedSwords";
 import { useEffect, useRef, useState } from "react";
 import { useDebateStore } from "@/stores/debate-store";
 
@@ -69,7 +69,7 @@ const steps = [
     title: "Choose Your Opponent",
     description: "Select from historical philosophers and pick a debate topic.",
     icon: (
-      <Swords size={48} strokeWidth={1.5} className="shrink-0 block" />
+      <CrossedSwords size={48} strokeWidth={1.5} className="shrink-0 block" />
     ),
   },
   {
@@ -121,7 +121,7 @@ export default function Home() {
       <header className="border-b border-border">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
-            <Swords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
+            <CrossedSwords size={24} strokeWidth={1.5} className="shrink-0 sm:w-7 sm:h-7" />
             <h1 className="text-lg sm:text-2xl font-bold tracking-tight">
               ARGUE WITH HISTORY
             </h1>
@@ -155,7 +155,7 @@ export default function Home() {
               </h2>
               <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-xl mb-8 sm:mb-10 leading-relaxed">
                 Not a spectator sport. Combat the world&apos;s most infamous philosophers and thinkers in your own words. Your arguments will be judged. Increase your understanding, challenge your assumptions, enter the arena.
-                <Swords size={20} className="inline-block ml-2 text-foreground/50 align-middle" />
+                <CrossedSwords size={20} className="inline-block ml-2 text-foreground/50 align-middle" />
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <Link href="/figures">

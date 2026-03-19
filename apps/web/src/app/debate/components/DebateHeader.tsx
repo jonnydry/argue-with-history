@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Swords } from "lucide-react";
+import { CrossedSwords } from "@/components/icons/CrossedSwords";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,7 +69,7 @@ export function DebateHeader({
       <header className="border-b border-border sticky top-0 z-20 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <Swords size={20} strokeWidth={1.5} className="shrink-0" />
+            <CrossedSwords size={20} strokeWidth={1.5} className="shrink-0" />
             <Link href="/" className="text-base sm:text-xl font-bold tracking-tight hover:underline underline-offset-4 whitespace-nowrap">
               ARGUE WITH HISTORY
             </Link>
